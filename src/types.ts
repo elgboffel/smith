@@ -339,7 +339,7 @@ export interface IssueContext {
   title: string;
   body: string;
   labels: string[];
-  issueType: 'github' | 'linear' | 'freeform';
+  issueType: 'github' | 'linear' | 'freeform' | 'local-md';
   issueNumber: string;
 }
 
