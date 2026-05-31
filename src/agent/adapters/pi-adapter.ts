@@ -21,10 +21,16 @@ const log = createLogger();
 
 export class PiRuntimeAdapter implements CaseAgentRuntime {
   private registry: ModelRegistry;
+  private auth: AuthStorage;
   private activeAgent: Agent | null = null;
 
   constructor() {
-    this.registry = ModelRegistry.create(AuthStorage.create());
+    // Keep the AuthStorage instance so we can resolve the provider credential
+    // (API key or refreshed OAuth access token) for the Agent's getApiKey hook.
+    // Without this, streamSimple has no key and fails with
+    // "No API key for provider: <provider>".
+    this.auth = AuthStorage.create();
+    this.registry = ModelRegistry.create(this.auth);
   }
 
   async spawn(options: SpawnAgentOptions): Promise<SpawnAgentResult> {
@@ -88,15 +94,28 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
     const agent = new Agent({
       initialState,
       streamFn: streamSimple,
+      getApiKey: (provider: string) => this.auth.getApiKey(provider),
     });
     this.activeAgent = agent;
 
     let responseText = '';
+    // pi's Agent does not throw on a model/stream failure: it records the error
+    // on the failed assistant message and resolves `prompt()` normally. Capture
+    // that message here so a real API error (bad model, auth, rate limit) is
+    // surfaced instead of the misleading "AGENT_RESULT start delimiter not found".
+    let agentError: string | null = null;
     const toolTimers = new Map<string, number>();
 
     agent.subscribe((event: any) => {
       if (event.type === 'message_update' && event.assistantMessageEvent.type === 'text_delta') {
         responseText += event.assistantMessageEvent.delta;
+      }
+      if (event.type === 'turn_end' && event.message?.errorMessage) {
+        agentError = event.message.errorMessage;
+      }
+      if (event.type === 'agent_end' && Array.isArray(event.messages)) {
+        const failed = event.messages.find((m: any) => m?.errorMessage);
+        if (failed) agentError = failed.errorMessage;
       }
       if (event.type === 'tool_execution_start') {
         if (options.onHeartbeat) options.onHeartbeat(Date.now() - start);
@@ -177,6 +196,30 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
       clearTimeout(timer);
       this.activeAgent = null;
       const durationMs = Date.now() - start;
+
+      // The agent reported a model/stream failure without throwing. Surface the
+      // real error rather than letting parseAgentResult emit a delimiter error.
+      if (agentError && !responseText.includes('AGENT_RESULT')) {
+        log.error('agent run failed', { agent: options.agentName, durationMs, error: agentError });
+        return {
+          raw: responseText,
+          result: {
+            status: 'failed',
+            summary: '',
+            artifacts: {
+              commit: null,
+              filesChanged: [],
+              testsPassed: null,
+              screenshotUrls: [],
+              evidenceMarkers: [],
+              prUrl: null,
+              prNumber: null,
+            },
+            error: agentError,
+          },
+          durationMs,
+        };
+      }
 
       const result = parseAgentResult(responseText);
       log.info('agent completed', { agent: options.agentName, durationMs, status: result.status });
