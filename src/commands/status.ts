@@ -1,7 +1,9 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import type { TaskStatus } from '../types.js';
+import { resolveSmithRunLog } from '../paths.js';
+import { parseRunLog, formatRunLog } from '../metrics/run-log.js';
 
-export const description = 'Read or update the current task status';
+export const description = 'Show recent runs across repos, or read/update a task status';
 
 const TRANSITIONS: Record<string, TaskStatus[]> = {
   active: ['implementing'],
@@ -55,8 +57,37 @@ function coerce(value: string): unknown {
   return value;
 }
 
+/**
+ * Render the harness-owned run-log view: recent runs and outcomes across all
+ * repos. Invoked when `smith status` is called without a task-file argument.
+ */
+function showRunLog(argv: string[]): number {
+  let repo: string | undefined;
+  let limit: number | undefined;
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === '--repo') repo = argv[++i];
+    else if (arg === '--limit') limit = Number(argv[++i]);
+    else if (arg === '--help' || arg === '-h') {
+      process.stdout.write('Usage: smith status [--repo <name>] [--limit <n>]\n');
+      return 0;
+    }
+  }
+
+  const logFile = resolveSmithRunLog();
+  const content = existsSync(logFile) ? readFileSync(logFile, 'utf-8') : '';
+  process.stdout.write(formatRunLog(parseRunLog(content), { repo, limit }));
+  return 0;
+}
+
 export async function handler(argv: string[]): Promise<number> {
   const taskFile = argv[0];
+
+  // No task-file argument (or leading flag) → human-facing run-log view.
+  if (!taskFile || taskFile.startsWith('-')) {
+    return showRunLog(argv);
+  }
+
   const field = argv[1];
   const value = argv[2];
   const extra = argv[3];

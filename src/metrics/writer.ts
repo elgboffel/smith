@@ -1,16 +1,18 @@
 import { mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import type { RunMetrics } from '../types.js';
-import { resolveRepoRunLog } from '../paths.js';
+import { resolveSmithRunLog } from '../paths.js';
 import { createLogger } from '../util/logger.js';
 
 const log = createLogger();
 
 /**
- * Append RunMetrics to the run log as a single JSON line.
+ * Append RunMetrics to the harness-owned run log as a single JSON line.
+ *
+ * The log is shared across all repos (each entry carries its `repo`) and lives
+ * in the harness, never in the target repo — target repos stay clean.
  */
 export async function writeRunMetrics(
-  repoPath: string,
   taskId: string,
   repo: string,
   metrics: RunMetrics,
@@ -19,7 +21,7 @@ export async function writeRunMetrics(
     parentTaskId?: string | null;
   },
 ): Promise<void> {
-  const logFile = resolveRepoRunLog(repoPath);
+  const logFile = resolveSmithRunLog();
 
   const entry = {
     runId: metrics.runId,

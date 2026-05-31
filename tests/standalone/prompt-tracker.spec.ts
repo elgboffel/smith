@@ -32,6 +32,20 @@ afterEach(async () => {
 });
 
 describe('findPriorRunId', () => {
+  it('prefers the harness-owned run log', async () => {
+    await writeFile(
+      join(packageRoot, 'run-log.jsonl'),
+      [
+        JSON.stringify({ task: 'task-1', runId: 'smith-old' }),
+        JSON.stringify({ task: 'task-1', runId: 'smith-new' }),
+      ].join('\n'),
+    );
+    await mkdir(join(repoDir, '.case'), { recursive: true });
+    await writeFile(join(repoDir, '.case/run-log.jsonl'), JSON.stringify({ task: 'task-1', runId: 'repo-run' }));
+
+    expect(await findPriorRunId(repoDir, 'task-1')).toBe('smith-new');
+  });
+
   it('prefers the repo-local run log', async () => {
     await mkdir(join(repoDir, '.case'), { recursive: true });
     await writeFile(

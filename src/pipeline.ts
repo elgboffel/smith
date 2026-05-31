@@ -210,7 +210,7 @@ async function runPipelineBody(
   runMetrics.promptVersions = promptVersions;
   runMetrics.humanOverrides = humanOverrides;
   const priorRunId = await findPriorRunId(config.repoPath, task.id);
-  await writeRunMetrics(config.dataDir, task.id, config.repoName, runMetrics, {
+  await writeRunMetrics(task.id, config.repoName, runMetrics, {
     priorRunId,
     parentTaskId: task.contractPath,
   });

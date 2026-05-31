@@ -1,4 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import { commandMap, dispatch, suggest, printHelp } from '../commands/index.js';
 
 /**
@@ -290,11 +293,88 @@ describe('upload handler — preflight checks', () => {
   });
 });
 
-describe('command modules — native TypeScript (smoke)', () => {
-  it('status rejects missing args', async () => {
+describe('status — run-log view', () => {
+  let tmp: string;
+  const originalRoot = process.env.CASE_PACKAGE_ROOT;
+
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'smith-status-'));
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ name: 'smith' }));
+    process.env.CASE_PACKAGE_ROOT = tmp;
+  });
+
+  afterEach(() => {
+    if (originalRoot === undefined) delete process.env.CASE_PACKAGE_ROOT;
+    else process.env.CASE_PACKAGE_ROOT = originalRoot;
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('lists recent runs and outcomes across all repos', async () => {
+    fs.writeFileSync(
+      path.join(tmp, 'run-log.jsonl'),
+      [
+        JSON.stringify({ runId: 'r1', date: '2026-05-01', task: 'task-cli', repo: 'cli', outcome: 'success' }),
+        JSON.stringify({
+          runId: 'r2',
+          date: '2026-05-02',
+          task: 'task-skills',
+          repo: 'skills',
+          outcome: 'failed',
+          failedAgent: 'verify',
+        }),
+      ].join('\n') + '\n',
+    );
+
     const mod = await import('../commands/status.js');
-    const code = await mod.handler([]);
-    expect(code).toBe(1);
+    const out = captureStream(process.stdout);
+    let code: number;
+    try {
+      code = await mod.handler([]);
+    } finally {
+      out.restore();
+    }
+    const text = out.lines.join('');
+    expect(code).toBe(0);
+    expect(text).toContain('cli');
+    expect(text).toContain('skills');
+    expect(text).toContain('task-cli');
+    expect(text).toContain('failed (verify)');
+  });
+
+  it('filters to a single repo with --repo', async () => {
+    fs.writeFileSync(
+      path.join(tmp, 'run-log.jsonl'),
+      [
+        JSON.stringify({ runId: 'r1', date: '2026-05-01', task: 'task-cli', repo: 'cli', outcome: 'success' }),
+        JSON.stringify({ runId: 'r2', date: '2026-05-02', task: 'task-skills', repo: 'skills', outcome: 'success' }),
+      ].join('\n') + '\n',
+    );
+
+    const mod = await import('../commands/status.js');
+    const out = captureStream(process.stdout);
+    try {
+      await mod.handler(['--repo', 'cli']);
+    } finally {
+      out.restore();
+    }
+    const text = out.lines.join('');
+    expect(text).toContain('task-cli');
+    expect(text).not.toContain('task-skills');
+  });
+});
+
+describe('command modules — native TypeScript (smoke)', () => {
+  it('status with no task file shows the run-log view', async () => {
+    const mod = await import('../commands/status.js');
+    const out = captureStream(process.stdout);
+    try {
+      const code = await mod.handler([]);
+      expect(code).toBe(0);
+    } finally {
+      out.restore();
+    }
+    // Either lists runs or reports an empty log — never the task-field usage error.
+    expect(out.lines.join('')).not.toContain('Usage: ca status <task.json>');
   });
 
   it('status rejects missing task file', async () => {

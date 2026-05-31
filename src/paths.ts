@@ -184,6 +184,19 @@ export function resolveRunLogPath(): string {
   return resolve(resolveDataDir(), 'run-log.jsonl');
 }
 
+/**
+ * Resolve the harness-owned append-only `run-log.jsonl`.
+ *
+ * smith records every run here — one shared, gitignored log that spans all
+ * repos — so `smith status` can reconcile recent runs and outcomes after a
+ * missed live alert. Lives at the on-disk harness root when available, and
+ * falls back to the user data dir for the self-contained binary.
+ */
+export function resolveSmithRunLog(): string {
+  const root = tryResolvePackageRoot();
+  return resolve(root ?? resolveDataDir(), 'run-log.jsonl');
+}
+
 /** Resolve the agent-versions/ directory under dataDir. */
 export function resolveAgentVersionsDir(): string {
   return resolve(resolveDataDir(), 'agent-versions');

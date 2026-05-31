@@ -1,6 +1,12 @@
 import { join, resolve } from 'node:path';
 import { parseJsonLines } from '../util/parse-jsonl.js';
-import { resolveAgentVersionsDir, resolveRepoRunLog, resolveRunLogPath, tryResolvePackageRoot } from '../paths.js';
+import {
+  resolveAgentVersionsDir,
+  resolveRepoRunLog,
+  resolveRunLogPath,
+  resolveSmithRunLog,
+  tryResolvePackageRoot,
+} from '../paths.js';
 import { createLogger } from '../util/logger.js';
 
 const log = createLogger();
@@ -54,6 +60,8 @@ function parseChangelog(text: string): Record<string, string> {
  * Find the most recent runId for a given task in the run log.
  */
 export async function findPriorRunId(repoPath: string, taskId: string): Promise<string | null> {
+  // The harness-owned log is the current home; the rest are migration fallbacks.
+  const smithRunLog = resolveSmithRunLog();
   const repoLocal = resolveRepoRunLog(repoPath);
   let configRunLog: string | null = null;
   try {
@@ -63,13 +71,15 @@ export async function findPriorRunId(repoPath: string, taskId: string): Promise<
   }
   const legacyPackageRoot = tryResolvePackageRoot();
   const legacy = legacyPackageRoot ? resolve(legacyPackageRoot, 'docs/run-log.jsonl') : null;
-  const path = (await Bun.file(repoLocal).exists())
-    ? repoLocal
-    : configRunLog
-      ? await resolveReadPath(configRunLog, legacy)
-      : legacy && (await Bun.file(legacy).exists())
-        ? legacy
-        : null;
+  const path = (await Bun.file(smithRunLog).exists())
+    ? smithRunLog
+    : (await Bun.file(repoLocal).exists())
+      ? repoLocal
+      : configRunLog
+        ? await resolveReadPath(configRunLog, legacy)
+        : legacy && (await Bun.file(legacy).exists())
+          ? legacy
+          : null;
   if (!path) return null;
 
   const entries = parseJsonLines<RunLogEntry>(await Bun.file(path).text());

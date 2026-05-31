@@ -860,7 +860,8 @@ describe('runPipeline', () => {
 
     await runPipeline(makeConfig());
 
-    const writtenMetrics = mockWriteRunMetrics.mock.calls[0][3];
+    // writeRunMetrics(taskId, repo, metrics, extra) — metrics is the 3rd arg.
+    const writtenMetrics = mockWriteRunMetrics.mock.calls[0][2];
     expect(writtenMetrics.revisionCycles).toBe(1);
   });
 
