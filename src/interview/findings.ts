@@ -207,13 +207,16 @@ export interface DetectedRepoForSynthesis {
 export function synthesizeProjectEntry(findings: InterviewFindings, detected: DetectedRepoForSynthesis): ProjectEntry {
   const commands: Record<string, string> = { ...detected.commands };
   for (const [key, value] of Object.entries(findings.commandOverrides)) {
-    if (typeof value === 'string' && value.trim().length > 0) {
+    if (typeof value !== 'string') continue;
+    if (value.trim().length > 0) {
+      // Non-empty override replaces (or adds) the command.
       commands[key] = value;
-    } else if (typeof value === 'string' && value.trim().length === 0) {
-      // Empty string = delete the command. Lets the agent remove placeholder
-      // scripts (e.g., `echo "Error: no test specified" && exit 1`).
+    } else if (value.length === 0) {
+      // A *truly empty* string (`""`) deletes the command — the documented
+      // contract for removing placeholder scripts (see agents/interviewer.md).
       delete commands[key];
     }
+    // Whitespace-only override carries no intent: keep the detected command.
   }
 
   const entry: ProjectEntry = {

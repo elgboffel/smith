@@ -65,7 +65,8 @@ function findPackageRootFrom(start: string): string | null {
     if (existsSync(manifestPath)) {
       try {
         const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8')) as { name?: string };
-        if (manifest.name === 'case') {
+        // Accept both names during the case → smith rename.
+        if (manifest.name === 'smith' || manifest.name === 'case') {
           return current;
         }
       } catch {

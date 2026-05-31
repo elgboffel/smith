@@ -195,6 +195,8 @@ function deriveBranchName(issue: IssueContext): string {
       return `${prefix}/${issue.issueNumber}`;
     case 'freeform':
       return `${prefix}/${issue.issueNumber}`;
+    case 'local-md':
+      return `${prefix}/${issue.issueNumber}`;
   }
 }
 

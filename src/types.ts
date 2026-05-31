@@ -23,7 +23,7 @@ export interface TaskJson {
   created: string;
   repo: string;
   issue?: string;
-  issueType?: 'github' | 'linear' | 'freeform';
+  issueType?: 'github' | 'linear' | 'freeform' | 'local-md';
   contractPath?: string | null;
   /**
    * Absolute path to the source issue `.md` file when the task was dispatched
@@ -422,7 +422,7 @@ export interface TaskCreateRequest {
   repo: string;
   title: string;
   description: string;
-  issueType?: 'github' | 'linear' | 'freeform';
+  issueType?: 'github' | 'linear' | 'freeform' | 'local-md';
   issue?: string;
   mode?: PipelineMode;
   profile?: PipelineProfile;
