@@ -1,0 +1,3 @@
+[test]
+# Smoke tests — no global preload, exercises real entry points
+timeout = 30000
