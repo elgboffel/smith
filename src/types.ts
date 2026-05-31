@@ -184,6 +184,14 @@ export interface ProjectEntry {
   commands: Record<string, string>;
   credentials?: string;
   verificationNotes?: string;
+  /** Key used to namespace learnings. Defaults to `name` when absent. */
+  learningsKey?: string;
+  /** Output mode (e.g. 'commit'). */
+  output?: string;
+  /** Notification config. */
+  notify?: Record<string, unknown>;
+  /** Promotion target for merged work. */
+  promoteTo?: string;
 }
 
 export function resolveEvidenceStrategy(project?: ProjectEntry): EvidenceStrategy {
