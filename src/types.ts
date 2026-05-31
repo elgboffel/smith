@@ -25,6 +25,12 @@ export interface TaskJson {
   issue?: string;
   issueType?: 'github' | 'linear' | 'freeform';
   contractPath?: string | null;
+  /**
+   * Absolute path to the source issue `.md` file when the task was dispatched
+   * from a local-md issue. The closer flips its `Status:` to done and appends a
+   * `## Comments` entry (commit-only close).
+   */
+  issuePath?: string | null;
   branch?: string;
   mode?: PipelineMode;
   /** Pipeline profile — determines which phases run (default: 'standard') */
@@ -139,6 +145,12 @@ export interface PipelineConfig {
   taskMdPath: string;
   repoPath: string;
   repoName: string;
+  /**
+   * Absolute path to the source issue `.md` file, when the run was dispatched
+   * from a local-md issue. The closer flips its `Status:` to done and appends a
+   * `## Comments` entry as the closed-loop record (commit-only close).
+   */
+  issuePath?: string | null;
   /** Project metadata from projects.json, when the config was built from the manifest. */
   project?: ProjectEntry;
   /** Disk checkout for package asset overrides, or embedded://case in portable binaries. */
@@ -274,7 +286,6 @@ export type OutcomeKind =
   | 'fail-no-code-changes'
   | 'fail-critical-findings'
   | 'fail-soft-findings'
-  | 'fail-github-unreachable'
   | 'fail-evidence-missing'
   | 'abort-user'
   | 'budget-exhausted';

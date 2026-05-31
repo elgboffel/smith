@@ -104,7 +104,7 @@ export async function buildPipelineConfig(opts: {
 }): Promise<PipelineConfig> {
   const taskJsonPath = resolve(opts.taskJsonPath);
   const raw = await Bun.file(taskJsonPath).text();
-  const task = JSON.parse(raw) as { repo: string; mode?: PipelineMode };
+  const task = JSON.parse(raw) as { repo: string; mode?: PipelineMode; issuePath?: string | null };
 
   const packageRoot = resolvePackageRoot();
 
@@ -136,5 +136,7 @@ export async function buildPipelineConfig(opts: {
     dataDir,
     maxRetries: 1,
     dryRun: opts.dryRun ?? false,
+    // Commit-only close: the closer updates this source issue file's status.
+    issuePath: task.issuePath ? resolve(task.issuePath) : null,
   };
 }

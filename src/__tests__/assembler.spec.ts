@@ -212,6 +212,25 @@ describe('assemblePrompt', () => {
     expect(prompt).toContain('0 critical, 1 warning');
   });
 
+  it('closer context includes the source issue file path when set', async () => {
+    const issuePath = join(tempCaseRoot, 'issues', '06-finalizer.md');
+    const prompt = await assemblePrompt(
+      'closer',
+      makeConfig({ issuePath }),
+      makeTask(),
+      emptyRepoContext,
+      new Map(),
+    );
+
+    expect(prompt).toContain('Issue file');
+    expect(prompt).toContain(issuePath);
+  });
+
+  it('closer context omits the issue file line when issuePath is unset', async () => {
+    const prompt = await assemblePrompt('closer', makeConfig(), makeTask(), emptyRepoContext, new Map());
+    expect(prompt).not.toContain('Issue file');
+  });
+
   it('missing learnings file results in empty string (not error)', async () => {
     const prompt = await assemblePrompt('implementer', makeConfig(), makeTask(), emptyRepoContext, new Map());
 

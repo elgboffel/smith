@@ -30,7 +30,7 @@ export class UnknownOutcomeError extends Error {
 /**
  * Subset of `OutcomeKind` values that may actually be surfaced by each phase.
  * Used by exhaustiveness tests to skip non-applicable combinations
- * (e.g. `fail-github-unreachable` only makes sense for `close`).
+ * (e.g. `fail-no-code-changes` only makes sense for `implement`).
  */
 const APPLICABLE_OUTCOMES: Record<PhaseName, readonly OutcomeKind[]> = {
   scout: ['success', 'fail-timeout', 'fail-agent-protocol', 'abort-user'],
@@ -63,7 +63,7 @@ const APPLICABLE_OUTCOMES: Record<PhaseName, readonly OutcomeKind[]> = {
     'budget-exhausted',
     'abort-user',
   ],
-  close: ['success', 'fail-github-unreachable', 'fail-agent-protocol', 'fail-timeout', 'abort-user'],
+  close: ['success', 'fail-agent-protocol', 'fail-timeout', 'abort-user'],
   retrospective: ['success', 'fail-timeout', 'fail-agent-protocol'],
 } as const;
 
@@ -94,7 +94,6 @@ export const ALL_OUTCOMES: readonly OutcomeKind[] = [
   'fail-no-code-changes',
   'fail-critical-findings',
   'fail-soft-findings',
-  'fail-github-unreachable',
   'fail-evidence-missing',
   'abort-user',
   'budget-exhausted',
@@ -180,7 +179,6 @@ const MATRIX = new Map<PhaseOutcomeKey, OutcomeAction>([
 
   // ---- close ----
   [k('close', 'success'), { action: 'advance', to: 'retrospective' }],
-  [k('close', 'fail-github-unreachable'), { action: 'retry', maxAttempts: 1 }],
   [
     k('close', 'fail-agent-protocol'),
     { action: 'surface', message: 'closer returned malformed AGENT_RESULT; manual PR may be required' },

@@ -371,8 +371,7 @@ async function dispatchNode(
         }
         return { ...output.result, status: 'completed' };
       }
-      const prUrl = output.result.artifacts.prUrl;
-      if (prUrl) notifier.send(`PR created: ${prUrl}`);
+      notifier.send('Close complete: issue marked done.');
       previousResults.set('closer', output.result);
       return output.result;
     }

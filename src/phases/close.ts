@@ -8,8 +8,13 @@ import { createLogger } from '../util/logger.js';
 const log = createLogger();
 
 /**
- * Step 7: Spawn closer to create PR.
- * Status is managed by pipeline events — closer just runs the agent.
+ * Step 7: Spawn closer for a commit-only close.
+ *
+ * The implementer already left a single clean conventional commit; the closer
+ * does NO git history surgery and opens NO PR. Its job is to confirm the work
+ * is committed (and not on a protected branch), then flip the source issue
+ * file's `Status:` to done and append a `## Comments` entry. Status is managed
+ * by pipeline events — closer just runs the agent.
  */
 export async function runClosePhase(
   config: PipelineConfig,
@@ -59,15 +64,8 @@ export async function runClosePhase(
   });
 
   if (result.status === 'completed') {
-    if (result.artifacts.prUrl) {
-      await store.setField('prUrl', result.artifacts.prUrl);
-    }
-    if (result.artifacts.prNumber) {
-      await store.setField('prNumber', String(result.artifacts.prNumber));
-    }
-
     previousResults.set('closer', result);
-    log.phase('close', 'completed', { prUrl: result.artifacts.prUrl });
+    log.phase('close', 'completed');
     return {
       result,
       nextPhase: 'retrospective',
@@ -85,15 +83,12 @@ export async function runClosePhase(
 }
 
 /**
- * Translate a closer failure into a typed outcome. The matrix routes
- * `fail-github-unreachable` to a single retry; other failures bubble up as
- * `surface` so a human can verify whether a partial PR exists.
+ * Translate a closer failure into a typed outcome. Commit-only close has no
+ * network/GitHub surface, so the only structured failures are timeouts and
+ * malformed agent protocol; both bubble up as `surface` so a human can inspect.
  */
 function classifyCloseFailure(result: AgentResult): PhaseOutcome {
   const err = (result.error ?? '').toLowerCase();
-  if (err.includes('github') || err.includes('gh ') || err.includes('rate limit') || err.includes('network')) {
-    return { phase: 'close', outcome: 'fail-github-unreachable', details: result.error ?? undefined };
-  }
   if (err.includes('timeout') || err.includes('timed out')) {
     return { phase: 'close', outcome: 'fail-timeout', details: result.error ?? undefined };
   }

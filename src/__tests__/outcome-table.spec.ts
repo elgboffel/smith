@@ -25,10 +25,10 @@ describe('outcome matrix — exhaustiveness', () => {
 
 describe('outcome matrix — rejection of invalid combinations', () => {
   test('throws UnknownOutcomeError for non-applicable (phase, outcome) pairs', () => {
-    // `fail-github-unreachable` should only apply to `close`.
-    expect(() => resolveOutcome('implement', 'fail-github-unreachable')).toThrow(UnknownOutcomeError);
-    expect(() => resolveOutcome('verify', 'fail-github-unreachable')).toThrow(UnknownOutcomeError);
-    expect(() => resolveOutcome('review', 'fail-github-unreachable')).toThrow(UnknownOutcomeError);
+    // `fail-critical-findings` should only apply to `review`.
+    expect(() => resolveOutcome('implement', 'fail-critical-findings')).toThrow(UnknownOutcomeError);
+    expect(() => resolveOutcome('verify', 'fail-critical-findings')).toThrow(UnknownOutcomeError);
+    expect(() => resolveOutcome('close', 'fail-critical-findings')).toThrow(UnknownOutcomeError);
   });
 
   test('throws UnknownOutcomeError for outcomes not registered for a phase', () => {
@@ -40,15 +40,15 @@ describe('outcome matrix — rejection of invalid combinations', () => {
 
   test('UnknownOutcomeError carries phase and outcome context', () => {
     try {
-      resolveOutcome('verify', 'fail-github-unreachable');
+      resolveOutcome('verify', 'fail-critical-findings');
       throw new Error('expected throw');
     } catch (err) {
       expect(err).toBeInstanceOf(UnknownOutcomeError);
       const e = err as UnknownOutcomeError;
       expect(e.phase).toBe('verify');
-      expect(e.outcome).toBe('fail-github-unreachable');
+      expect(e.outcome).toBe('fail-critical-findings');
       expect(e.message).toContain('verify');
-      expect(e.message).toContain('fail-github-unreachable');
+      expect(e.message).toContain('fail-critical-findings');
     }
   });
 
@@ -149,14 +149,6 @@ describe('outcome matrix — key entries', () => {
     expect(action.action).toBe('advance');
     if (action.action === 'advance') {
       expect(action.to).toBe('retrospective');
-    }
-  });
-
-  test('close:fail-github-unreachable retries once', () => {
-    const action = resolveOutcome('close', 'fail-github-unreachable');
-    expect(action.action).toBe('retry');
-    if (action.action === 'retry') {
-      expect(action.maxAttempts).toBe(1);
     }
   });
 

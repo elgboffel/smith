@@ -138,7 +138,7 @@ function buildContextBlock(
       break;
 
     case 'closer':
-      appendCloserContext(lines, previousResults);
+      appendCloserContext(lines, config, previousResults);
       break;
 
     case 'orchestrator':
@@ -225,7 +225,16 @@ function appendReviewerContext(lines: string[], repoContext: RepoContext): void 
   lines.push('');
 }
 
-function appendCloserContext(lines: string[], previousResults: Map<AgentName, AgentResult>): void {
+function appendCloserContext(
+  lines: string[],
+  config: PipelineConfig,
+  previousResults: Map<AgentName, AgentResult>,
+): void {
+  if (config.issuePath) {
+    lines.push(`- **Issue file**: \`${config.issuePath}\``);
+    lines.push('');
+  }
+
   const verifierResult = previousResults.get('verifier');
   const reviewerResult = previousResults.get('reviewer');
 

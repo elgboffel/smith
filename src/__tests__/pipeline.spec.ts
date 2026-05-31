@@ -106,10 +106,9 @@ const completedAgentOutput: AgentResult = {
   error: null,
 };
 
-const prAgentOutput: AgentResult = {
+const closeAgentOutput: AgentResult = {
   ...completedAgentOutput,
-  summary: 'PR created',
-  artifacts: { ...completedAgentOutput.artifacts, prUrl: 'https://github.com/workos/cli/pull/42', prNumber: 42 },
+  summary: 'Close complete: issue marked done',
 };
 
 const failedAgentOutput: AgentResult = {
@@ -229,14 +228,14 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
 
     // 6 agent spawns: scout, implementer, verifier, reviewer, closer, retrospective
     expect(mockSpawnAgent).toHaveBeenCalledTimes(6);
-    expect(mockNotifierSend).toHaveBeenCalledWith(expect.stringContaining('PR created'));
+    expect(mockNotifierSend).toHaveBeenCalledWith(expect.stringContaining('Close complete'));
     expect(mockNotifierSend).toHaveBeenCalledWith('Pipeline completed successfully.');
     expect(mockWriteRunMetrics).toHaveBeenCalled();
   });
@@ -301,7 +300,7 @@ describe('runPipeline', () => {
     mockSpawnAgent
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
@@ -328,7 +327,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 })
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 })
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 })
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 })
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 })
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 });
 
     await runPipeline(config);
@@ -357,7 +356,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer (revision)
       .mockResolvedValueOnce({ raw: agentRaw(verifierClean), result: verifierClean, durationMs: 100 }) // verifier (clean)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
@@ -386,7 +385,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer (revision 2)
       .mockResolvedValueOnce({ raw: agentRaw(verifierWithFail), result: verifierWithFail, durationMs: 100 }) // verifier (budget exhausted → proceed)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
@@ -417,7 +416,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer (revision)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier (re-verify)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer (clean)
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
@@ -441,7 +440,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer
       .mockResolvedValueOnce({ raw: agentRaw(verifierWithFail), result: verifierWithFail, durationMs: 100 }) // verifier (has fails but budget=0)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig({ maxRevisionCycles: 0 }));
@@ -467,7 +466,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer revision (index 3)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier clean
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
@@ -500,7 +499,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer retry within revision succeeds (index 4)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier (clean)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     mockAnalyzeFailure.mockResolvedValueOnce({
@@ -550,7 +549,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer revision 2 (index 5)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier (clean)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
@@ -591,7 +590,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer (revision)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier (clean)
       .mockResolvedValueOnce({ raw: agentRaw(reviewerSoftFail), result: reviewerSoftFail, durationMs: 100 }) // reviewer (soft fail, budget exhausted)
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig({ maxRevisionCycles: 1 }));
@@ -610,7 +609,7 @@ describe('runPipeline', () => {
     mockSpawnAgent
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer (verify skipped)
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
@@ -644,7 +643,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer (revision)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer (clean)
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
@@ -662,7 +661,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 })
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 })
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 })
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 })
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 })
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 });
 
     await runPipeline(makeConfig());
@@ -678,7 +677,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 })
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 })
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 })
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 })
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 })
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 });
 
     await runPipeline(makeConfig());
@@ -702,7 +701,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer (revision)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier (clean)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
@@ -735,7 +734,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer retry succeeds (index 4)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier (clean)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     mockRunCommand
@@ -786,7 +785,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer (revision)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
@@ -827,7 +826,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer (revision)
       .mockResolvedValueOnce({ raw: agentRaw(verifierWithFail), result: verifierWithFail, durationMs: 100 }) // verifier (fails again, budget exhausted)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig({ maxRevisionCycles: 1 }));
@@ -856,7 +855,7 @@ describe('runPipeline', () => {
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer (revision)
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
@@ -872,7 +871,7 @@ describe('runPipeline', () => {
     mockSpawnAgent
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer
       .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
-      .mockResolvedValueOnce({ raw: agentRaw(prAgentOutput), result: prAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
       .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
 
     await runPipeline(makeConfig());
