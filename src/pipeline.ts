@@ -2,6 +2,7 @@ import type { AgentName, AgentResult, PipelineConfig, RevisionRequest, ScoutFind
 import { PROFILE_PHASES } from './types.js';
 import { TaskStore } from './state/task-store.js';
 import { formatDuration } from './notify.js';
+import { notifyRunCompletion } from './notify-completion-bridge.js';
 import { createStructuredLogRenderer } from './render/structured-log.js';
 import { createTuiRenderer, type TuiRenderer } from './render/tui-renderer.js';
 import type { Notifier } from './notify.js';
@@ -227,6 +228,9 @@ async function runPipelineBody(
   } else {
     notifier.send('Pipeline completed successfully.');
   }
+
+  // Completion signal for queued, walk-away runs (default bell + optional hook).
+  notifyRunCompletion(config, outcome === 'failed' ? 'failed' : 'done');
 }
 
 interface PipelineCallbacks {
