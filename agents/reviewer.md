@@ -23,7 +23,7 @@ You receive from the orchestrator:
 Run the session command to orient yourself:
 
 ```bash
-SESSION=$(ca session <target-repo-path> --task <task.json>)
+SESSION=$(smith session <target-repo-path> --task <task.json>)
 echo "$SESSION"
 ```
 
@@ -33,9 +33,9 @@ Read the output to understand: current branch, last commits, task status, which 
 
 1. Update task JSON:
    ```bash
-   ca status <task.json> status reviewing
-   ca status <task.json> agent reviewer status running
-   ca status <task.json> agent reviewer started now
+   smith status <task.json> status reviewing
+   smith status <task.json> agent reviewer status running
+   smith status <task.json> agent reviewer started now
    ```
 2. Read the task file — understand the issue, objective, and acceptance criteria
 3. Read the git diff to understand what the implementer changed:
@@ -125,7 +125,7 @@ Format each finding as:
 1. If **no critical findings**: create the evidence marker:
 
    ```bash
-   ca mark-reviewed \
+   smith mark-reviewed \
      --critical 0 --warnings <N> --info <N>
    ```
 
@@ -145,8 +145,8 @@ Format each finding as:
 
 4. **Update task JSON**:
    ```bash
-   ca status <task.json> agent reviewer status completed
-   ca status <task.json> agent reviewer completed now
+   smith status <task.json> agent reviewer status completed
+   smith status <task.json> agent reviewer completed now
    ```
 
 ### 4b. Score Rubric
@@ -180,7 +180,7 @@ If critical findings exist, set `"status":"blocked"` and list the critical findi
 - **Never run tests.** Read the structured test output from `.case/<task-slug>/tested` instead.
 - **Always use the Golden Principles supplied by the orchestrator.** They come from the current Case package assets.
 - **Always include file and line references** for critical and warning findings.
-- **Always create the evidence marker via `ca mark-reviewed`** — never `touch` the marker file directly.
+- **Always create the evidence marker via `smith mark-reviewed`** — never `touch` the marker file directly.
 - **Critical findings include the specific principle violated.** Not just "principle 5" but "Principle 5: No secrets in source control — found `sk_live_` in `src/config.ts:42`".
 - **If critical findings exist, do NOT create the reviewed marker.** The marker script will refuse anyway, but don't even attempt it.
 - **Always end with `<<<AGENT_RESULT` / `AGENT_RESULT>>>`.** The orchestrator depends on this.

@@ -9,7 +9,7 @@ export const description = 'Snapshot current agent prompt versions to agent-vers
 export async function handler(argv: string[]): Promise<number> {
   const agentName = argv[0];
   if (!agentName) {
-    process.stderr.write('Usage: ca snapshot <agent-name> --task <task-id> --reason "<why>"\n');
+    process.stderr.write('Usage: smith snapshot <agent-name> --task <task-id> --reason "<why>"\n');
     return 1;
   }
 

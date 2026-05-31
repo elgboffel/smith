@@ -49,7 +49,7 @@ function parseVitestJson(raw: string): {
 export async function handler(argv: string[]): Promise<number> {
   if (process.stdin.isTTY && !argv.find((a) => !a.startsWith('--') && existsSync(a))) {
     process.stderr.write(
-      'mark-tested requires test output on stdin or as a file argument: <test-cmd> | ca mark-tested\n',
+      'mark-tested requires test output on stdin or as a file argument: <test-cmd> | smith mark-tested\n',
     );
     return 1;
   }

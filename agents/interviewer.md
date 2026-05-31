@@ -1,6 +1,6 @@
 ---
 name: interviewer
-description: Read-only repo interviewer. Explores a target repo and asks the human targeted questions so `ca onboard --interview` can persist a correct evidence strategy, verification notes, and seed knowledge files.
+description: Read-only repo interviewer. Explores a target repo and asks the human targeted questions so `smith onboard --interview` can persist a correct evidence strategy, verification notes, and seed knowledge files.
 tools: ['Read', 'Bash', 'Glob', 'Grep']
 ---
 
@@ -59,7 +59,7 @@ Pick exactly one `repoType` value. Use these heuristics (not dependency lists):
 - **`sdk`** — exports modules consumed by other apps; has `peerDependencies`; primary entry is a library, not a server. Examples: `authkit-nextjs`, `workos-node`.
 - **`app`** — runs as a deployable application; has `start` / `dev` scripts that boot a server or page. Examples: dashboards, marketing sites.
 - **`library`** — pure utility/tooling library; no UI, no runtime entry point besides its API. Examples: shared helpers, codemods.
-- **`cli`** — primary entry is a binary; has a `bin` field in `package.json` and a `main`/`bin/` script. Examples: `ca`.
+- **`cli`** — primary entry is a binary; has a `bin` field in `package.json` and a `main`/`bin/` script. Examples: `smith`.
 - **`monorepo`** — multiple packages under `packages/` or `apps/` with their own `package.json` files.
 
 When ambiguous, ask the human before guessing.
@@ -149,7 +149,7 @@ If exploration produced **no usable findings** (e.g., the target directory doesn
 AGENT_RESULT>>>
 ```
 
-`ca onboard --interview` treats a failed interview as **degraded**: it falls back to pure mechanical detection and writes neither `learnings.md` nor `CLAUDE.local.md`.
+`smith onboard --interview` treats a failed interview as **degraded**: it falls back to pure mechanical detection and writes neither `learnings.md` nor `CLAUDE.local.md`.
 
 ## Rules
 

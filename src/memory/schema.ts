@@ -2,7 +2,7 @@
  * Structured working memory schema.
  *
  * Working memory lives at `<repoPath>/.case/<task-slug>/working-memory.json`.
- * It is written by the implementer/verifier agents (via `ca update-memory`)
+ * It is written by the implementer/verifier agents (via `smith update-memory`)
  * and read by the orchestrator before dispatching each phase, so the next
  * agent inherits context about what was tried, what failed, and what files
  * changed.
@@ -91,7 +91,7 @@ export function validateWorkingMemory(value: unknown): WorkingMemory {
 
 /**
  * Validate a partial update — same checks as `validateWorkingMemory` but
- * every top-level field is optional. Used by the `ca update-memory` CLI
+ * every top-level field is optional. Used by the `smith update-memory` CLI
  * before merging into the persisted snapshot.
  */
 export function validateWorkingMemoryUpdate(value: unknown): WorkingMemoryUpdate {

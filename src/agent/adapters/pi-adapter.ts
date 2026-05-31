@@ -202,7 +202,7 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
         return [createReadTool(cwd), createBashTool(cwd)];
       case 'interviewer':
         // Same read-only constraint as scout: Read + Bash. The interviewer
-        // explores the target repo before `ca onboard --interview` persists
+        // explores the target repo before `smith onboard --interview` persists
         // results; it must never mutate the working tree. Human Q&A flows
         // through the conversation channel, not a tool.
         return [createReadTool(cwd), createBashTool(cwd)];

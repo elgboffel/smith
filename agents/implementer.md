@@ -26,7 +26,7 @@ You receive from the orchestrator:
 Run the session command to orient yourself:
 
 ```bash
-SESSION=$(ca session <target-repo-path> --task <task.json>)
+SESSION=$(smith session <target-repo-path> --task <task.json>)
 echo "$SESSION"
 ```
 
@@ -36,9 +36,9 @@ Read the output to understand: current branch, last commits, task status, which 
 
 1. Update task JSON: set status to `implementing` and agent phase to running
    ```bash
-   ca status <task.json> status implementing
-   ca status <task.json> agent implementer status running
-   ca status <task.json> agent implementer started now
+   smith status <task.json> status implementing
+   smith status <task.json> agent implementer status running
+   smith status <task.json> agent implementer started now
    ```
 2. Read the task file (`.md`) — understand the objective, acceptance criteria, and checklist
 3. Read the target repo's `CLAUDE.md` for project-specific instructions
@@ -53,7 +53,7 @@ Read the output to understand: current branch, last commits, task status, which 
    ```
    If `checkBaseline` is null in the task JSON, save the baseline:
    ```bash
-   ca status <task.json> checkBaseline "$BASELINE"
+   smith status <task.json> checkBaseline "$BASELINE"
    ```
 
 ### 2. Implement
@@ -195,9 +195,9 @@ Fix any errors before proceeding. Warnings should be addressed if feasible but d
 
    ```bash
    # Preferred — structured evidence via vitest JSON reporter
-   pnpm test --reporter=json 2>&1 | ca mark-tested
+   pnpm test --reporter=json 2>&1 | smith mark-tested
    # Fallback — if JSON reporter is unavailable or the repo doesn't use vitest
-   pnpm test 2>&1 | ca mark-tested
+   pnpm test 2>&1 | smith mark-tested
    ```
 
    This creates `.case/<task-slug>/tested` with a hash of test output AND updates the task JSON `tested` field. You do NOT set `tested` directly.
@@ -224,35 +224,35 @@ Fix any errors before proceeding. Warnings should be addressed if feasible but d
 
 4. **Update task JSON**:
    ```bash
-   ca status <task.json> agent implementer status completed
-   ca status <task.json> agent implementer completed now
+   smith status <task.json> agent implementer status completed
+   smith status <task.json> agent implementer completed now
    ```
 
 ### 4b. Update Working Memory
 
-**Always do this, even on failure.** Persist structured progress via the `ca update-memory` CLI. It writes `.case/<task-slug>/working-memory.json`, which the orchestrator reads before dispatching the next phase (or the next implementer cycle).
+**Always do this, even on failure.** Persist structured progress via the `smith update-memory` CLI. It writes `.case/<task-slug>/working-memory.json`, which the orchestrator reads before dispatching the next phase (or the next implementer cycle).
 
 Record at least the current state and the approach you used. If you tried multiple approaches, record each with its outcome. If you hit errors, record their resolution status. Examples:
 
 ```bash
 # Mark a partial state after WIP commit
-ca update-memory \
+smith update-memory \
   --state "Implemented retry logic; tests still failing" \
   --approach "Exponential backoff with jitter" \
   --file src/retry.ts --file src/__tests__/retry.spec.ts
 
 # Record a failed approach so the next cycle doesn't repeat it
-ca update-memory \
+smith update-memory \
   --tried "Linear retry with fixed delay" --tried-outcome failed --tried-reason "Exceeded rate limit on burst"
 
 # Record an unresolved error
-ca update-memory \
+smith update-memory \
   --error "TypeError: Cannot read property 'foo' of undefined" \
   --error-file src/retry.ts \
   --error-status unresolved
 
 # Note a blocker
-ca update-memory --blocker "Need test credentials with retry-after header"
+smith update-memory --blocker "Need test credentials with retry-after header"
 ```
 
 Each call merges into the existing memory: array fields (files, errors, attempts, blockers) are appended and de-duplicated; scalar fields (state, approach) are replaced. The schema is validated before writing — invalid `--*-status` / `--*-outcome` values exit non-zero with an error.
@@ -276,7 +276,7 @@ If you failed, set `"status":"failed"` and fill in the `"error"` field. Still en
 - **Never start example apps.** That's the verifier's job.
 - **Never run browser automation.** That's the verifier's job.
 - **Never create PRs or push.** That's the closer's job.
-- **Never create manual-tested markers.** That's the verifier's job via `ca mark-manual-tested`.
+- **Never create manual-tested markers.** That's the verifier's job via `smith mark-manual-tested`.
 - **Never set `tested` or `manualTested` directly in task JSON.** The marker script handles `tested` as a side effect.
 - **Always commit before returning.** The verifier needs a clean diff to review.
 - **Always update the progress log.** The closer reads it to draft the PR description.

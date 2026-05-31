@@ -43,7 +43,7 @@ export async function loadProjectsManifest(caseRoot: string): Promise<LoadedProj
       if (i > 0 && !deprecationWarned && process.env.CASE_QUIET !== '1') {
         deprecationWarned = true;
         process.stderr.write(
-          `case: deprecation — projects.json read from legacy path ${candidate.path}; move it to ${candidates[0]?.path} (or run 'ca init --migrate-from <repo>').\n`,
+          `case: deprecation — projects.json read from legacy path ${candidate.path}; move it to ${candidates[0]?.path} (or run 'smith init --migrate-from <repo>').\n`,
         );
       }
       const raw = await file.text();
@@ -58,7 +58,7 @@ export async function loadProjectsManifest(caseRoot: string): Promise<LoadedProj
     candidates.length > 0
       ? candidates.map((candidate) => candidate.path).join('\n  ')
       : '(no configured projects path)';
-  throw new Error(`projects.json not found. Looked in:\n  ${looked}\nRun 'ca init' or set --projects.`);
+  throw new Error(`projects.json not found. Looked in:\n  ${looked}\nRun 'smith init' or set --projects.`);
 }
 
 /** Candidate paths for projects.json in resolution order. */
@@ -66,7 +66,7 @@ function projectsManifestCandidates(caseRoot: string): ProjectsManifestCandidate
   const list: ProjectsManifestCandidate[] = [];
   try {
     // Only add the user config dir candidate when the user has explicitly
-    // initialized Case by running `ca init` (which creates config.json).
+    // initialized Case by running `smith init` (which creates config.json).
     // Without this guard, every invocation falls back to the legacy in-repo
     // path and prints a spurious deprecation warning.
     if (configExists()) {

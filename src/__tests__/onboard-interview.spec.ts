@@ -278,7 +278,7 @@ describe('onboard CLI flag parsing', () => {
         2,
       ),
     );
-    // ca init creates config.json; emulate that so loadProjectsManifest picks up the data dir.
+    // smith init creates config.json; emulate that so loadProjectsManifest picks up the data dir.
     await writeFile(join(tempDir, 'config.json'), JSON.stringify({ projects: 'projects.json' }));
 
     try {

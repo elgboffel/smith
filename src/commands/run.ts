@@ -15,7 +15,7 @@ export const description = 'Run the agent pipeline (default)';
  * Handler for `case run` (also the default when no verb is supplied).
  *
  * Mirrors the original inline dispatch in src/index.ts before Phase 2 — kept
- * intact for back-compat with existing `ca` invocations. Parses its own argv
+ * intact for back-compat with existing `smith` invocations. Parses its own argv
  * slice via `parseArgs` so the router stays verb-agnostic.
  */
 export async function handler(argv: string[]): Promise<number> {
@@ -101,9 +101,9 @@ export async function handler(argv: string[]): Promise<number> {
 }
 
 function printRunHelp(): void {
-  const text = `Usage: ca run [options] [issue]
-       ca [issue]
-       ca --agent [issue]
+  const text = `Usage: smith run [options] [issue]
+       smith [issue]
+       smith --agent [issue]
 
 Run the agent pipeline for a GitHub or Linear issue.
 

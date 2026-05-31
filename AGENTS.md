@@ -8,7 +8,7 @@ Humans steer. Agents execute. When agents struggle, fix the harness.
 Run the session command to gather context before doing anything else:
 
 ```bash
-SESSION=$(ca session <target-repo-path> --task <task.json>)
+SESSION=$(smith session <target-repo-path> --task <task.json>)
 echo "$SESSION"
 ```
 
@@ -47,21 +47,21 @@ Tasks are markdown files that agents execute. Runtime task files live in the tar
 
 Pipeline: scout → implementer → verifier → reviewer → closer → (retrospective)
 
-Onboarding agent (out of the pipeline): `interviewer` — invoked by `ca onboard --interview` to capture evidence strategy rationale, verification notes, and repo learnings.
+Onboarding agent (out of the pipeline): `interviewer` — invoked by `smith onboard --interview` to capture evidence strategy rationale, verification notes, and repo learnings.
 
 Lifecycle: `.case/tasks/active/` → PR opened/merged status in the task JSON
 
 ## Working in a Target Repo
 
-0. Run `ca session {repo-path} --task {task-json}` to gather context
+0. Run `smith session {repo-path} --task {task-json}` to gather context
 1. Read the repo's `CLAUDE.md` (or `CLAUDE.local.md`) for project-specific instructions
-2. Run `ca bootstrap {repo-name}` to verify readiness
+2. Run `smith bootstrap {repo-name}` to verify readiness
 3. Follow the repo's PR checklist before opening a PR
-4. Run `ca check --repo {repo-name}` to verify conventions
+4. Run `smith check --repo {repo-name}` to verify conventions
 
 ## Maintenance
 
-- **Convention checks**: `ca check` — enforce shared rules
+- **Convention checks**: `smith check` — enforce shared rules
 
 ## Improving This Harness
 

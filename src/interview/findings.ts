@@ -2,7 +2,7 @@
  * Interview findings schema + synthesis.
  *
  * The interviewer agent (see `agents/interviewer.md`) explores a target repo
- * and asks the human targeted questions before `ca onboard --interview`
+ * and asks the human targeted questions before `smith onboard --interview`
  * persists results. The agent emits an `InterviewFindings` payload inside its
  * `AGENT_RESULT` block. This module:
  *

@@ -45,7 +45,7 @@ export async function handler(argv: string[]): Promise<number> {
   if (mode === 'library') {
     if (process.stdin.isTTY) {
       process.stderr.write(
-        'REFUSED: No test output piped to stdin. Usage: pnpm test 2>&1 | ca mark-manual-tested --library\n',
+        'REFUSED: No test output piped to stdin. Usage: pnpm test 2>&1 | smith mark-manual-tested --library\n',
       );
       return 1;
     }

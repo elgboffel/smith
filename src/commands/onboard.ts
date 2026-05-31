@@ -85,8 +85,8 @@ function parseFlags(argv: string[]): OnboardFlags {
 }
 
 function printUsage(): void {
-  process.stderr.write('Usage: ca onboard <path-to-repo> [--interview]\n');
-  process.stderr.write('       ca onboard <repo-name> --re-interview\n');
+  process.stderr.write('Usage: smith onboard <path-to-repo> [--interview]\n');
+  process.stderr.write('       smith onboard <repo-name> --re-interview\n');
   process.stderr.write('\nProbes the repo for package manager, language, scripts, and git remote.\n');
   process.stderr.write('Adds an entry to projects.json with the detected settings.\n');
   process.stderr.write('\nFlags:\n');
@@ -170,7 +170,7 @@ async function runReInterview(repoName: string, caseRoot: string): Promise<numbe
 
   const manifest = await loadProjectsManifest(caseRoot).catch(() => null);
   if (!manifest) {
-    process.stderr.write(`Error: projects.json not found. Run 'ca init' or 'ca onboard <path>' first.\n`);
+    process.stderr.write(`Error: projects.json not found. Run 'smith init' or 'smith onboard <path>' first.\n`);
     return 1;
   }
 

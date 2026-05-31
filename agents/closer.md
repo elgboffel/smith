@@ -28,7 +28,7 @@ You receive from the orchestrator:
 Run the session command to orient yourself:
 
 ```bash
-SESSION=$(ca session <target-repo-path> --task <task.json>)
+SESSION=$(smith session <target-repo-path> --task <task.json>)
 echo "$SESSION"
 ```
 
@@ -37,8 +37,8 @@ Read the output to understand: current branch, last commits, task status, which 
 ### 0.5. Record Start
 
 ```bash
-ca status <task.json> agent closer status running
-ca status <task.json> agent closer started now
+smith status <task.json> agent closer status running
+smith status <task.json> agent closer started now
 ```
 
 ### 1. Pre-flight
@@ -48,7 +48,7 @@ Verify the work is in a closeable state. If any check fails, STOP — do not edi
 1. **Reviewer ran**: confirm `agents.reviewer.status` is `"completed"`
 
    ```bash
-   test "$(ca status <task.json> agent reviewer status)" = "completed"
+   test "$(smith status <task.json> agent reviewer status)" = "completed"
    ```
 
 2. **Work is committed**: the working tree must be clean (the implementer commits before returning). A dirty tree means uncommitted work — STOP.
@@ -102,8 +102,8 @@ Use the `Edit` tool for both changes so the rest of the issue file is preserved 
 Append to the task file's Progress Log and mark yourself complete:
 
 ```bash
-ca status <task.json> agent closer status completed
-ca status <task.json> agent closer completed now
+smith status <task.json> agent closer status completed
+smith status <task.json> agent closer completed now
 ```
 
 ```markdown

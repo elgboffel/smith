@@ -447,7 +447,7 @@ export interface TaskCreateRequest {
  * Structured, schema-validated working memory persisted between phases.
  *
  * Lives at `<repoPath>/.case/<task-slug>/working-memory.json`. Written by
- * agents via `ca update-memory`, read by the orchestrator to inject prior
+ * agents via `smith update-memory`, read by the orchestrator to inject prior
  * context into each phase's prompt. Versioned for forward-compat.
  */
 export interface WorkingMemory {
@@ -508,7 +508,7 @@ export interface ScoutFindings {
   suggestedApproach?: string;
 }
 
-// --- Interview findings (ca onboard --interview) ---
+// --- Interview findings (smith onboard --interview) ---
 
 /**
  * Repo classification used to validate evidence strategy and drive
@@ -519,7 +519,7 @@ export type RepoType = 'sdk' | 'app' | 'library' | 'cli' | 'monorepo';
 
 /**
  * Structured output emitted by the interviewer agent inside an `AGENT_RESULT`
- * block. Captures everything `ca onboard --interview` needs to:
+ * block. Captures everything `smith onboard --interview` needs to:
  *
  *   1. Override the evidence-strategy heuristic with a human-confirmed choice.
  *   2. Populate `verificationNotes` / `credentials` in the projects.json entry.

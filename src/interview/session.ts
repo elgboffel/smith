@@ -1,5 +1,5 @@
 /**
- * Interactive interviewer session for `ca onboard --interview`.
+ * Interactive interviewer session for `smith onboard --interview`.
  *
  * Runs the interviewer agent inside pi-coding-agent's InteractiveMode TUI so
  * the human gets a full interactive editor for free-form answers. The agent
@@ -45,7 +45,7 @@ import { parseAgentResult } from '../util/parse-agent-result.js';
 import { parseInterviewFindings } from './findings.js';
 import type { InterviewFindings, ProjectEntry } from '../types.js';
 
-/** Mechanical probe results passed in by `ca onboard`. */
+/** Mechanical probe results passed in by `smith onboard`. */
 export interface InterviewSessionDetected {
   name: string;
   path: string;

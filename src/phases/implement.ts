@@ -177,7 +177,7 @@ async function attemptRetry(
  * Read structured working memory (if present) and prepend it as a `## Prior
  * Context` section. Returns `basePrompt` unchanged on cold start. Falls back
  * silently on read errors — the legacy `working.md` injected by the assembler
- * still covers the no-memory case until agents adopt `ca update-memory`.
+ * still covers the no-memory case until agents adopt `smith update-memory`.
  */
 function prependWorkingMemory(basePrompt: string, config: PipelineConfig): string {
   const slug = taskSlugFromTaskJsonPath(config.taskJsonPath);

@@ -1,5 +1,5 @@
 /**
- * `ca update-memory` — agent-facing CLI to write structured working memory.
+ * `smith update-memory` — agent-facing CLI to write structured working memory.
  *
  * Agents call this between meaningful steps to record what they tried, what
  * failed, which files changed, and what's blocking them. The orchestrator
@@ -197,7 +197,7 @@ function isApproachOutcome(value: string): value is ApproachOutcome {
 
 function usage(): string {
   return [
-    'Usage: ca update-memory [flags]',
+    'Usage: smith update-memory [flags]',
     '',
     'Flags:',
     '  --state <text>            Set currentState',

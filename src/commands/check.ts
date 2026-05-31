@@ -68,10 +68,10 @@ export async function handler(argv: string[]): Promise<number> {
     if (argv[i] === '--repo') repoName = argv[++i] ?? '';
     else if (argv[i] === '--run-tests') runTests = true;
     else if (argv[i] === '--help' || argv[i] === '-h') {
-      process.stdout.write('Usage: ca check [--repo <name>] [--run-tests]\n');
+      process.stdout.write('Usage: smith check [--repo <name>] [--run-tests]\n');
       return 0;
     } else {
-      process.stderr.write(`Unknown option: ${argv[i]}\nUsage: ca check [--repo <name>] [--run-tests]\n`);
+      process.stderr.write(`Unknown option: ${argv[i]}\nUsage: smith check [--repo <name>] [--run-tests]\n`);
       return 1;
     }
   }

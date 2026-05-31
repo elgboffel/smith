@@ -8,13 +8,13 @@ including suboptimal ones. Continuous scanning catches drift early.
 Run a one-time scan across all repos:
 
 ```bash
-ca check
+smith check
 ```
 
 Scan a specific repo:
 
 ```bash
-ca check --repo cli
+smith check --repo cli
 ```
 
 ## Continuous Scanning with /loop
@@ -22,7 +22,7 @@ ca check --repo cli
 During active work sessions, scan periodically:
 
 ```
-/loop 30m ca check
+/loop 30m smith check
 ```
 
 This runs every 30 minutes while your session is active. The scan:
@@ -34,9 +34,9 @@ This runs every 30 minutes while your session is active. The scan:
 
 | Scenario                 | Interval | Command                           |
 | ------------------------ | -------- | --------------------------------- |
-| Active multi-repo work   | 30m      | `/loop 30m ca check`              |
-| Focused single-repo work | 1h       | `/loop 1h ca check --repo {name}` |
-| Background monitoring    | 2h       | `/loop 2h ca check`               |
+| Active multi-repo work   | 30m      | `/loop 30m smith check`              |
+| Focused single-repo work | 1h       | `/loop 1h smith check --repo {name}` |
+| Background monitoring    | 2h       | `/loop 2h smith check`               |
 
 ### Limitations
 
@@ -47,7 +47,7 @@ This runs every 30 minutes while your session is active. The scan:
 
 ## What Gets Checked
 
-`ca check` validates:
+`smith check` validates:
 
 1. CLAUDE.md exists in each repo
 2. Required commands in package.json
@@ -64,4 +64,4 @@ When drift is detected:
 1. Read the failures array in the JSON output
 2. Fix the lowest-effort issues first (commit format, missing fields)
 3. For structural issues (file sizes, missing tests), create a task in the target repo's `.case/tasks/active/`
-4. Run `ca check --repo {name}` to verify fixes
+4. Run `smith check --repo {name}` to verify fixes

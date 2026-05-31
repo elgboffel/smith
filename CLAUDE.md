@@ -27,7 +27,7 @@ It provides the cross-cutting knowledge, conventions, and task dispatch that no 
 - Architecture patterns that span multiple repos
 - Playbooks for recurring operations
 - Task files and templates
-- TypeScript CLI guardrails (`ca check`, `ca bootstrap`, evidence marker commands)
+- TypeScript CLI guardrails (`smith check`, `smith bootstrap`, evidence marker commands)
 - Pipeline orchestrator (TypeScript)
 
 **In individual repos:**
@@ -68,14 +68,14 @@ src/commands/
 
 ```bash
 # Check conventions across repos (also validates the manifest)
-ca check
+smith check
 
 # Check a single repo
-ca check --repo cli
+smith check --repo cli
 
 # Bootstrap a repo for agent work
-ca bootstrap cli
+smith bootstrap cli
 
 # Onboard a new repo
-ca onboard <path>
+smith onboard <path>
 ```

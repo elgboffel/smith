@@ -129,7 +129,7 @@ export async function handler(argv: string[]): Promise<number> {
   const errorSummary = argv[2] ?? '';
 
   if (!taskFile || !failedAgent) {
-    process.stderr.write('Usage: ca analyze-failure <task.json> <failed-agent> <error-summary>\n');
+    process.stderr.write('Usage: smith analyze-failure <task.json> <failed-agent> <error-summary>\n');
     return 1;
   }
 

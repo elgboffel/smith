@@ -3,7 +3,7 @@ import { formatDuration, formatPhaseEnd, formatPhaseHeader, formatToolLine } fro
 import { cyan, dim, green, red, yellow } from '../render/color.js';
 
 /**
- * Render a single PipelineEvent for `ca watch`. Uses the same formatting
+ * Render a single PipelineEvent for `smith watch`. Uses the same formatting
  * primitives as the inline structured log, with colors applied (respecting
  * NO_COLOR / FORCE_COLOR / TTY detection in `render/color.ts`).
  */

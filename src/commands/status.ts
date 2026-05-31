@@ -94,7 +94,7 @@ export async function handler(argv: string[]): Promise<number> {
 
   if (!taskFile || !field) {
     process.stderr.write(
-      'Usage: ca status <task.json> <field> [value] [--from-marker]\n\n' +
+      'Usage: smith status <task.json> <field> [value] [--from-marker]\n\n' +
         'Fields: status, id, repo, issue, issueType, branch, tested, manualTested, prUrl, prNumber, contractPath\n' +
         'Special: agent <name> <started|completed|status> [value]\n',
     );
@@ -118,7 +118,7 @@ export async function handler(argv: string[]): Promise<number> {
     const agentField = extra;
     const agentValue = argv[4];
     if (!agentName || !agentField) {
-      process.stderr.write('Usage: ca status <task.json> agent <name> <started|completed|status> [value]\n');
+      process.stderr.write('Usage: smith status <task.json> agent <name> <started|completed|status> [value]\n');
       return 1;
     }
     const data = readTask(taskFile);
@@ -152,7 +152,7 @@ export async function handler(argv: string[]): Promise<number> {
   // Evidence flag guard
   if ((field === 'tested' || field === 'manualTested') && extra !== '--from-marker') {
     process.stderr.write(
-      `Error: ${field} can only be set by marker commands (pass --from-marker)\nUse ca mark-tested or ca mark-manual-tested instead.\n`,
+      `Error: ${field} can only be set by marker commands (pass --from-marker)\nUse smith mark-tested or smith mark-manual-tested instead.\n`,
     );
     return 1;
   }

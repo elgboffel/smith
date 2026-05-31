@@ -1,5 +1,5 @@
 /**
- * `ca init` — scaffold the user config directory and write a default `config.json`.
+ * `smith init` — scaffold the user config directory and write a default `config.json`.
  *
  * Idempotent and non-destructive: re-running prints the current path and exits 0.
  * Pass `--force` to rewrite `config.json` (state directories are never deleted).
@@ -92,7 +92,7 @@ export async function handler(argv: string[]): Promise<number> {
       strict: true,
     });
   } catch (err) {
-    process.stderr.write(`ca init: ${(err as Error).message}\n`);
+    process.stderr.write(`smith init: ${(err as Error).message}\n`);
     printHelp();
     return 1;
   }
@@ -109,7 +109,7 @@ export async function handler(argv: string[]): Promise<number> {
       (err as NodeJS.ErrnoException).code === 'EACCES'
         ? `permission denied at ${resolveDataDir()} — try CASE_DATA_DIR=/writable/path`
         : (err as Error).message;
-    process.stderr.write(`ca init: ${msg}\n`);
+    process.stderr.write(`smith init: ${msg}\n`);
     return 1;
   }
 }
@@ -117,7 +117,7 @@ export async function handler(argv: string[]): Promise<number> {
 function printHelp(): void {
   process.stdout.write(
     [
-      'Usage: ca init [options]',
+      'Usage: smith init [options]',
       '',
       'Scaffold the case config directory (default: ~/.config/case/) and write config.json.',
       'Per-repo task runtime state is stored under each target repo .case/ directory.',

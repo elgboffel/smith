@@ -75,7 +75,7 @@ export async function handler(argv: string[]): Promise<number> {
   const caseRoot = resolvePackageRoot();
   if (!repoName || repoName === '--help' || repoName === '-h') {
     const projects = await loadProjects(caseRoot).catch(() => []);
-    process.stderr.write('Usage: ca bootstrap <repo-name>\n');
+    process.stderr.write('Usage: smith bootstrap <repo-name>\n');
     if (projects.length > 0) {
       process.stderr.write('\nAvailable repos:\n');
       for (const project of projects) process.stderr.write(`  ${project.name}\n`);

@@ -25,7 +25,7 @@ The north star:
 From a target repo:
 
 ```bash
-ca 1234
+smith 1234
 ```
 
 Case detects the repo, fetches the GitHub issue, creates task files, runs a baseline check, and dispatches the pipeline:
@@ -37,22 +37,22 @@ scout -> implementer -> verifier -> reviewer -> closer -> retrospective
 For unclear work, use the human steering path:
 
 ```bash
-ca --agent
-ca --agent 1234
+smith --agent
+smith --agent 1234
 ```
 
-`ca --agent` starts an interactive orchestrator session. It can inspect context, fetch issues, help shape the task, create the task file, and then run the pipeline. It should not implement directly. This is the primary interface for “humans steer.”
+`smith --agent` starts an interactive orchestrator session. It can inspect context, fetch issues, help shape the task, create the task file, and then run the pipeline. It should not implement directly. This is the primary interface for “humans steer.”
 
 For an existing task file:
 
 ```bash
-ca run --task .case/tasks/active/cli-1-issue-53.task.json
+smith run --task .case/tasks/active/cli-1-issue-53.task.json
 ```
 
 To resume an interrupted issue run, re-run the same command:
 
 ```bash
-ca 1234
+smith 1234
 ```
 
 Case reuses the existing task when it finds one and resumes from stored state.
@@ -61,7 +61,7 @@ Case reuses the existing task when it finds one and resumes from stored state.
 
 Case should stay focused on the PR loop. A feature belongs when it does at least one of these:
 
-- Makes `ca <issue>` or `ca --agent <issue>` more likely to produce a correct PR.
+- Makes `smith <issue>` or `smith --agent <issue>` more likely to produce a correct PR.
 - Converts an observed agent failure into a repeatable guardrail.
 - Preserves context isolation, evidence, or resumability.
 - Can be tested hermetically without depending on one user's machine.
@@ -83,60 +83,60 @@ Requires [Bun](https://bun.sh) >= 1.0.
 ```bash
 bun install
 bun link
-ca init
+smith init
 ```
 
-`ca init` creates `~/.config/case/` and migrates local state from the repo when run from the case checkout. Re-running it is safe.
+`smith init` creates `~/.config/case/` and migrates local state from the repo when run from the case checkout. Re-running it is safe.
 
 Build a standalone binary:
 
 ```bash
 bun run build:binary
-cp dist/ca /usr/local/bin/ca
+cp dist/smith /usr/local/bin/smith
 ```
 
-`build:binary` regenerates the embedded package asset manifest before compiling. The resulting `dist/ca` is portable: agent prompts, docs, playbooks, and AST rules are bundled into the executable. The binary is `ca` because `case` is a reserved word in bash and zsh.
+`build:binary` regenerates the embedded package asset manifest before compiling. The resulting `dist/smith` is portable: agent prompts, docs, playbooks, and AST rules are bundled into the executable.
 
 ## CLI
 
 Primary commands:
 
 ```bash
-ca 1234                 # create or resume a GitHub issue run
-ca DX-1234              # create or resume a Linear issue run
-ca --agent              # interactive steering session
-ca --agent 1234         # steering session with issue context
-ca onboard <path>                    # add a repo to projects.json
-ca onboard <path> --interview        # add a repo with an interactive interview
-ca onboard <repo> --re-interview     # re-interview an already-onboarded repo
-ca run --task <file>    # run an existing task JSON
-ca watch <task-slug>    # live-tail the event log
+smith 1234                 # create or resume a GitHub issue run
+smith DX-1234              # create or resume a Linear issue run
+smith --agent              # interactive steering session
+smith --agent 1234         # steering session with issue context
+smith onboard <path>                    # add a repo to projects.json
+smith onboard <path> --interview        # add a repo with an interactive interview
+smith onboard <repo> --re-interview     # re-interview an already-onboarded repo
+smith run --task <file>    # run an existing task JSON
+smith watch <task-slug>    # live-tail the event log
 ```
 
 Agent-facing commands:
 
 ```bash
-ca session <repo-path> --task <task.json>
-ca status <task.json> [field value...]
-ca mark-tested
-ca mark-manual-tested
-ca mark-reviewed --critical 0
-ca update-memory --state "..." --approach "..." --file <path>
-ca upload <file>
-ca snapshot <agent-name>
-ca create --repo <name> --title <title> --description <text> --evidence <expectations>
-ca analyze-failure <task.json> <agent> <error>
-ca bootstrap <repo>
-ca check [--repo <repo>]
+smith session <repo-path> --task <task.json>
+smith status <task.json> [field value...]
+smith mark-tested
+smith mark-manual-tested
+smith mark-reviewed --critical 0
+smith update-memory --state "..." --approach "..." --file <path>
+smith upload <file>
+smith snapshot <agent-name>
+smith create --repo <name> --title <title> --description <text> --evidence <expectations>
+smith analyze-failure <task.json> <agent> <error>
+smith bootstrap <repo>
+smith check [--repo <repo>]
 ```
 
 Common flags:
 
 ```bash
-ca --model claude-opus-4-5 1234
-ca run --task <file> --mode unattended
-ca run --task <file> --dry-run
-ca run --fresh 1234
+smith --model claude-opus-4-5 1234
+smith run --task <file> --mode unattended
+smith run --task <file> --dry-run
+smith run --fresh 1234
 ```
 
 ## Storage Layout
@@ -167,14 +167,14 @@ Package-level config lives under `~/.config/case/`. Per-repo runtime state lives
 Override the config/cache directory with:
 
 ```bash
-CASE_DATA_DIR=/tmp/case-test ca init
+CASE_DATA_DIR=/tmp/case-test smith init
 ```
 
 Static package assets are versioned with Case and embedded into the standalone binary: `agents/`, markdown under `docs/`, and text rules under `ast-rules/`. When running from a checkout, disk files win so local prompt/doc edits are picked up immediately; set `CASE_PACKAGE_ROOT=/path/to/case` to force a specific checkout as the disk override.
 
 Each entry in `projects.json` may optionally include `credentials` (per-repo secrets needed for verification) and `verificationNotes` (free-form context the verifier should know about the repo).
 
-For portable binary installs, keep `projects.json` in `~/.config/case/` via `ca init --projects <path>` or `ca init --migrate-from <case-checkout>`. Repo paths in a portable `projects.json` should be absolute or relative to that `projects.json` file.
+For portable binary installs, keep `projects.json` in `~/.config/case/` via `smith init --projects <path>` or `smith init --migrate-from <case-checkout>`. Repo paths in a portable `projects.json` should be absolute or relative to that `projects.json` file.
 
 ## Pipeline
 
@@ -187,7 +187,7 @@ Profiles:
 
 Revision loops are evaluator-driven. A verifier or reviewer rubric failure can send structured feedback back to the implementer. The default revision budget is two cycles. If consecutive cycles produce identical failure fingerprints (SHA-256 of failed categories + error summary), the pipeline aborts early instead of burning the remaining budget.
 
-Every run writes an append-only event log under `<target-repo>/.case/<task-slug>/events/`. `ca watch <task-slug>` renders those events while a run is active.
+Every run writes an append-only event log under `<target-repo>/.case/<task-slug>/events/`. `smith watch <task-slug>` renders those events while a run is active.
 
 Every task carries `evidenceExpectations` — the concrete artifacts the verifier must produce. The orchestrator writes these based on the target repo's `evidenceStrategy` so the verifier knows what counts as proof up front.
 
@@ -203,7 +203,7 @@ Every task carries `evidenceExpectations` — the concrete artifacts the verifie
 | Closer        | Creates the PR after evidence gates pass                             | Implement or test                   |
 | Retrospective | Records learnings and proposes harness improvements                  | Edit target repo code               |
 
-¹ The orchestrator runs as an LLM agent session via `ca --agent`, or as TypeScript runtime code for direct `ca <issue>` dispatch.
+¹ The orchestrator runs as an LLM agent session via `smith --agent`, or as TypeScript runtime code for direct `smith <issue>` dispatch.
 
 The key boundary is context isolation. Scout context is read-only exploration of the target repo; its structured findings (relevant files, patterns, test baseline) are synthesized by the orchestrator and injected into the implementer's prompt. Implementer context includes task details, playbooks, repo learnings, scout findings, and revision feedback. Verifier context is intentionally fresher. Reviewer context is focused on the diff and principles.
 
@@ -211,9 +211,9 @@ The key boundary is context isolation. Scout context is read-only exploration of
 
 Evidence markers live under the target repo's `.case/<task-slug>/` directory:
 
-- `tested`: created by `ca mark-tested` from real test output.
-- `manual-tested`: created by `ca mark-manual-tested` from manual/browser verification evidence.
-- `reviewed`: created by `ca mark-reviewed --critical 0`.
+- `tested`: created by `smith mark-tested` from real test output.
+- `manual-tested`: created by `smith mark-manual-tested` from manual/browser verification evidence.
+- `reviewed`: created by `smith mark-reviewed --critical 0`.
 
 The closer checks these markers before opening a PR. The point is not ceremony; it is making the PR auditable without trusting a chat transcript.
 
@@ -256,14 +256,14 @@ Priority:
 
 ## Repository Map
 
-Target repos are listed in `~/.config/case/projects.json` (created by `ca init` + `ca onboard`). The schema is `projects.schema.json` in this repo.
+Target repos are listed in `~/.config/case/projects.json` (created by `smith init` + `smith onboard`). The schema is `projects.schema.json` in this repo.
 
 Add a repo with:
 
 ```bash
-ca onboard <path>                    # mechanical probe only
-ca onboard <path> --interview        # mechanical probe + interactive interview
-ca onboard <repo> --re-interview     # update an existing entry by re-interviewing
+smith onboard <path>                    # mechanical probe only
+smith onboard <path> --interview        # mechanical probe + interactive interview
+smith onboard <repo> --re-interview     # update an existing entry by re-interviewing
 ```
 
 `--interview` runs the interviewer agent after the mechanical probe to capture evidence strategy rationale, verification notes, conventions, and repo-specific learnings. The interview writes the seed `.case/learnings.md` and `CLAUDE.local.md` alongside the `projects.json` entry. `--re-interview` re-runs the interview for an existing repo and replaces its `projects.json` entry in place.
@@ -271,7 +271,7 @@ ca onboard <repo> --re-interview     # update an existing entry by re-interviewi
 Then add any needed architecture notes under `docs/architecture/` and verify with:
 
 ```bash
-ca check --repo <name>
+smith check --repo <name>
 ```
 
 ## Development Checks
@@ -288,8 +288,8 @@ bun run format:check
 For target repos:
 
 ```bash
-ca bootstrap <repo>
-ca check --repo <repo>
+smith bootstrap <repo>
+smith check --repo <repo>
 ```
 
 ## Philosophy

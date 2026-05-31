@@ -12,7 +12,7 @@
     "status": {
       "type": "string",
       "enum": ["active", "implementing", "verifying", "reviewing", "evaluating", "closing", "pr-opened", "merged"],
-      "description": "Current lifecycle status. Transitions are enforced by the task store and ca status, not this schema."
+      "description": "Current lifecycle status. Transitions are enforced by the task store and smith status, not this schema."
     },
     "created": {
       "type": "string",
@@ -68,12 +68,12 @@
     "tested": {
       "type": "boolean",
       "default": false,
-      "description": "Set by ca mark-tested only. Do not set directly."
+      "description": "Set by smith mark-tested only. Do not set directly."
     },
     "manualTested": {
       "type": "boolean",
       "default": false,
-      "description": "Set by ca mark-manual-tested only. Do not set directly."
+      "description": "Set by smith mark-manual-tested only. Do not set directly."
     },
     "prUrl": {
       "type": ["string", "null"],

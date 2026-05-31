@@ -282,7 +282,7 @@ describe('taskSlugFromTaskJsonPath', () => {
   });
 });
 
-describe('ca update-memory CLI (handler)', () => {
+describe('smith update-memory CLI (handler)', () => {
   let tempCwd: string;
   let originalCwd: string;
 

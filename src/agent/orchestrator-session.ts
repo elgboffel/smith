@@ -277,13 +277,13 @@ function minimalStatusline(cwd: string) {
 function buildOrchestratorSystemPrompt(caseRoot: string): string {
   const packageAssetLines = isEmbeddedPackageRoot(caseRoot)
     ? [
-        '- Package assets: embedded in the current `ca` binary',
+        '- Package assets: embedded in the current `smith` binary',
         '- Projects manifest: read from the configured user config path',
         '- Golden principles and agent prompts: injected by the pipeline when needed',
       ]
     : [
         `- Case root: ${caseRoot}`,
-        `- Projects manifest: ~/.config/case/projects.json (or ca onboard to add repos)`,
+        `- Projects manifest: ~/.config/case/projects.json (or smith onboard to add repos)`,
         `- Golden principles: ${caseRoot}/docs/golden-principles.md`,
         `- Agent prompts: ${caseRoot}/agents/`,
       ];
@@ -368,7 +368,7 @@ Call \`create_task\`, then \`run_pipeline\` with the created task JSON path. The
 
 ${packageAssetLines.join('\n')}
 - Convention: conventional commits, feature branches, PRs to main.
-- Working memory: agents persist progress to \`.case/<task-slug>/working-memory.json\` via \`ca update-memory\`. The pipeline reads it between phases to inject prior context — you don't need to manage it manually, but you can inspect it if a run is misbehaving.
+- Working memory: agents persist progress to \`.case/<task-slug>/working-memory.json\` via \`smith update-memory\`. The pipeline reads it between phases to inject prior context — you don't need to manage it manually, but you can inspect it if a run is misbehaving.
 
 Use the \`read\` tool for on-disk files when paths are available. Keep responses concise.`;
 }

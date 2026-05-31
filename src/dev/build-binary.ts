@@ -4,7 +4,7 @@ import { generatePackageAssets } from './generate-package-assets.js';
 
 const root = resolve(import.meta.dir, '..', '..');
 const dist = resolve(root, 'dist');
-const outfile = resolve(dist, 'ca');
+const outfile = resolve(dist, 'smith');
 
 await generatePackageAssets(root);
 rmSync(dist, { recursive: true, force: true });

@@ -23,7 +23,7 @@ You receive from the orchestrator:
 Run the session command to orient yourself:
 
 ```bash
-SESSION=$(ca session <target-repo-path> --task <task.json>)
+SESSION=$(smith session <target-repo-path> --task <task.json>)
 echo "$SESSION"
 ```
 
@@ -35,9 +35,9 @@ Read the output to understand: current branch, last commits, task status, which 
 
 1. Update task JSON:
    ```bash
-   ca status <task.json> status verifying
-   ca status <task.json> agent verifier status running
-   ca status <task.json> agent verifier started now
+   smith status <task.json> status verifying
+   smith status <task.json> agent verifier status running
+   smith status <task.json> agent verifier started now
    ```
 2. Read the task file — understand the issue, objective, and acceptance criteria
 3. **Read the `## Evidence Expectations` section.** This is the contract from the orchestrator — it specifies exactly what evidence you must produce. Your verification plan must satisfy every expectation listed. If the section is missing or vague, treat it as a defect and report it rather than guessing.
@@ -139,7 +139,7 @@ This is the critical step. Write a short script (10-30 lines) that exercises the
 9. **Create the manual-tested marker** with combined test + scenario output:
 
    ```bash
-   cat /tmp/verifier-test-output.txt | ca mark-manual-tested --library
+   cat /tmp/verifier-test-output.txt | smith mark-manual-tested --library
    ```
 
 10. Continue to step 5 (Record).
@@ -253,9 +253,9 @@ Most AuthKit example apps redirect to the WorkOS hosted login page. Follow this 
 1. **Upload before/after screenshots** for PR inclusion:
 
    ```bash
-   BEFORE=$(ca upload .playwright-cli/before.png)
+   BEFORE=$(smith upload .playwright-cli/before.png)
    echo "$BEFORE"
-   AFTER=$(ca upload .playwright-cli/after.png)
+   AFTER=$(smith upload .playwright-cli/after.png)
    echo "$AFTER"
    ```
 
@@ -264,7 +264,7 @@ Most AuthKit example apps redirect to the WorkOS hosted login page. Follow this 
 2. **(Optional) Upload video** if you recorded one for a complex flow:
 
    ```bash
-   VIDEO=$(ca upload /tmp/verification.webm)
+   VIDEO=$(smith upload /tmp/verification.webm)
    echo "$VIDEO"
    ```
 
@@ -272,7 +272,7 @@ Most AuthKit example apps redirect to the WorkOS hosted login page. Follow this 
 
 3. **Create the manual testing evidence marker:**
    ```bash
-   ca mark-manual-tested
+   smith mark-manual-tested
    ```
    This checks for recent playwright screenshots and creates `.case/<task-slug>/manual-tested` with evidence. It also updates the task JSON `manualTested` field. You do NOT set `manualTested` directly.
 
@@ -295,8 +295,8 @@ Most AuthKit example apps redirect to the WorkOS hosted login page. Follow this 
 
 2. **Update task JSON**:
    ```bash
-   ca status <task.json> agent verifier status completed
-   ca status <task.json> agent verifier completed now
+   smith status <task.json> agent verifier status completed
+   smith status <task.json> agent verifier completed now
    ```
 
 ### 5b. Score Rubric

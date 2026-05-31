@@ -60,9 +60,9 @@ Profile values: `tiny` (skip verify — docs, config, typos) and `standard` (all
 
 Issue types: `github`, `linear`, `freeform`.
 
-Read/write via: `ca status <file> <field> [value]`
+Read/write via: `smith status <file> <field> [value]`
 
-**Evidence flags** (`tested`, `manualTested`) can only be set by marker commands (`ca mark-tested`, `ca mark-manual-tested`) — not by agents directly.
+**Evidence flags** (`tested`, `manualTested`) can only be set by marker commands (`smith mark-tested`, `smith mark-manual-tested`) — not by agents directly.
 
 ### Evidence Markers
 
@@ -70,13 +70,13 @@ Evidence markers live under `.case/<task-slug>/` in the target repo. The `.case/
 
 | Marker                            | Created by              | Purpose                                          |
 | --------------------------------- | ----------------------- | ------------------------------------------------ |
-| `.case/<task-slug>/tested`        | `ca mark-tested`        | Proves automated tests ran (hash of test output) |
-| `.case/<task-slug>/manual-tested` | `ca mark-manual-tested` | Proves manual/browser testing was performed      |
-| `.case/<task-slug>/reviewed`      | `ca mark-reviewed`      | Proves code review passed (critical: 0)          |
+| `.case/<task-slug>/tested`        | `smith mark-tested`        | Proves automated tests ran (hash of test output) |
+| `.case/<task-slug>/manual-tested` | `smith mark-manual-tested` | Proves manual/browser testing was performed      |
+| `.case/<task-slug>/reviewed`      | `smith mark-reviewed`      | Proves code review passed (critical: 0)          |
 
 #### `tested` structured format
 
-When piped JSON output from `vitest --reporter=json`, `ca mark-tested` writes structured fields:
+When piped JSON output from `vitest --reporter=json`, `smith mark-tested` writes structured fields:
 
 ```
 timestamp: ...
@@ -109,7 +109,7 @@ Recovery transitions:
 
 Pipeline agents: implementer → verifier → reviewer → closer → (retrospective)
 
-Transitions are enforced by the TypeScript task store and `ca status`. Invalid transitions are rejected with an error.
+Transitions are enforced by the TypeScript task store and `smith status`. Invalid transitions are rejected with an error.
 
 ## Progress Log
 

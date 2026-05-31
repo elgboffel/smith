@@ -1,5 +1,5 @@
 /**
- * Output writers for `ca onboard --interview`.
+ * Output writers for `smith onboard --interview`.
  *
  * Each writer takes the synthesized output of {@link ../interview/findings.ts}
  * and persists it to disk:

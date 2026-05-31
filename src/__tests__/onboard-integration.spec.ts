@@ -1,5 +1,5 @@
 /**
- * End-to-end integration tests for `ca onboard --interview`.
+ * End-to-end integration tests for `smith onboard --interview`.
  *
  * Validates that interview findings produced by the interviewer agent actually
  * reach the runtime pipeline:

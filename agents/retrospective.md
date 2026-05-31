@@ -24,7 +24,7 @@ You receive from the orchestrator:
 Run the session-start command to orient yourself:
 
 ```bash
-SESSION=$(ca session <target-repo-path> --task <task.json>)
+SESSION=$(smith session <target-repo-path> --task <task.json>)
 echo "$SESSION"
 ```
 
@@ -106,7 +106,7 @@ For each finding, classify where the fix belongs:
 If any of your proposals target an agent prompt (`agents/*.md`), create a snapshot before proposing:
 
 ```bash
-ca snapshot <agent-name> \
+smith snapshot <agent-name> \
   --task "<task-filename>" \
   --reason "<1-line: what metric or failure motivated this change>"
 ```
@@ -124,7 +124,7 @@ For each finding, create a proposal file in `.case/amendments/` under the target
 **Target file:** {path relative to case/}
 **Triggered by:** {task filename} — {brief description of what happened}
 **Metrics motivation:** {what measurement or observation led to this}
-**Prompt version:** {version tag from `ca snapshot`, if target is agents/\*.md — otherwise omit}
+**Prompt version:** {version tag from `smith snapshot`, if target is agents/\*.md — otherwise omit}
 
 ## Current behavior
 

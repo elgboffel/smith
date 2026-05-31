@@ -83,7 +83,7 @@ export async function dispatch(argv: string[]): Promise<number> {
   const verb = argv[0];
 
   // Treat top-level flags (starting with `-`) as args to the default `run` handler.
-  // Preserves back-compat with `ca --task foo.json`, `ca -t foo.json`, etc.
+  // Preserves back-compat with `smith --task foo.json`, `smith -t foo.json`, etc.
   if (verb && verb.startsWith('-')) {
     return commandMap.run.handler(argv);
   }
@@ -92,7 +92,7 @@ export async function dispatch(argv: string[]): Promise<number> {
   if (!cmd) {
     // Not a registered verb — forward to `run` as a bare positional argument
     // (issue number, Linear ID, freeform text). Preserves back-compat with
-    // `case 1234`, `ca DX-1234`, `ca "fix login bug"`.
+    // `case 1234`, `smith DX-1234`, `smith "fix login bug"`.
     return commandMap.run.handler(argv);
   }
 
@@ -107,13 +107,13 @@ const groupMeta: Record<CommandGroup, { label: string; note?: string }> = {
 
 export function printHelp(): void {
   const lines: string[] = [];
-  lines.push('Usage: ca <command> [options]');
-  lines.push('       ca [issue]');
-  lines.push('       ca --agent [issue]');
+  lines.push('Usage: smith <command> [options]');
+  lines.push('       smith [issue]');
+  lines.push('       smith --agent [issue]');
   lines.push('');
   lines.push('Core:');
-  lines.push('  ca 1234           Create or resume a pipeline run from a GitHub issue');
-  lines.push('  ca --agent 1234   Start an interactive steering session before running');
+  lines.push('  smith 1234           Create or resume a pipeline run from a GitHub issue');
+  lines.push('  smith --agent 1234   Start an interactive steering session before running');
 
   const allVerbs = Object.keys(commandMap);
   const pad = Math.max(...allVerbs.map((v) => v.length)) + 2;
@@ -130,8 +130,8 @@ export function printHelp(): void {
   }
 
   lines.push('');
-  lines.push('Run `ca <command> --help` for command-specific options.');
-  lines.push('Run `ca --version` to print the version.');
+  lines.push('Run `smith <command> --help` for command-specific options.');
+  lines.push('Run `smith --version` to print the version.');
   lines.push('');
   process.stdout.write(lines.join('\n'));
 }

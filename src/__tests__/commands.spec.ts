@@ -374,7 +374,7 @@ describe('command modules — native TypeScript (smoke)', () => {
       out.restore();
     }
     // Either lists runs or reports an empty log — never the task-field usage error.
-    expect(out.lines.join('')).not.toContain('Usage: ca status <task.json>');
+    expect(out.lines.join('')).not.toContain('Usage: smith status <task.json>');
   });
 
   it('status rejects missing task file', async () => {

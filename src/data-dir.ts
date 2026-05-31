@@ -165,7 +165,7 @@ export async function migrateFromRepo(repoRoot: string): Promise<MigrationStats>
   ensureDataDir();
 
   // Per-repo runtime state (tasks, learnings, amendments, run logs) intentionally
-  // stays with each target repo under `.case/`; `ca init` only migrates user-level
+  // stays with each target repo under `.case/`; `smith init` only migrates user-level
   // config/cache files.
 
   // agent-versions

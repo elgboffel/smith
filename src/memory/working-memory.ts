@@ -9,7 +9,7 @@
  * - `mergeWorkingMemory(existing, update)` — appends to array fields (deduped by
  *   key column) and replaces scalars. Returns a new object; never mutates.
  *
- * Designed to be safe to call from the CLI `ca update-memory` command and from
+ * Designed to be safe to call from the CLI `smith update-memory` command and from
  * the orchestrator's pre-phase prompt injection.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -97,7 +97,7 @@ export function mergeWorkingMemory(existing: WorkingMemory, update: WorkingMemor
 
 /**
  * Build an empty starting snapshot. Used by the CLI when no prior memory
- * exists — the first `ca update-memory` call creates it from scratch.
+ * exists — the first `smith update-memory` call creates it from scratch.
  */
 export function emptyWorkingMemory(): WorkingMemory {
   return {

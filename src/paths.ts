@@ -154,7 +154,7 @@ export function resolveRepoLearnings(repoPath: string): string {
   return resolve(resolveRepoCaseDir(repoPath), 'learnings.md');
 }
 
-/** Resolve repo-local CLAUDE.local.md seed file written by `ca onboard --interview`. */
+/** Resolve repo-local CLAUDE.local.md seed file written by `smith onboard --interview`. */
 export function resolveRepoClaudeLocal(repoPath: string): string {
   return resolve(repoPath, 'CLAUDE.local.md');
 }
