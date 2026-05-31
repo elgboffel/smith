@@ -206,6 +206,13 @@ export interface ProjectEntry {
   promoteTo?: string | null;
   /** Per-repo recurrence threshold that emits a promotion proposal (default 3). */
   promotionThreshold?: number;
+  /**
+   * Convention-check ids this repo opts out of (see `smith check`). Skipped
+   * checks render as SKIP and don't count toward pass/fail. Ids: `claude-md`,
+   * `required-commands`, `conventional-commits`, `file-sizes`,
+   * `package-json-fields`, `tests`.
+   */
+  skipChecks?: string[];
 }
 
 export function resolveEvidenceStrategy(project?: ProjectEntry): EvidenceStrategy {

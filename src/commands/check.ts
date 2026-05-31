@@ -9,7 +9,19 @@ export const description = 'Run Case convention checks for target repos';
 
 type CheckStatus = 'PASS' | 'FAIL' | 'SKIP';
 
+/** Human label shown when a check is skipped via projects.json. */
+const CHECK_LABELS = {
+  'claude-md': 'CLAUDE.md or CLAUDE.local.md exists',
+  'required-commands': 'Required commands exist in package.json',
+  'conventional-commits': 'Conventional commits (last 10)',
+  'file-sizes': 'Source file size limit (src/)',
+  'package-json-fields': 'package.json required fields',
+  tests: 'Tests pass',
+} as const;
+
 interface CheckResult {
+  /** Stable identifier used to opt out via a repo's `skipChecks` in projects.json. */
+  id?: string;
   status: CheckStatus;
   message: string;
   remediation?: string;
@@ -21,7 +33,7 @@ interface RepoCheckResult {
   checks: CheckResult[];
 }
 
-async function runConventionChecks(
+export async function runConventionChecks(
   opts: {
     caseRoot?: string;
     repoName?: string;
@@ -47,13 +59,25 @@ async function runConventionChecks(
       continue;
     }
 
+    // A repo can opt out of specific checks via `skipChecks` in projects.json
+    // (e.g. a monorepo root that legitimately lacks package.json version/license,
+    // or a repo that doesn't follow conventional commits). A skipped check is
+    // never executed — it renders as SKIP and doesn't count toward pass/fail.
+    const skip = new Set(repo.skipChecks ?? []);
     const checks: CheckResult[] = [];
-    checks.push(checkClaudeMd(repoPath));
-    checks.push(checkRequiredCommands(repo, repoPath));
-    checks.push(await checkConventionalCommits(repoPath));
-    checks.push(checkFileSizes(repoPath));
-    checks.push(checkPackageJsonFields(repoPath));
-    if (opts.runTests) checks.push(await checkRunTests(repo, repoPath));
+    const add = async (id: keyof typeof CHECK_LABELS, run: () => CheckResult | Promise<CheckResult>): Promise<void> => {
+      if (skip.has(id)) {
+        checks.push({ id, status: 'SKIP', message: `${CHECK_LABELS[id]} (skipped per projects.json)` });
+        return;
+      }
+      checks.push({ ...(await run()), id });
+    };
+    await add('claude-md', () => checkClaudeMd(repoPath));
+    await add('required-commands', () => checkRequiredCommands(repo, repoPath));
+    await add('conventional-commits', () => checkConventionalCommits(repoPath));
+    await add('file-sizes', () => checkFileSizes(repoPath));
+    await add('package-json-fields', () => checkPackageJsonFields(repoPath));
+    if (opts.runTests) await add('tests', () => checkRunTests(repo, repoPath));
     results.push({ repo, repoPath, checks });
   }
 
@@ -68,7 +92,13 @@ export async function handler(argv: string[]): Promise<number> {
     if (argv[i] === '--repo') repoName = argv[++i] ?? '';
     else if (argv[i] === '--run-tests') runTests = true;
     else if (argv[i] === '--help' || argv[i] === '-h') {
-      process.stdout.write('Usage: smith check [--repo <name>] [--run-tests]\n');
+      process.stdout.write(
+        'Usage: smith check [--repo <name>] [--run-tests]\n' +
+          '\nA repo can opt out of individual checks by adding a "skipChecks" array to its\n' +
+          'projects.json entry, e.g. "skipChecks": ["conventional-commits", "package-json-fields"].\n' +
+          'Check ids: claude-md, required-commands, conventional-commits, file-sizes,\n' +
+          'package-json-fields, tests.\n',
+      );
       return 0;
     } else {
       process.stderr.write(`Unknown option: ${argv[i]}\nUsage: smith check [--repo <name>] [--run-tests]\n`);
@@ -89,7 +119,8 @@ export async function handler(argv: string[]): Promise<number> {
   for (const result of results) {
     process.stdout.write(`=== ${result.repo.name} (${result.repo.path}) ===\n`);
     for (const check of result.checks) {
-      process.stdout.write(`  [${check.status}] ${check.message}\n`);
+      const idLabel = check.id ? `(${check.id}) ` : '';
+      process.stdout.write(`  [${check.status}] ${idLabel}${check.message}\n`);
       if (check.remediation) process.stdout.write(`         FIX: ${check.remediation}\n`);
       if (check.status !== 'SKIP') total++;
       if (check.status === 'PASS') passed++;

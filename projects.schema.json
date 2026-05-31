@@ -82,6 +82,21 @@
             "type": "integer",
             "minimum": 1,
             "description": "Per-repo override for the recurrence hit count that emits a promotion proposal. Defaults to 3."
+          },
+          "skipChecks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "claude-md",
+                "required-commands",
+                "conventional-commits",
+                "file-sizes",
+                "package-json-fields",
+                "tests"
+              ]
+            },
+            "description": "Convention checks (`smith check`) this repo opts out of. Skipped checks render as SKIP and don't count toward pass/fail. Use for legitimate exceptions, e.g. a monorepo root lacking package.json version/license, or a repo that doesn't follow conventional commits."
           }
         },
         "additionalProperties": false
