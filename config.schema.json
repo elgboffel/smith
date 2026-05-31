@@ -17,10 +17,31 @@
         "orchestrator": { "oneOf": [{ "$ref": "#/$defs/modelConfig" }, { "type": "null" }] }
       },
       "additionalProperties": false
+    },
+    "effort": {
+      "type": "object",
+      "description": "Per-agent reasoning effort (thinking level). Higher levels trade more tokens for deeper reasoning. Unset agents use built-in defaults: scout=low, implementer=medium, verifier=medium, reviewer=high, closer=off, retrospective=low, orchestrator=medium, interviewer=low. Set 'default' to 'off' to disable extended thinking everywhere. A requested level is clamped to what the chosen model supports.",
+      "properties": {
+        "default": { "oneOf": [{ "$ref": "#/$defs/effortLevel" }, { "type": "null" }] },
+        "scout": { "oneOf": [{ "$ref": "#/$defs/effortLevel" }, { "type": "null" }] },
+        "implementer": { "oneOf": [{ "$ref": "#/$defs/effortLevel" }, { "type": "null" }] },
+        "verifier": { "oneOf": [{ "$ref": "#/$defs/effortLevel" }, { "type": "null" }] },
+        "reviewer": { "oneOf": [{ "$ref": "#/$defs/effortLevel" }, { "type": "null" }] },
+        "closer": { "oneOf": [{ "$ref": "#/$defs/effortLevel" }, { "type": "null" }] },
+        "retrospective": { "oneOf": [{ "$ref": "#/$defs/effortLevel" }, { "type": "null" }] },
+        "orchestrator": { "oneOf": [{ "$ref": "#/$defs/effortLevel" }, { "type": "null" }] },
+        "interviewer": { "oneOf": [{ "$ref": "#/$defs/effortLevel" }, { "type": "null" }] }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,
   "$defs": {
+    "effortLevel": {
+      "type": "string",
+      "enum": ["off", "minimal", "low", "medium", "high", "xhigh"],
+      "description": "Reasoning effort: off disables extended thinking; minimal<low<medium<high<xhigh increase reasoning depth and token use."
+    },
     "modelConfig": {
       "type": "object",
       "properties": {

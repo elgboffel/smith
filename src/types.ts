@@ -322,6 +322,20 @@ export interface AgentModelConfig {
   model: string;
 }
 
+/**
+ * The reasoning-effort ladder. Mirrors pi-ai's `ModelThinkingLevel` (`off` plus
+ * the extended-thinking levels). Declared once as a runtime array so the
+ * {@link AgentEffort} type and the validation list can't drift apart.
+ */
+export const AGENT_EFFORTS = ['off', 'minimal', 'low', 'medium', 'high', 'xhigh'] as const;
+
+/**
+ * Reasoning effort for an agent turn. `off` disables extended thinking; higher
+ * levels trade more tokens for deeper reasoning. The adapter clamps a requested
+ * level to what the chosen model actually supports.
+ */
+export type AgentEffort = (typeof AGENT_EFFORTS)[number];
+
 export interface SpawnAgentOptions {
   prompt: string;
   cwd: string;
@@ -335,6 +349,8 @@ export interface SpawnAgentOptions {
   provider?: string;
   /** Model ID (default: "claude-sonnet-4-20250514") */
   model?: string;
+  /** Reasoning effort override. When unset, resolved via config/env per-agent defaults. */
+  effort?: AgentEffort;
   /** Called periodically with elapsed ms while the agent is running. */
   onHeartbeat?: (elapsedMs: number) => void;
   /** Called on every tool start/end so renderers can show live activity. */

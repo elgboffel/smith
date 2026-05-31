@@ -251,8 +251,51 @@ Configure models in `~/.config/smith/config.json`:
 Priority:
 
 ```text
---model flag > explicit spawn options > config file > hardcoded default
+explicit spawn options > --model flag > config file > hardcoded default
 ```
+
+## Reasoning Effort
+
+Each agent runs with a reasoning (thinking) effort level. The ladder is tuned to where extended thinking actually earns its tokens rather than a uniform setting:
+
+| Agent         | Default  | Why                                                         |
+| ------------- | -------- | ----------------------------------------------------------- |
+| scout         | `low`    | Exploration is tool-driven; only light synthesis needed.    |
+| implementer   | `medium` | Core problem-solving and working through test failures.     |
+| verifier      | `medium` | Must design a check that exercises the *changed* path.      |
+| reviewer      | `high`   | Subtle principle/architecture bugs reward deeper reasoning. |
+| closer        | `off`    | Mechanical: confirm evidence markers, open the PR.          |
+| retrospective | `low`    | Light synthesis of learnings.                               |
+| orchestrator  | `medium` | Interactive planning and spec-writing.                      |
+| interviewer   | `low`    | Structured Q&A and repo classification.                     |
+
+Levels: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`. A requested level is clamped to what the chosen model supports — non-reasoning models collapse every level to `off`.
+
+Override in `~/.config/smith/config.json` (per-agent, with `default` as the fallback). A `null` value means "use the next level down":
+
+```json
+{
+  "effort": {
+    "default": "low",
+    "reviewer": "xhigh",
+    "closer": "off"
+  }
+}
+```
+
+Set `"effort": { "default": "off" }` to disable extended thinking everywhere (the pre-feature behaviour). Override a single run with the flag:
+
+```bash
+smith --effort high 1234
+```
+
+Priority mirrors model selection:
+
+```text
+explicit spawn options > --effort flag > config file > per-agent default
+```
+
+> **Subscription quota note:** higher effort spends more tokens. On a Claude subscription (usage caps rather than per-token billing), turning effort up across all six pipeline agents will consume quota noticeably faster.
 
 ## Repository Map
 

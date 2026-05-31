@@ -9,12 +9,12 @@ import {
   createBashTool,
 } from '@mariozechner/pi-coding-agent';
 import { loadSystemPrompt } from '../prompt-loader.js';
-import { getModelForAgent } from '../config.js';
+import { getModelForAgent, resolveThinkingLevel } from '../config.js';
 import { isEmbeddedPackageRoot } from '../../paths.js';
 import { parseAgentResult } from '../../util/parse-agent-result.js';
 import { createLogger } from '../../util/logger.js';
 import { sanitizeForTrace } from '../../tracing/sanitize.js';
-import type { AgentModelConfig, SpawnAgentOptions, SpawnAgentResult } from '../../types.js';
+import type { AgentEffort, AgentModelConfig, SpawnAgentOptions, SpawnAgentResult } from '../../types.js';
 import type { CaseAgentRuntime, WorkspacePolicy } from '../runtime.js';
 
 const log = createLogger();
@@ -60,16 +60,33 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
       );
     }
 
+    // Resolve reasoning effort (explicit > env override > per-agent config),
+    // clamped to what the model supports. `undefined` means "off".
+    const thinkingLevel = await resolveThinkingLevel(options.agentName, model, options.effort);
+
     log.info('spawning agent', {
       agent: options.agentName,
       cwd: options.cwd,
       provider: modelConfig.provider,
       model: modelConfig.model,
+      effort: thinkingLevel ?? 'off',
       timeout,
     });
 
+    // pi's Agent defaults thinkingLevel to "off"; only set it when reasoning is
+    // requested so the type (which excludes "off") stays honest.
+    const initialState: {
+      systemPrompt: string;
+      model: typeof model;
+      tools: typeof tools;
+      thinkingLevel?: Exclude<AgentEffort, 'off'>;
+    } = { systemPrompt, model, tools };
+    if (thinkingLevel) {
+      initialState.thinkingLevel = thinkingLevel;
+    }
+
     const agent = new Agent({
-      initialState: { systemPrompt, model, tools },
+      initialState,
       streamFn: streamSimple,
     });
     this.activeAgent = agent;

@@ -13,7 +13,7 @@ import type { ExtensionAPI, ToolDefinition, CreateAgentSessionRuntimeResult } fr
 import { truncateToWidth, visibleWidth } from '@mariozechner/pi-tui';
 import { basename } from 'node:path';
 import { mkdirSync, symlinkSync, existsSync } from 'node:fs';
-import { getModelForAgent } from './config.js';
+import { getModelForAgent, resolveThinkingLevel } from './config.js';
 import { detectRepo } from '../entry/repo-detector.js';
 import { detectArgumentType, fetchIssue } from '../entry/issue-fetcher.js';
 import { findTaskByIssue } from '../entry/task-scanner.js';
@@ -62,6 +62,11 @@ export async function startOrchestratorSession(options: OrchestratorSessionOptio
     : await getModelForAgent('orchestrator');
   const model = modelRegistry.find(modelConfig.provider, modelConfig.model);
 
+  // Resolve starting reasoning effort (CLI/env override > config), clamped to
+  // the model. The session is interactive, so this is just the initial level —
+  // the user can change it live in the pi TUI. `undefined` means "off".
+  const thinkingLevel = await resolveThinkingLevel('orchestrator', model);
+
   // Gather context before creating the session (same as cli-orchestrator Steps 0-0b)
   const contextBriefing = await gatherContext(options);
 
@@ -97,6 +102,7 @@ export async function startOrchestratorSession(options: OrchestratorSessionOptio
       authStorage,
       modelRegistry,
       model: model ?? undefined,
+      thinkingLevel,
       resourceLoader: rl,
       sessionManager: factoryOpts.sessionManager,
       customTools: [

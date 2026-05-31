@@ -37,9 +37,9 @@ import type {
   CreateAgentSessionRuntimeResult,
   ToolDefinition,
 } from '@mariozechner/pi-coding-agent';
-import { basename, resolve, dirname } from 'node:path';
+import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getModelForAgent } from '../agent/config.js';
+import { getModelForAgent, resolveThinkingLevel } from '../agent/config.js';
 import { loadSystemPrompt } from '../agent/prompt-loader.js';
 import { parseAgentResult } from '../util/parse-agent-result.js';
 import { parseInterviewFindings } from './findings.js';
@@ -114,6 +114,10 @@ export async function startInterviewSession(options: InterviewSessionOptions): P
     : await getModelForAgent('interviewer');
   const model = modelRegistry.find(modelConfig.provider, modelConfig.model);
 
+  // Starting reasoning effort for the interactive interviewer (override >
+  // config), clamped to the model. `undefined` means "off".
+  const thinkingLevel = await resolveThinkingLevel('interviewer', model);
+
   const systemPrompt = await loadSystemPrompt(options.caseRoot, 'interviewer');
   const briefing = buildBriefing(options);
 
@@ -149,6 +153,7 @@ export async function startInterviewSession(options: InterviewSessionOptions): P
       authStorage,
       modelRegistry,
       model: model ?? undefined,
+      thinkingLevel,
       resourceLoader: rl,
       sessionManager: factoryOpts.sessionManager,
       customTools: [createReadTool(factoryOpts.cwd), createBashTool(factoryOpts.cwd)] as unknown as ToolDefinition[],
