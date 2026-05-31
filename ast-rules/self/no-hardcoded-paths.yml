@@ -1,0 +1,9 @@
+id: no-hardcoded-paths
+language: typescript
+rule:
+  pattern: $STR
+  kind: string_fragment
+  regex: '/Users/'
+message: 'Hardcoded absolute path detected. Use environment variables or computed paths.'
+severity: error
+note: 'Catches new hardcoded paths in TypeScript. Markdown path checks run through bun run lint:paths.'

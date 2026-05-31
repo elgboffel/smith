@@ -1,0 +1,32 @@
+# Smith runtime state (per-run artifacts, ephemeral)
+runs/
+run-log.jsonl
+
+# Legacy case runtime state (retained for reference during migration)
+.case/
+
+# Legacy in-repo runtime state
+tasks/active/
+tasks/done/
+docs/learnings/
+docs/proposed-amendments/*.md
+!docs/proposed-amendments/.gitkeep
+!docs/proposed-amendments/README.md
+docs/run-log.jsonl
+docs/agent-versions/
+
+# Ideation artifacts (generated HTML/MD specs)
+docs/ideation/
+
+# Scratch/working area
+.scratch/
+
+# Build artifacts
+node_modules/
+dist/
+
+# bun artifacts
+*.bun-build
+
+# OS artifacts
+.DS_Store

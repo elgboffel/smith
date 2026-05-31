@@ -1,0 +1,81 @@
+# Case Harness
+
+Case is a spine/meta-repo for orchestrating agent work across WorkOS open source projects.
+It provides the cross-cutting knowledge, conventions, and task dispatch that no single repo owns.
+
+## Rules
+
+- **Always work in feature branches.** Never commit to main.
+- **Always use conventional commits.** `type(scope): description`. See `docs/conventions/commits.md`.
+- **Always open pull requests.** Never push to main. Use `gh pr create`.
+- **PR titles use conventional commit format.** e.g., `fix(session): handle expired cookies`.
+- **PR descriptions must be thorough.** Summary, what was tested, screenshots for UI changes, issue link, follow-ups.
+
+## Philosophy
+
+- **Case exists to make agent-authored PRs reliable, reviewable, and self-improving.** Keep the core loop small unless reliability requires more.
+- **Humans steer, agents execute.** Engineers define goals and acceptance criteria. Agents implement.
+- **Never write code directly.** All code changes in target repos flow through agents. Engineers only improve this harness.
+- **When agents struggle, fix the harness.** The fix is never "try harder" — it's a missing doc, playbook, convention, or enforcement rule.
+- **Give a map, not a manual.** AGENTS.md is ~100 lines. Deeper docs live in docs/. Progressive disclosure.
+
+## What Belongs Here vs In Individual Repos
+
+**In case/:**
+
+- Cross-repo conventions and golden principles
+- Architecture patterns that span multiple repos
+- Playbooks for recurring operations
+- Task files and templates
+- TypeScript CLI guardrails (`ca check`, `ca bootstrap`, evidence marker commands)
+- Pipeline orchestrator (TypeScript)
+
+**In individual repos:**
+
+- CLAUDE.md (or CLAUDE.local.md) with repo-specific instructions
+- Repo-specific CI, linters, test config
+- Code and tests
+
+## Relationship to Skills Plugin
+
+- `skills` (`../skills`) = WorkOS **domain knowledge** (what is SSO, how AuthKit works, API endpoints, gotchas)
+- `case` = **orchestration layer** (which repos exist, how to work across them, patterns, playbooks, task dispatch)
+
+Case depends on the skills plugin for product knowledge. They are complementary, not overlapping.
+
+## Project Structure
+
+```
+AGENTS.md                 # Entry point for agents (routing map)
+CLAUDE.md                 # This file (meta-instructions for case itself)
+projects.schema.json      # JSON Schema for the project manifest
+docs/
+  architecture/           # Canonical patterns per repo type
+  conventions/            # Shared rules (commits, testing, PRs)
+  failure-matrix.md       # Phase × outcome → action lookup (synced with code)
+  golden-principles.md    # Invariants enforced across all repos
+  playbooks/              # Step-by-step guides for recurring operations
+tasks/
+  active/                 # Current task files for agent execution
+  templates/              # Reusable task templates
+src/commands/
+  check.ts                # Cross-repo convention enforcement
+  bootstrap.ts            # Per-repo readiness verification
+  onboard.ts              # Human-facing onboarding for a new repo
+```
+
+## Commands
+
+```bash
+# Check conventions across repos (also validates the manifest)
+ca check
+
+# Check a single repo
+ca check --repo cli
+
+# Bootstrap a repo for agent work
+ca bootstrap cli
+
+# Onboard a new repo
+ca onboard <path>
+```

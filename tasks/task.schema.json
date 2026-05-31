@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Case Task",
+  "description": "JSON companion file for case task files. Stores machine-touched metadata alongside the human-readable Markdown task file.",
+  "type": "object",
+  "required": ["id", "status", "created", "repo"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Task slug matching the .md filename, e.g. authkit-nextjs-1-issue-53"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "implementing", "verifying", "reviewing", "evaluating", "closing", "pr-opened", "merged"],
+      "description": "Current lifecycle status. Transitions are enforced by the task store and ca status, not this schema."
+    },
+    "created": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of task creation"
+    },
+    "repo": {
+      "type": "string",
+      "description": "Target repo name from projects.json (e.g. authkit-nextjs)"
+    },
+    "issue": {
+      "type": "string",
+      "description": "Issue identifier (e.g. 53 for GitHub, DX-1234 for Linear)"
+    },
+    "issueType": {
+      "type": "string",
+      "enum": ["github", "linear", "freeform"],
+      "description": "How the task was created"
+    },
+    "contractPath": {
+      "type": ["string", "null"],
+      "default": null,
+      "description": "Optional path to external planning context"
+    },
+    "branch": {
+      "type": "string",
+      "description": "Git branch name (e.g. fix/issue-53, fix/DX-1234)"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["attended", "unattended"],
+      "default": "attended",
+      "description": "Pipeline execution mode. Attended = human monitors and can intervene. Unattended = autonomous with auto-abort on failure."
+    },
+    "profile": {
+      "type": "string",
+      "enum": ["tiny", "standard"],
+      "default": "standard",
+      "description": "Pipeline profile — determines which phases run. tiny = skip verify (docs/config), standard = all phases (default)."
+    },
+    "agents": {
+      "type": "object",
+      "description": "Tracking for each agent phase in the multi-agent pipeline",
+      "properties": {
+        "orchestrator": { "$ref": "#/$defs/agentPhase" },
+        "implementer": { "$ref": "#/$defs/agentPhase" },
+        "verifier": { "$ref": "#/$defs/agentPhase" },
+        "reviewer": { "$ref": "#/$defs/agentPhase" },
+        "closer": { "$ref": "#/$defs/agentPhase" }
+      },
+      "additionalProperties": false
+    },
+    "tested": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set by ca mark-tested only. Do not set directly."
+    },
+    "manualTested": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set by ca mark-manual-tested only. Do not set directly."
+    },
+    "prUrl": {
+      "type": ["string", "null"],
+      "default": null,
+      "description": "Pull request URL after PR creation"
+    },
+    "prNumber": {
+      "type": ["integer", "null"],
+      "default": null,
+      "description": "Pull request number"
+    },
+    "fastTestCommand": {
+      "type": ["string", "null"],
+      "default": null,
+      "description": "Fast test command targeting only changed files (e.g. 'pnpm vitest --related'). Run first during keep/discard; full suite only if this passes. If null, falls back to full test command from projects.json."
+    },
+    "checkCommand": {
+      "type": ["string", "null"],
+      "default": null,
+      "description": "Shell command that outputs a single number measuring progress. Implementer runs after each attempt to decide keep/discard."
+    },
+    "checkBaseline": {
+      "type": ["number", "null"],
+      "default": null,
+      "description": "Value of checkCommand before implementation starts. Captured by implementer at setup."
+    },
+    "checkTarget": {
+      "type": ["number", "null"],
+      "default": null,
+      "description": "Target value for checkCommand. Task succeeds when checkCommand output >= checkTarget."
+    },
+    "pendingRevision": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/revisionRequest" }],
+      "description": "Persisted evaluator revision request. Present when an evaluator found fixable issues and the pipeline was interrupted before the implementer could address them. Cleared after successful re-implementation."
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "agentPhase": {
+      "type": "object",
+      "properties": {
+        "started": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when agent started"
+        },
+        "completed": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when agent completed"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "running", "completed", "failed"],
+          "description": "Current agent phase status"
+        }
+      },
+      "additionalProperties": false
+    },
+    "revisionRequest": {
+      "type": "object",
+      "required": ["source", "failedCategories", "summary", "suggestedFocus", "cycle"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": ["verifier", "reviewer"],
+          "description": "Which evaluator triggered the revision"
+        },
+        "failedCategories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["category", "verdict", "detail"],
+            "properties": {
+              "category": { "type": "string" },
+              "verdict": { "type": "string", "enum": ["pass", "fail", "na"] },
+              "detail": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "summary": { "type": "string" },
+        "suggestedFocus": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "cycle": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Which revision cycle this is (1-indexed)"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

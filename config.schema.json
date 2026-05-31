@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Case Config",
+  "description": "Configuration for the case orchestrator harness",
+  "type": "object",
+  "properties": {
+    "models": {
+      "type": "object",
+      "description": "Per-agent model configuration. Each role can specify a provider and model ID.",
+      "properties": {
+        "default": { "$ref": "#/$defs/modelConfig" },
+        "implementer": { "oneOf": [{ "$ref": "#/$defs/modelConfig" }, { "type": "null" }] },
+        "verifier": { "oneOf": [{ "$ref": "#/$defs/modelConfig" }, { "type": "null" }] },
+        "reviewer": { "oneOf": [{ "$ref": "#/$defs/modelConfig" }, { "type": "null" }] },
+        "closer": { "oneOf": [{ "$ref": "#/$defs/modelConfig" }, { "type": "null" }] },
+        "retrospective": { "oneOf": [{ "$ref": "#/$defs/modelConfig" }, { "type": "null" }] },
+        "orchestrator": { "oneOf": [{ "$ref": "#/$defs/modelConfig" }, { "type": "null" }] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "modelConfig": {
+      "type": "object",
+      "properties": {
+        "provider": { "type": "string", "description": "Model provider (e.g., anthropic, google, openai)" },
+        "model": { "type": "string", "description": "Model ID (e.g., claude-sonnet-4-20250514, gemini-2.5-pro)" }
+      },
+      "required": ["provider", "model"],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,150 @@
+import { mkdir } from 'node:fs/promises';
+import { basename, resolve } from 'node:path';
+import type { IssueContext, TaskCreateRequest, TaskJson } from '../types.js';
+import { loadProjectsManifest, resolveRepoPath } from '../config.js';
+import { resolveRepoActiveMarker, resolveRepoActiveTaskDir } from '../paths.js';
+import { createLogger } from '../util/logger.js';
+import { slugify } from '../util/slugify.js';
+
+const log = createLogger();
+
+/** Generate a task ID from repo + timestamp + title slug. */
+function generateTaskId(repo: string, title: string): string {
+  const ts = Date.now().toString(36);
+  const slug = slugify(title).slice(0, 30);
+  return `${repo}-${ts}-${slug}`;
+}
+
+export interface TaskCreateResult {
+  taskId: string;
+  taskJsonPath: string;
+  taskMdPath: string;
+}
+
+/** Optional enrichment passed by the CLI orchestrator. */
+export interface TaskEnrichment {
+  issueContext?: IssueContext;
+  branch?: string;
+  repoPath?: string;
+}
+
+/**
+ * Create a task.json + task.md pair in the target repo's .case/tasks/active/
+ * from a TaskCreateRequest.
+ * Returns paths to the created files for pipeline dispatch.
+ *
+ * When `enrichment` is provided (from CLI orchestrator), the task gets:
+ * - `branch` field in JSON
+ * - Richer markdown with issue reference and labels
+ */
+export async function createTask(
+  caseRoot: string,
+  request: TaskCreateRequest,
+  enrichment?: TaskEnrichment,
+): Promise<TaskCreateResult> {
+  const taskId = generateTaskId(request.repo, request.title);
+  const repoPath = enrichment?.repoPath ?? (await resolveTargetRepoPath(caseRoot, request.repo));
+  const activeDir = resolveRepoActiveTaskDir(repoPath);
+  await mkdir(activeDir, { recursive: true });
+
+  const taskJsonPath = resolve(activeDir, `${taskId}.task.json`);
+  const taskMdPath = resolve(activeDir, `${taskId}.md`);
+
+  const taskJson: TaskJson = {
+    id: taskId,
+    status: 'active',
+    created: new Date().toISOString(),
+    repo: request.repo,
+    issue: request.issue,
+    issueType: request.issueType ?? 'freeform',
+    branch: enrichment?.branch,
+    mode: request.mode ?? 'attended',
+    profile: request.profile ?? 'standard',
+    agents: {},
+    tested: false,
+    manualTested: false,
+    prUrl: null,
+    prNumber: null,
+    checkCommand: request.checkCommand ?? null,
+    checkBaseline: request.checkBaseline ?? null,
+    checkTarget: request.checkTarget ?? null,
+  };
+
+  const taskMd = buildTaskMarkdown(request, taskJson, enrichment?.issueContext);
+
+  await Bun.write(taskJsonPath, JSON.stringify(taskJson, null, 2) + '\n');
+  await Bun.write(taskMdPath, taskMd);
+  await mkdir(resolve(repoPath, '.case'), { recursive: true });
+  await Bun.write(resolveRepoActiveMarker(repoPath), `${taskId}\n`);
+
+  log.info('task created', {
+    taskId,
+    repo: request.repo,
+    trigger: request.trigger.type,
+    branch: enrichment?.branch,
+    repoPath,
+    file: basename(taskJsonPath),
+  });
+
+  return { taskId, taskJsonPath, taskMdPath };
+}
+
+async function resolveTargetRepoPath(caseRoot: string, repoName: string): Promise<string> {
+  const manifest = await loadProjectsManifest(caseRoot);
+  const project = manifest.repos.find((p) => p.name === repoName);
+  if (!project) throw new Error(`Repo "${repoName}" not found in projects.json`);
+  return resolveRepoPath(manifest.repoBasePath, project.path);
+}
+
+/** Build task markdown. Enriched with issue context when available. */
+function buildTaskMarkdown(request: TaskCreateRequest, taskJson: TaskJson, issueContext?: IssueContext): string {
+  const lines: (string | false)[] = [
+    `# ${request.title}`,
+    '',
+    `**Repo:** ${request.repo}`,
+    `**Trigger:** ${request.trigger.type}`,
+    `**Created:** ${taskJson.created}`,
+    !!request.issue && `**Issue:** ${request.issue}`,
+    !!taskJson.branch && `**Branch:** ${taskJson.branch}`,
+    '',
+  ];
+
+  // Issue reference section when enriched
+  if (issueContext) {
+    lines.push('## Issue Reference', '', `**Source:** ${issueContext.issueType} #${issueContext.issueNumber}`);
+    if (issueContext.labels.length > 0) {
+      lines.push(`**Labels:** ${issueContext.labels.join(', ')}`);
+    }
+    lines.push('');
+  }
+
+  lines.push(
+    '## Description',
+    '',
+    request.description,
+    '',
+    '## Acceptance Criteria',
+    '',
+    '- [ ] Fix verified by tests',
+    '- [ ] No regressions introduced',
+    '',
+  );
+
+  if (request.verificationScenarios) {
+    lines.push('## Verification Scenarios', '', request.verificationScenarios, '');
+  }
+  if (request.nonGoals) {
+    lines.push('## Non-Goals', '', request.nonGoals, '');
+  }
+  if (request.edgeCases) {
+    lines.push('## Edge Cases', '', request.edgeCases, '');
+  }
+  if (request.evidenceExpectations !== undefined) {
+    lines.push('## Evidence Expectations', '', request.evidenceExpectations, '');
+  }
+
+  // Progress Log always at the end
+  lines.push('## Progress Log', '', '<!-- Agents append entries below. Do not edit existing entries. -->', '');
+
+  return lines.filter((line) => line !== false).join('\n');
+}
