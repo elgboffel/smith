@@ -14,8 +14,8 @@ let packageRoot: string;
 function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
     mode: 'attended',
-    taskJsonPath: join(repoDir, '.case/tasks/active/cli-1.task.json'),
-    taskMdPath: join(repoDir, '.case/tasks/active/cli-1.md'),
+    taskJsonPath: join(repoDir, '.smith/tasks/active/cli-1.task.json'),
+    taskMdPath: join(repoDir, '.smith/tasks/active/cli-1.md'),
     repoPath: repoDir,
     repoName: 'cli',
     packageRoot,
@@ -33,13 +33,13 @@ describe('prefetchRepoContext', () => {
     tempDir = join(process.env.TMPDIR ?? '/tmp', `case-prefetch-test-${Date.now()}`);
     repoDir = join(tempDir, 'repo');
     dataDir = join(tempDir, 'data');
-    packageRoot = join(tempDir, 'case');
+    packageRoot = join(tempDir, 'smith');
 
-    await mkdir(join(repoDir, '.case'), { recursive: true });
+    await mkdir(join(repoDir, '.smith'), { recursive: true });
     await mkdir(join(dataDir, 'learnings'), { recursive: true });
     await mkdir(join(packageRoot, 'docs/learnings'), { recursive: true });
 
-    process.env.CASE_DATA_DIR = dataDir;
+    process.env.SMITH_DATA_DIR = dataDir;
     mockGatherSessionContext.mockReset();
     mockRunCommand.mockReset();
     mockGatherSessionContext.mockResolvedValue({ repo: 'cli' });
@@ -51,8 +51,8 @@ describe('prefetchRepoContext', () => {
     await rm(tempDir, { recursive: true, force: true });
   });
 
-  it('prefers repo-local .case/learnings.md over global and legacy learnings', async () => {
-    await Bun.write(join(repoDir, '.case/learnings.md'), 'repo-local learning\n');
+  it('prefers repo-local .smith/learnings.md over global and legacy learnings', async () => {
+    await Bun.write(join(repoDir, '.smith/learnings.md'), 'repo-local learning\n');
     await Bun.write(join(dataDir, 'learnings/cli.md'), 'global learning\n');
     await Bun.write(join(packageRoot, 'docs/learnings/cli.md'), 'legacy learning\n');
 

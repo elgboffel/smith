@@ -168,11 +168,11 @@ describe('writeProjectsEntry', () => {
 });
 
 describe('writeLearnings', () => {
-  it('creates .case/learnings.md when none exists', async () => {
+  it('creates .smith/learnings.md when none exists', async () => {
     const findings = makeFindings();
     writeLearnings(tempDir, findings);
 
-    const target = join(tempDir, '.case', 'learnings.md');
+    const target = join(tempDir, '.smith', 'learnings.md');
     expect(existsSync(target)).toBe(true);
     const content = readFileSync(target, 'utf-8');
     expect(content).toContain('# Repo Learnings');
@@ -181,13 +181,13 @@ describe('writeLearnings', () => {
   });
 
   it('appends under a separator when the file already exists', async () => {
-    await mkdir(join(tempDir, '.case'), { recursive: true });
+    await mkdir(join(tempDir, '.smith'), { recursive: true });
     const existing = '# Repo Learnings\n\n## Existing topic\n\nHand-written content.\n';
-    await writeFile(join(tempDir, '.case', 'learnings.md'), existing);
+    await writeFile(join(tempDir, '.smith', 'learnings.md'), existing);
 
     writeLearnings(tempDir, makeFindings());
 
-    const content = readFileSync(join(tempDir, '.case', 'learnings.md'), 'utf-8');
+    const content = readFileSync(join(tempDir, '.smith', 'learnings.md'), 'utf-8');
     expect(content).toContain('Hand-written content.');
     expect(content).toContain('---');
     expect(content).toContain('## Architecture');
@@ -196,7 +196,7 @@ describe('writeLearnings', () => {
   it('does nothing when there are no learnings to write', async () => {
     const findings = makeFindings({ learnings: [] });
     writeLearnings(tempDir, findings);
-    expect(existsSync(join(tempDir, '.case', 'learnings.md'))).toBe(false);
+    expect(existsSync(join(tempDir, '.smith', 'learnings.md'))).toBe(false);
   });
 
   it('reports the entry count to stdout', async () => {
@@ -265,7 +265,7 @@ describe('onboard CLI flag parsing', () => {
   });
 
   it('exits 1 when --re-interview is given a name that does not match', async () => {
-    process.env.CASE_DATA_DIR = tempDir;
+    process.env.SMITH_DATA_DIR = tempDir;
     const manifestPath = join(tempDir, 'projects.json');
     await writeFile(
       manifestPath,
@@ -287,7 +287,7 @@ describe('onboard CLI flag parsing', () => {
       expect(code).toBe(1);
       expect(errCapture.lines.join('')).toContain('not found');
     } finally {
-      delete process.env.CASE_DATA_DIR;
+      delete process.env.SMITH_DATA_DIR;
     }
   });
 });

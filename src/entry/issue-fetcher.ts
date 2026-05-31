@@ -4,7 +4,7 @@ import type { IssueContext } from '../types.js';
 import { extractOwnerRepo } from './repo-detector.js';
 import { slugify } from '../util/slugify.js';
 
-const CREDENTIALS_PATH = resolve(homedir(), '.config/case/credentials');
+const CREDENTIALS_PATH = resolve(homedir(), '.config/smith/credentials');
 
 /**
  * Detect argument type from a CLI positional argument.
@@ -73,7 +73,7 @@ async function fetchGitHubIssue(repoRemote: string, issueNumber: string): Promis
 
 /**
  * Fetch a Linear issue via GraphQL API.
- * Requires LINEAR_API_KEY in ~/.config/case/credentials.
+ * Requires LINEAR_API_KEY in ~/.config/smith/credentials.
  */
 async function fetchLinearIssue(issueId: string): Promise<IssueContext> {
   const apiKey = await readLinearApiKey();

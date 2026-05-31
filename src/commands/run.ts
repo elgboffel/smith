@@ -80,7 +80,7 @@ export async function handler(argv: string[]): Promise<number> {
   const caseRoot = resolvePackageRoot();
 
   // Suppress structured JSON logs for interactive CLI use
-  process.env.CASE_QUIET = '1';
+  process.env.SMITH_QUIET = '1';
 
   try {
     await runCliOrchestrator({

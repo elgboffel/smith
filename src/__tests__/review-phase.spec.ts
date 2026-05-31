@@ -10,15 +10,15 @@ const tempCaseRoot = join(process.env.TMPDIR ?? '/tmp', `case-review-test-${Date
 
 async function setupTempFiles() {
   await mkdir(join(tempCaseRoot, 'agents'), { recursive: true });
-  await mkdir(join(tempCaseRoot, '.case'), { recursive: true });
+  await mkdir(join(tempCaseRoot, '.smith'), { recursive: true });
   await Bun.write(join(tempCaseRoot, 'agents/reviewer.md'), '# Reviewer');
 }
 
 function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
     mode: 'attended',
-    taskJsonPath: join(tempCaseRoot, '.case/tasks/active/cli-1.task.json'),
-    taskMdPath: join(tempCaseRoot, '.case/tasks/active/cli-1.md'),
+    taskJsonPath: join(tempCaseRoot, '.smith/tasks/active/cli-1.task.json'),
+    taskMdPath: join(tempCaseRoot, '.smith/tasks/active/cli-1.md'),
     repoPath: tempCaseRoot,
     repoName: 'cli',
     packageRoot: tempCaseRoot,

@@ -14,7 +14,7 @@ import { resolveEvidenceStrategy } from '../types.js';
 import type { TaskMatch } from './task-scanner.js';
 
 export interface CliOrchestratorOptions {
-  /** Issue number, Linear ID, or free text. Undefined = re-entry via .case/active. */
+  /** Issue number, Linear ID, or free text. Undefined = re-entry via .smith/active. */
   argument?: string;
   mode: PipelineMode;
   dryRun: boolean;

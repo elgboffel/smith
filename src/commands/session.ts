@@ -53,7 +53,7 @@ export async function gatherSessionContext(repoPath: string, taskJsonPath?: stri
   const recentRaw = await run(['git', 'log', '--oneline', '-5'], repoPath);
   const recentCommits = recentRaw.split('\n').filter(Boolean);
 
-  const caseDir = resolve(repoPath, '.case');
+  const caseDir = resolve(repoPath, '.smith');
   const activeFile = resolve(caseDir, 'active');
   let caseActive = false;
   let caseTested = false;

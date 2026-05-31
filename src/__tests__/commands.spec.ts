@@ -295,17 +295,17 @@ describe('upload handler — preflight checks', () => {
 
 describe('status — run-log view', () => {
   let tmp: string;
-  const originalRoot = process.env.CASE_PACKAGE_ROOT;
+  const originalRoot = process.env.SMITH_PACKAGE_ROOT;
 
   beforeEach(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'smith-status-'));
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ name: 'smith' }));
-    process.env.CASE_PACKAGE_ROOT = tmp;
+    process.env.SMITH_PACKAGE_ROOT = tmp;
   });
 
   afterEach(() => {
-    if (originalRoot === undefined) delete process.env.CASE_PACKAGE_ROOT;
-    else process.env.CASE_PACKAGE_ROOT = originalRoot;
+    if (originalRoot === undefined) delete process.env.SMITH_PACKAGE_ROOT;
+    else process.env.SMITH_PACKAGE_ROOT = originalRoot;
     fs.rmSync(tmp, { recursive: true, force: true });
   });
 

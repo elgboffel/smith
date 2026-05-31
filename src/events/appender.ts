@@ -25,7 +25,7 @@ export class EventAppender {
     this.caseRoot = caseRoot;
     this.taskSlug = taskSlug;
     this.runId = runId;
-    const eventDir = resolve(caseRoot, '.case', taskSlug, 'events');
+    const eventDir = resolve(caseRoot, '.smith', taskSlug, 'events');
     this.filePath = resolve(eventDir, `run-${runId}.jsonl`);
     this.dirReady = mkdir(eventDir, { recursive: true }).then(() => {});
   }

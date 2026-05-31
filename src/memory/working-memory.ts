@@ -1,5 +1,5 @@
 /**
- * Read/write/merge helpers for `<repoPath>/.case/<task-slug>/working-memory.json`.
+ * Read/write/merge helpers for `<repoPath>/.smith/<task-slug>/working-memory.json`.
  *
  * - `readWorkingMemory(taskDir)` — load + validate, returns `null` on cold start
  *   or on corrupt files (logs a warning to stderr so the corruption is observable

@@ -139,10 +139,10 @@ export function projectMarkers(state: PipelineState): Array<{ name: string; path
 
   for (const [, phase] of state.phases) {
     if (phase.phase === 'verify' && phase.status === 'completed' && !state.markers.has('tested')) {
-      markers.push({ name: 'tested', path: `.case/${state.taskId}/tested` });
+      markers.push({ name: 'tested', path: `.smith/${state.taskId}/tested` });
     }
     if (phase.phase === 'review' && phase.status === 'completed' && !state.markers.has('reviewed')) {
-      markers.push({ name: 'reviewed', path: `.case/${state.taskId}/reviewed` });
+      markers.push({ name: 'reviewed', path: `.smith/${state.taskId}/reviewed` });
     }
   }
 

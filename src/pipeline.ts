@@ -30,7 +30,7 @@ import type { PipelineGraph } from './dag/types.js';
 const log = createLogger();
 
 export async function runPipeline(config: PipelineConfig): Promise<void> {
-  // Task JSON lives in the target repo's ignored .case directory.
+  // Task JSON lives in the target repo's ignored .smith directory.
   const store = new TaskStore(config.taskJsonPath, config.packageRoot);
   // Renderer selection: TUI wins when explicitly requested (even over a
   // pre-built notifier from cli-orchestrator's setup phase). Otherwise an
@@ -91,7 +91,7 @@ async function runPipelineBody(
   const runId = crypto.randomUUID();
   config.runtime ??= new PiRuntimeAdapter();
 
-  // Event log is mutable runtime state — lives under <repo>/.case/<taskId>/events/.
+  // Event log is mutable runtime state — lives under <repo>/.smith/<taskId>/events/.
   const appender = new EventAppender(config.dataDir, task.id, runId, store);
   config.eventAppender = appender;
 
@@ -99,15 +99,15 @@ async function runPipelineBody(
 
   const { mkdir: mkdirPlan, writeFile: writePlan } = await import('node:fs/promises');
   const { resolve: resolvePlan } = await import('node:path');
-  // Plan + event log live under <repo>/.case/<taskId>/ — mutable runtime state.
-  const planDir = resolvePlan(config.dataDir, '.case', task.id);
+  // Plan + event log live under <repo>/.smith/<taskId>/ — mutable runtime state.
+  const planDir = resolvePlan(config.dataDir, '.smith', task.id);
   await mkdirPlan(planDir, { recursive: true });
   await writePlan(resolvePlan(planDir, 'plan.json'), JSON.stringify(plan, null, 2));
 
   const graph = buildGraph(profile, maxRevisionCycles);
 
   // Crash recovery: restore graph state from event log if a prior run didn't complete
-  const existingEventLogPath = resolvePlan(config.dataDir, '.case', task.id, 'events');
+  const existingEventLogPath = resolvePlan(config.dataDir, '.smith', task.id, 'events');
   let resumed = false;
   try {
     const { readdir: readdirFs } = await import('node:fs/promises');
@@ -153,7 +153,7 @@ async function runPipelineBody(
     }
   }
 
-  // Prompt versions are static package assets; run metrics are appended under the repo .case dir.
+  // Prompt versions are static package assets; run metrics are appended under the repo .smith dir.
   const promptVersions = await getCurrentPromptVersions(config.packageRoot);
   let outcome: 'completed' | 'failed' = 'completed';
   let failedAgent: AgentName | undefined;

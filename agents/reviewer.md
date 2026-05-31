@@ -12,7 +12,7 @@ You start with a **completely fresh context**. You did not write the code — yo
 
 You receive from the orchestrator:
 
-- **Task file path** — absolute path to the `.md` task file under the target repo's ignored `.case/tasks/active/`
+- **Task file path** — absolute path to the `.md` task file under the target repo's ignored `.smith/tasks/active/`
 - **Task JSON path** — the `.task.json` companion
 - **Target repo path** — absolute path to the repo where the fix was implemented
 
@@ -45,7 +45,7 @@ Read the output to understand: current branch, last commits, task status, which 
    git diff main
    ```
 4. Read the Golden Principles section in this prompt — all invariants
-5. Read structured test output from `.case/<task-slug>/tested` (Phase 1 format with passed/failed/total/duration_ms/suites/files fields). Get the task slug from `.case/active`.
+5. Read structured test output from `.smith/<task-slug>/tested` (Phase 1 format with passed/failed/total/duration_ms/suites/files fields). Get the task slug from `.smith/active`.
 6. Read the target repo's `CLAUDE.md` for repo-specific conventions
 
 ### 2. Review the Diff
@@ -90,14 +90,14 @@ Check each changed file against:
    git diff --name-only main | grep -E "^(test|__tests__|.*\.test\.|.*\.spec\.)"
    ```
 
-6. **Structured test output**: Check `.case/<task-slug>/tested` for regressions (fail count > 0)
+6. **Structured test output**: Check `.smith/<task-slug>/tested` for regressions (fail count > 0)
 
 ### 3. Classify Findings
 
 Each finding gets a severity:
 
 - **`critical`** — Blocks PR. Examples:
-  - Tests failing (fail count > 0 in `.case/<task-slug>/tested`)
+  - Tests failing (fail count > 0 in `.smith/<task-slug>/tested`)
   - Enforced golden principle violation (principles 1-7, 14-16)
   - Secrets in the diff (`sk_*`, API keys, `.env` contents)
   - Missing test for public API change (new/modified export with no test)
@@ -140,7 +140,7 @@ Format each finding as:
    - Critical: <list each critical finding, or "none">
    - Warnings: <list each warning finding, or "none">
    - Info: <list each info finding, or "none">
-   - Evidence: .case/<task-slug>/reviewed (created/not created)
+   - Evidence: .smith/<task-slug>/reviewed (created/not created)
    ```
 
 4. **Update task JSON**:
@@ -177,7 +177,7 @@ If critical findings exist, set `"status":"blocked"` and list the critical findi
 - **Never edit source code.** You review, not implement.
 - **Never commit.** The implementer already committed.
 - **Never create PRs.** That's the closer's job.
-- **Never run tests.** Read the structured test output from `.case/<task-slug>/tested` instead.
+- **Never run tests.** Read the structured test output from `.smith/<task-slug>/tested` instead.
 - **Always use the Golden Principles supplied by the orchestrator.** They come from the current Case package assets.
 - **Always include file and line references** for critical and warning findings.
 - **Always create the evidence marker via `smith mark-reviewed`** — never `touch` the marker file directly.

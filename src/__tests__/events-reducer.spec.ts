@@ -138,7 +138,7 @@ describe('reduceEvents', () => {
   test('marker_written adds to markers set', () => {
     const events: PipelineEvent[] = [
       makeEvent(1, { event: 'pipeline_start', taskId: 'task-1', profile: 'standard', plan: PLAN }),
-      makeEvent(2, { event: 'marker_written', marker: 'tested', path: '.case/task-1/tested' }),
+      makeEvent(2, { event: 'marker_written', marker: 'tested', path: '.smith/task-1/tested' }),
     ];
 
     const state = reduceEvents(events);

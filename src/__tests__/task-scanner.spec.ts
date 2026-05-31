@@ -33,8 +33,8 @@ async function writeLegacyTask(taskId: string, task: TaskJson): Promise<string> 
 }
 
 async function writeRepoTask(taskId: string, task: TaskJson): Promise<string> {
-  const taskJsonPath = join(repoDir, '.case/tasks/active', `${taskId}.task.json`);
-  await mkdir(join(repoDir, '.case/tasks/active'), { recursive: true });
+  const taskJsonPath = join(repoDir, '.smith/tasks/active', `${taskId}.task.json`);
+  await mkdir(join(repoDir, '.smith/tasks/active'), { recursive: true });
   await Bun.write(taskJsonPath, JSON.stringify(task, null, 2));
   return taskJsonPath;
 }
@@ -45,10 +45,10 @@ describe('task-scanner', () => {
   beforeEach(async () => {
     tempDir = join(process.env.TMPDIR ?? '/tmp', `case-scanner-test-${Date.now()}`);
     repoDir = join(tempDir, 'repo');
-    await mkdir(join(repoDir, '.case/tasks/active'), { recursive: true });
+    await mkdir(join(repoDir, '.smith/tasks/active'), { recursive: true });
     // Point the legacy data-dir fallback at a sibling temp dir so tests can
     // explicitly distinguish repo-local state from legacy state.
-    process.env.CASE_DATA_DIR = join(tempDir, '.case-data-empty');
+    process.env.SMITH_DATA_DIR = join(tempDir, '.smith-data-empty');
   });
 
   afterEach(async () => {
@@ -68,7 +68,7 @@ describe('task-scanner', () => {
       expect(result!.taskJson.issue).toBe('1523');
       expect(result!.entryPhase).toBe('implement');
       expect(result!.taskJsonPath).toContain('cli-abc-fix-test.task.json');
-      expect(result!.taskJsonPath).toContain(join('.case', 'tasks', 'active'));
+      expect(result!.taskJsonPath).toContain(join('.smith', 'tasks', 'active'));
       expect(result!.taskMdPath).toContain('cli-abc-fix-test.md');
     });
 
@@ -120,14 +120,14 @@ describe('task-scanner', () => {
     });
 
     it('returns null when no active task directory exists', async () => {
-      await rm(join(repoDir, '.case/tasks'), { recursive: true, force: true });
+      await rm(join(repoDir, '.smith/tasks'), { recursive: true, force: true });
 
       const result = await findTaskByIssue(tempDir, 'cli', 'github', '1523', repoDir);
       expect(result).toBeNull();
     });
 
     it('skips unparseable JSON files', async () => {
-      await Bun.write(join(repoDir, '.case/tasks/active/bad.task.json'), 'not json{{{');
+      await Bun.write(join(repoDir, '.smith/tasks/active/bad.task.json'), 'not json{{{');
       await writeRepoTask('cli-good', makeTaskJson({ id: 'cli-good' }));
 
       const result = await findTaskByIssue(tempDir, 'cli', 'github', '1523', repoDir);
@@ -136,7 +136,7 @@ describe('task-scanner', () => {
     });
 
     it('falls back to legacy tasks/active when repo-local state is absent', async () => {
-      await rm(join(repoDir, '.case/tasks'), { recursive: true, force: true });
+      await rm(join(repoDir, '.smith/tasks'), { recursive: true, force: true });
       await writeLegacyTask('cli-legacy', makeTaskJson({ id: 'cli-legacy' }));
 
       const result = await findTaskByIssue(tempDir, 'cli', 'github', '1523', repoDir);
@@ -151,7 +151,7 @@ describe('task-scanner', () => {
     it('returns task when marker points to valid task', async () => {
       const task = makeTaskJson();
       await writeRepoTask('cli-abc-fix-test', task);
-      await Bun.write(join(repoDir, '.case', 'active'), 'cli-abc-fix-test\n');
+      await Bun.write(join(repoDir, '.smith', 'active'), 'cli-abc-fix-test\n');
 
       const result = await findTaskByMarker(tempDir, repoDir);
 
@@ -166,21 +166,21 @@ describe('task-scanner', () => {
     });
 
     it('cleans up active marker when task file is missing', async () => {
-      await Bun.write(join(repoDir, '.case', 'active'), 'nonexistent-task-id\n');
-      await Bun.write(join(repoDir, '.case', 'learnings.md'), 'keep me\n');
+      await Bun.write(join(repoDir, '.smith', 'active'), 'nonexistent-task-id\n');
+      await Bun.write(join(repoDir, '.smith', 'learnings.md'), 'keep me\n');
 
       const result = await findTaskByMarker(tempDir, repoDir);
 
       expect(result).toBeNull();
-      const markerExists = await Bun.file(join(repoDir, '.case', 'active')).exists();
+      const markerExists = await Bun.file(join(repoDir, '.smith', 'active')).exists();
       expect(markerExists).toBe(false);
-      expect(await Bun.file(join(repoDir, '.case', 'learnings.md')).exists()).toBe(true);
+      expect(await Bun.file(join(repoDir, '.smith', 'learnings.md')).exists()).toBe(true);
     });
 
     it('cleans up stale marker (>24h)', async () => {
       const task = makeTaskJson();
       await writeRepoTask('cli-abc-fix-test', task);
-      const markerPath = join(repoDir, '.case', 'active');
+      const markerPath = join(repoDir, '.smith', 'active');
       await Bun.write(markerPath, 'cli-abc-fix-test\n');
 
       // Set mtime to 25 hours ago
@@ -195,12 +195,12 @@ describe('task-scanner', () => {
     });
 
     it('cleans up marker with empty content', async () => {
-      await Bun.write(join(repoDir, '.case', 'active'), '  \n');
+      await Bun.write(join(repoDir, '.smith', 'active'), '  \n');
 
       const result = await findTaskByMarker(tempDir, repoDir);
 
       expect(result).toBeNull();
-      const markerExists = await Bun.file(join(repoDir, '.case', 'active')).exists();
+      const markerExists = await Bun.file(join(repoDir, '.smith', 'active')).exists();
       expect(markerExists).toBe(false);
     });
 
@@ -212,7 +212,7 @@ describe('task-scanner', () => {
         },
       });
       await writeRepoTask('cli-abc-fix-test', task);
-      await Bun.write(join(repoDir, '.case', 'active'), 'cli-abc-fix-test\n');
+      await Bun.write(join(repoDir, '.smith', 'active'), 'cli-abc-fix-test\n');
 
       const result = await findTaskByMarker(tempDir, repoDir);
 

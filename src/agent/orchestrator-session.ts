@@ -33,7 +33,7 @@ export async function startOrchestratorSession(options: OrchestratorSessionOptio
   // Suppress structured JSON logs in interactive mode — the TUI provides its own feedback.
   // Preserve logging if CASE_DEBUG is explicitly set.
   if (!process.env.CASE_DEBUG) {
-    process.env.CASE_QUIET = '1';
+    process.env.SMITH_QUIET = '1';
   }
 
   // Run pi fully isolated — no global settings, extensions, packages,
@@ -283,7 +283,7 @@ function buildOrchestratorSystemPrompt(caseRoot: string): string {
       ]
     : [
         `- Case root: ${caseRoot}`,
-        `- Projects manifest: ~/.config/case/projects.json (or smith onboard to add repos)`,
+        `- Projects manifest: ~/.config/smith/projects.json (or smith onboard to add repos)`,
         `- Golden principles: ${caseRoot}/docs/golden-principles.md`,
         `- Agent prompts: ${caseRoot}/agents/`,
       ];
@@ -368,7 +368,7 @@ Call \`create_task\`, then \`run_pipeline\` with the created task JSON path. The
 
 ${packageAssetLines.join('\n')}
 - Convention: conventional commits, feature branches, PRs to main.
-- Working memory: agents persist progress to \`.case/<task-slug>/working-memory.json\` via \`smith update-memory\`. The pipeline reads it between phases to inject prior context — you don't need to manage it manually, but you can inspect it if a run is misbehaving.
+- Working memory: agents persist progress to \`.smith/<task-slug>/working-memory.json\` via \`smith update-memory\`. The pipeline reads it between phases to inject prior context — you don't need to manage it manually, but you can inspect it if a run is misbehaving.
 
 Use the \`read\` tool for on-disk files when paths are available. Keep responses concise.`;
 }

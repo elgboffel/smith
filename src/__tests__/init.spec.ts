@@ -11,7 +11,7 @@ const originalEnv = { ...process.env };
 
 beforeEach(async () => {
   tmp = await mkdtemp(join(tmpdir(), 'case-init-'));
-  process.env.CASE_DATA_DIR = tmp;
+  process.env.SMITH_DATA_DIR = tmp;
 });
 
 afterEach(async () => {

@@ -9,7 +9,7 @@ tools: ['Read', 'Bash', 'Glob', 'Grep']
 You start with a **completely fresh context** and run **before** the repo is registered in `projects.json`. Your job is to combine mechanical exploration with a few targeted questions to the human, then emit a structured `InterviewFindings` payload the onboard command will persist into:
 
 - `projects.json` (entry merged with mechanical detection)
-- `<repo>/.case/learnings.md` (seed repo knowledge)
+- `<repo>/.smith/learnings.md` (seed repo knowledge)
 - `<repo>/CLAUDE.local.md` (seed repo conventions)
 
 You are **strictly read-only** in the target repo:
@@ -137,7 +137,7 @@ End your response with the structured result block. The `findings` field carries
 
 ```
 <<<AGENT_RESULT
-{"status":"completed","summary":"Onboarded {repoName}: {repoType} → {evidenceStrategy}","findings":{"evidenceStrategy":"test-output","evidenceRationale":"SDK consumed by Next.js apps — verifier reads test runner output for proof.","verificationNotes":"Set WORKOS_API_KEY and WORKOS_CLIENT_ID before running tests. CI uses fake values from `.env.test`.","credentials":"~/.config/case/credentials","description":"AuthKit SDK for Next.js apps","commandOverrides":{"test":"pnpm test:unit"},"learnings":[{"topic":"Architecture","content":"Cookie-based session encrypted with iron-session in `src/session/`."},{"topic":"Testing","content":"Vitest mocks live in `src/__mocks__/`; never call the real WorkOS API."}],"conventions":[{"rule":"Use pnpm","reason":"Lockfile is committed and CI fails on npm install."}],"repoType":"sdk","hasExampleApp":false,"testFramework":"vitest","ciProvider":"github-actions"},"artifacts":{"commit":null,"filesChanged":[],"testsPassed":null,"screenshotUrls":[],"evidenceMarkers":[],"prUrl":null,"prNumber":null},"error":null}
+{"status":"completed","summary":"Onboarded {repoName}: {repoType} → {evidenceStrategy}","findings":{"evidenceStrategy":"test-output","evidenceRationale":"SDK consumed by Next.js apps — verifier reads test runner output for proof.","verificationNotes":"Set WORKOS_API_KEY and WORKOS_CLIENT_ID before running tests. CI uses fake values from `.env.test`.","credentials":"~/.config/smith/credentials","description":"AuthKit SDK for Next.js apps","commandOverrides":{"test":"pnpm test:unit"},"learnings":[{"topic":"Architecture","content":"Cookie-based session encrypted with iron-session in `src/session/`."},{"topic":"Testing","content":"Vitest mocks live in `src/__mocks__/`; never call the real WorkOS API."}],"conventions":[{"rule":"Use pnpm","reason":"Lockfile is committed and CI fails on npm install."}],"repoType":"sdk","hasExampleApp":false,"testFramework":"vitest","ciProvider":"github-actions"},"artifacts":{"commit":null,"filesChanged":[],"testsPassed":null,"screenshotUrls":[],"evidenceMarkers":[],"prUrl":null,"prNumber":null},"error":null}
 AGENT_RESULT>>>
 ```
 

@@ -214,7 +214,7 @@ describe('EventAppender', () => {
     });
 
     const { existsSync } = await import('node:fs');
-    const markerPath = resolve(tmpDir, '.case/task-1/tested');
+    const markerPath = resolve(tmpDir, '.smith/task-1/tested');
     expect(existsSync(markerPath)).toBe(true);
 
     expect(appender.getState().markers.has('tested')).toBe(true);
@@ -254,7 +254,7 @@ describe('EventAppender', () => {
     });
 
     const { existsSync } = await import('node:fs');
-    expect(existsSync(resolve(tmpDir, '.case/task-1/reviewed'))).toBe(true);
+    expect(existsSync(resolve(tmpDir, '.smith/task-1/reviewed'))).toBe(true);
     expect(appender.getState().markers.has('reviewed')).toBe(true);
   });
 

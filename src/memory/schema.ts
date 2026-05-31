@@ -1,7 +1,7 @@
 /**
  * Structured working memory schema.
  *
- * Working memory lives at `<repoPath>/.case/<task-slug>/working-memory.json`.
+ * Working memory lives at `<repoPath>/.smith/<task-slug>/working-memory.json`.
  * It is written by the implementer/verifier agents (via `smith update-memory`)
  * and read by the orchestrator before dispatching each phase, so the next
  * agent inherits context about what was tried, what failed, and what files

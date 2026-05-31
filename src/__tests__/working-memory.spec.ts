@@ -275,7 +275,7 @@ describe('formatForImplementer / formatForVerifier', () => {
 
 describe('taskSlugFromTaskJsonPath', () => {
   it('strips the .task.json suffix and directory', () => {
-    expect(taskSlugFromTaskJsonPath('/repo/.case/tasks/active/foo-1.task.json')).toBe('foo-1');
+    expect(taskSlugFromTaskJsonPath('/repo/.smith/tasks/active/foo-1.task.json')).toBe('foo-1');
   });
   it('handles bare basenames', () => {
     expect(taskSlugFromTaskJsonPath('foo-1.task.json')).toBe('foo-1');
@@ -289,7 +289,7 @@ describe('smith update-memory CLI (handler)', () => {
   beforeEach(() => {
     originalCwd = process.cwd();
     tempCwd = mkdtempSync(join(tmpdir(), 'case-wm-cli-'));
-    mkdirSync(join(tempCwd, '.case'), { recursive: true });
+    mkdirSync(join(tempCwd, '.smith'), { recursive: true });
     process.chdir(tempCwd);
   });
 
@@ -305,12 +305,12 @@ describe('smith update-memory CLI (handler)', () => {
   });
 
   it('creates working-memory.json on first call', async () => {
-    writeFileSync(join(tempCwd, '.case/active'), 'foo-1');
+    writeFileSync(join(tempCwd, '.smith/active'), 'foo-1');
     const { handler } = await import('../commands/update-memory.js');
     const code = await handler(['--state', 'Starting', '--approach', 'TDD', '--file', 'src/x.ts']);
     expect(code).toBe(0);
 
-    const path = join(tempCwd, '.case/foo-1/working-memory.json');
+    const path = join(tempCwd, '.smith/foo-1/working-memory.json');
     expect(existsSync(path)).toBe(true);
     const memory = JSON.parse(readFileSync(path, 'utf-8'));
     expect(memory.currentState).toBe('Starting');
@@ -320,33 +320,33 @@ describe('smith update-memory CLI (handler)', () => {
   });
 
   it('appends to arrays on subsequent calls', async () => {
-    writeFileSync(join(tempCwd, '.case/active'), 'foo-1');
+    writeFileSync(join(tempCwd, '.smith/active'), 'foo-1');
     const { handler } = await import('../commands/update-memory.js');
 
     await handler(['--state', 'A', '--file', 'src/a.ts']);
     await handler(['--file', 'src/b.ts', '--tried', 'first', '--tried-outcome', 'failed']);
 
-    const memory = JSON.parse(readFileSync(join(tempCwd, '.case/foo-1/working-memory.json'), 'utf-8'));
+    const memory = JSON.parse(readFileSync(join(tempCwd, '.smith/foo-1/working-memory.json'), 'utf-8'));
     expect(memory.filesChanged).toEqual(['src/a.ts', 'src/b.ts']);
     expect(memory.approachesTried).toEqual([{ approach: 'first', outcome: 'failed' }]);
   });
 
   it('rejects invalid --error-status with exit 1', async () => {
-    writeFileSync(join(tempCwd, '.case/active'), 'foo-1');
+    writeFileSync(join(tempCwd, '.smith/active'), 'foo-1');
     const { handler } = await import('../commands/update-memory.js');
     const code = await handler(['--error', 'X', '--error-status', 'bogus']);
     expect(code).toBe(1);
   });
 
   it('rejects --error-status without preceding --error', async () => {
-    writeFileSync(join(tempCwd, '.case/active'), 'foo-1');
+    writeFileSync(join(tempCwd, '.smith/active'), 'foo-1');
     const { handler } = await import('../commands/update-memory.js');
     const code = await handler(['--error-status', 'fixed']);
     expect(code).toBe(1);
   });
 
   it('rejects empty argv', async () => {
-    writeFileSync(join(tempCwd, '.case/active'), 'foo-1');
+    writeFileSync(join(tempCwd, '.smith/active'), 'foo-1');
     const { handler } = await import('../commands/update-memory.js');
     const code = await handler([]);
     expect(code).toBe(1);
@@ -359,7 +359,7 @@ describe('smith update-memory CLI (handler)', () => {
   });
 
   it('attaches --error-file and --error-status to most recent --error', async () => {
-    writeFileSync(join(tempCwd, '.case/active'), 'foo-1');
+    writeFileSync(join(tempCwd, '.smith/active'), 'foo-1');
     const { handler } = await import('../commands/update-memory.js');
     const code = await handler([
       '--error',
@@ -374,7 +374,7 @@ describe('smith update-memory CLI (handler)', () => {
       'workaround',
     ]);
     expect(code).toBe(0);
-    const memory = JSON.parse(readFileSync(join(tempCwd, '.case/foo-1/working-memory.json'), 'utf-8'));
+    const memory = JSON.parse(readFileSync(join(tempCwd, '.smith/foo-1/working-memory.json'), 'utf-8'));
     expect(memory.errorsSeen).toEqual([
       { error: 'TypeError', file: 'src/x.ts', resolution: 'fixed' },
       { error: 'RangeError', resolution: 'workaround' },

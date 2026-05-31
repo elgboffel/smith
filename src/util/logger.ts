@@ -8,11 +8,11 @@ export interface Logger {
  * Structured JSON-lines logger writing to stderr.
  * Stdout is reserved for pipeline output.
  *
- * Suppressed when CASE_QUIET=1 (set by CLI for interactive terminal use).
+ * Suppressed when SMITH_QUIET=1 (set by CLI for interactive terminal use).
  */
 export function createLogger(): Logger {
   function emit(level: string, message: string, extra?: Record<string, unknown>) {
-    if (process.env.CASE_QUIET === '1') return;
+    if (process.env.SMITH_QUIET === '1') return;
     const entry = {
       ts: new Date().toISOString(),
       level,

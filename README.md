@@ -46,7 +46,7 @@ smith --agent 1234
 For an existing task file:
 
 ```bash
-smith run --task .case/tasks/active/cli-1-issue-53.task.json
+smith run --task .smith/tasks/active/cli-1-issue-53.task.json
 ```
 
 To resume an interrupted issue run, re-run the same command:
@@ -86,7 +86,7 @@ bun link
 smith init
 ```
 
-`smith init` creates `~/.config/case/` and migrates local state from the repo when run from the case checkout. Re-running it is safe.
+`smith init` creates `~/.config/smith/` and migrates local state from the repo when run from the case checkout. Re-running it is safe.
 
 Build a standalone binary:
 
@@ -141,15 +141,15 @@ smith run --fresh 1234
 
 ## Storage Layout
 
-Package-level config lives under `~/.config/case/`. Per-repo runtime state lives under each target repo's ignored `.case/` directory:
+Package-level config lives under `~/.config/smith/`. Per-repo runtime state lives under each target repo's ignored `.smith/` directory:
 
 ```text
-~/.config/case/
+~/.config/smith/
   config.json
   projects.json
   agent-versions/
 
-<target-repo>/.case/
+<target-repo>/.smith/
   active
   learnings.md
   amendments/
@@ -167,14 +167,14 @@ Package-level config lives under `~/.config/case/`. Per-repo runtime state lives
 Override the config/cache directory with:
 
 ```bash
-CASE_DATA_DIR=/tmp/case-test smith init
+SMITH_DATA_DIR=/tmp/case-test smith init
 ```
 
-Static package assets are versioned with Case and embedded into the standalone binary: `agents/`, markdown under `docs/`, and text rules under `ast-rules/`. When running from a checkout, disk files win so local prompt/doc edits are picked up immediately; set `CASE_PACKAGE_ROOT=/path/to/case` to force a specific checkout as the disk override.
+Static package assets are versioned with Case and embedded into the standalone binary: `agents/`, markdown under `docs/`, and text rules under `ast-rules/`. When running from a checkout, disk files win so local prompt/doc edits are picked up immediately; set `SMITH_PACKAGE_ROOT=/path/to/case` to force a specific checkout as the disk override.
 
 Each entry in `projects.json` may optionally include `credentials` (per-repo secrets needed for verification) and `verificationNotes` (free-form context the verifier should know about the repo).
 
-For portable binary installs, keep `projects.json` in `~/.config/case/` via `smith init --projects <path>` or `smith init --migrate-from <case-checkout>`. Repo paths in a portable `projects.json` should be absolute or relative to that `projects.json` file.
+For portable binary installs, keep `projects.json` in `~/.config/smith/` via `smith init --projects <path>` or `smith init --migrate-from <case-checkout>`. Repo paths in a portable `projects.json` should be absolute or relative to that `projects.json` file.
 
 ## Pipeline
 
@@ -187,7 +187,7 @@ Profiles:
 
 Revision loops are evaluator-driven. A verifier or reviewer rubric failure can send structured feedback back to the implementer. The default revision budget is two cycles. If consecutive cycles produce identical failure fingerprints (SHA-256 of failed categories + error summary), the pipeline aborts early instead of burning the remaining budget.
 
-Every run writes an append-only event log under `<target-repo>/.case/<task-slug>/events/`. `smith watch <task-slug>` renders those events while a run is active.
+Every run writes an append-only event log under `<target-repo>/.smith/<task-slug>/events/`. `smith watch <task-slug>` renders those events while a run is active.
 
 Every task carries `evidenceExpectations` — the concrete artifacts the verifier must produce. The orchestrator writes these based on the target repo's `evidenceStrategy` so the verifier knows what counts as proof up front.
 
@@ -209,7 +209,7 @@ The key boundary is context isolation. Scout context is read-only exploration of
 
 ## Evidence Gates
 
-Evidence markers live under the target repo's `.case/<task-slug>/` directory:
+Evidence markers live under the target repo's `.smith/<task-slug>/` directory:
 
 - `tested`: created by `smith mark-tested` from real test output.
 - `manual-tested`: created by `smith mark-manual-tested` from manual/browser verification evidence.
@@ -227,15 +227,15 @@ Each repo declares an `evidenceStrategy` in `projects.json` that drives what the
 
 After a run, the retrospective agent should leave the harness smarter:
 
-- Append tactical repo learnings under `<target-repo>/.case/learnings.md`.
-- Propose broader harness changes under `<target-repo>/.case/amendments/`.
+- Append tactical repo learnings under `<target-repo>/.smith/learnings.md`.
+- Propose broader harness changes under `<target-repo>/.smith/amendments/`.
 - Escalate repeated failures into docs, playbooks, conventions, or enforcement.
 
 Retrospective output is constrained. It should not expand the product surface by default. The fix for repeated agent failure is usually a clearer task, a better playbook, a sharper convention, or a mechanical guardrail.
 
 ## Model Configuration
 
-Configure models in `~/.config/case/config.json`:
+Configure models in `~/.config/smith/config.json`:
 
 ```json
 {
@@ -256,7 +256,7 @@ Priority:
 
 ## Repository Map
 
-Target repos are listed in `~/.config/case/projects.json` (created by `smith init` + `smith onboard`). The schema is `projects.schema.json` in this repo.
+Target repos are listed in `~/.config/smith/projects.json` (created by `smith init` + `smith onboard`). The schema is `projects.schema.json` in this repo.
 
 Add a repo with:
 
@@ -266,7 +266,7 @@ smith onboard <path> --interview        # mechanical probe + interactive intervi
 smith onboard <repo> --re-interview     # update an existing entry by re-interviewing
 ```
 
-`--interview` runs the interviewer agent after the mechanical probe to capture evidence strategy rationale, verification notes, conventions, and repo-specific learnings. The interview writes the seed `.case/learnings.md` and `CLAUDE.local.md` alongside the `projects.json` entry. `--re-interview` re-runs the interview for an existing repo and replaces its `projects.json` entry in place.
+`--interview` runs the interviewer agent after the mechanical probe to capture evidence strategy rationale, verification notes, conventions, and repo-specific learnings. The interview writes the seed `.smith/learnings.md` and `CLAUDE.local.md` alongside the `projects.json` entry. `--re-interview` re-runs the interview for an existing repo and replaces its `projects.json` entry in place.
 
 Then add any needed architecture notes under `docs/architecture/` and verify with:
 

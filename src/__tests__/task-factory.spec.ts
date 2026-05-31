@@ -32,7 +32,7 @@ describe('createTask', () => {
     expect(result.taskId).toContain('cli-');
     expect(result.taskJsonPath).toContain('.task.json');
     expect(result.taskMdPath).toContain('.md');
-    expect(result.taskJsonPath).toContain(join('.case', 'tasks', 'active'));
+    expect(result.taskJsonPath).toContain(join('.smith', 'tasks', 'active'));
 
     const taskJson = JSON.parse(await Bun.file(result.taskJsonPath).text());
     expect(taskJson.id).toBe(result.taskId);
@@ -46,7 +46,7 @@ describe('createTask', () => {
     expect(taskMd).toContain('Repo:** cli');
     expect(taskMd).toContain('## Evidence Expectations');
     expect(taskMd).toContain('flaky login test passes 10 consecutive runs');
-    expect((await Bun.file(join(tempDir, '.case', 'active')).text()).trim()).toBe(result.taskId);
+    expect((await Bun.file(join(tempDir, '.smith', 'active')).text()).trim()).toBe(result.taskId);
   });
 
   it('includes issue and trigger info', async () => {

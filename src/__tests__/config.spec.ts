@@ -12,7 +12,7 @@ const originalEnv = { ...process.env };
 describe('projects config', () => {
   beforeEach(async () => {
     tempDir = await mkdtemp(join(tmpdir(), 'case-config-'));
-    process.env.CASE_DATA_DIR = tempDir;
+    process.env.SMITH_DATA_DIR = tempDir;
   });
 
   afterEach(async () => {

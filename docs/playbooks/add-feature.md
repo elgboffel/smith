@@ -84,11 +84,11 @@ Before opening a PR, the reviewer agent checks the diff against golden principle
 
 - All enforced invariants (TypeScript strict, tests pass, conventional commits, no secrets, etc.)
 - Advisory checks (file size, test coverage, one concern per PR)
-- Structured test output from `.case/<task-slug>/tested` (fail count must be 0)
+- Structured test output from `.smith/<task-slug>/tested` (fail count must be 0)
 
 Critical findings block PR creation. Warnings and info are posted as PR comments.
 
-Evidence: `.case/<task-slug>/reviewed` marker (created by `smith mark-reviewed` only if critical: 0).
+Evidence: `.smith/<task-slug>/reviewed` marker (created by `smith mark-reviewed` only if critical: 0).
 
 ## Step 9: Open PR
 

@@ -12,7 +12,7 @@
  *   2. Synthesizes a validated `InterviewFindings` into the three downstream
  *      artifacts the onboard command writes:
  *        - merged {@link ProjectEntry} for `projects.json`
- *        - seed markdown for `<repo>/.case/learnings.md`
+ *        - seed markdown for `<repo>/.smith/learnings.md`
  *        - seed markdown for `<repo>/CLAUDE.local.md`
  *   3. Validates that the chosen evidence strategy matches the declared repo
  *      type — surfaces warnings for combinations that the verifier is known
@@ -239,7 +239,7 @@ export function synthesizeProjectEntry(findings: InterviewFindings, detected: De
 }
 
 /**
- * Format the interview's learnings array as a `.case/learnings.md`
+ * Format the interview's learnings array as a `.smith/learnings.md`
  * document. Each entry becomes a `## {topic}` heading followed by its
  * content paragraph. Returns the empty string when no learnings were
  * captured — onboard treats that as "skip writing the file".

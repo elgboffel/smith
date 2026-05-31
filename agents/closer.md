@@ -15,7 +15,7 @@ Close the loop on a completed task **without opening a pull request**. By the ti
 You receive from the orchestrator:
 
 - **Issue file path** — absolute path to the source issue `.md` file. This is the closed-loop record you will update.
-- **Task file path** — absolute path to the `.md` task file under the target repo's ignored `.case/tasks/active/`
+- **Task file path** — absolute path to the `.md` task file under the target repo's ignored `.smith/tasks/active/`
 - **Task JSON path** — the `.task.json` companion
 - **Target repo path** — absolute path to the repo
 - **Verifier AGENT_RESULT** — structured output from the verifier
@@ -54,7 +54,7 @@ Verify the work is in a closeable state. If any check fails, STOP — do not edi
 2. **Work is committed**: the working tree must be clean (the implementer commits before returning). A dirty tree means uncommitted work — STOP.
 
    ```bash
-   test -z "$(git status --porcelain -- ':!.case/')"
+   test -z "$(git status --porcelain -- ':!.smith/')"
    ```
 
 3. **Not on a protected branch**: never close from `main`/`master`. The implementer works on a feature branch.

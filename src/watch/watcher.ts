@@ -81,7 +81,7 @@ export async function* watchEventLog(options: WatchOptions): AsyncGenerator<Pipe
 }
 
 async function resolveEventLogPath(caseRoot: string, taskSlug: string, runId?: string): Promise<string> {
-  const eventDir = resolve(caseRoot, '.case', taskSlug, 'events');
+  const eventDir = resolve(caseRoot, '.smith', taskSlug, 'events');
 
   if (runId) {
     return resolve(eventDir, `run-${runId}.jsonl`);

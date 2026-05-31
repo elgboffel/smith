@@ -166,8 +166,8 @@ describe('renderWatchEvent — no color', () => {
   });
 
   test('marker_written', () => {
-    const out = renderWatchEvent(makeEvent('marker_written', { marker: '.case-tested', path: '/tmp/x' } as any));
-    expect(out).toBe('📎 marker: .case-tested');
+    const out = renderWatchEvent(makeEvent('marker_written', { marker: '.smith-tested', path: '/tmp/x' } as any));
+    expect(out).toBe('📎 marker: .smith-tested');
   });
 });
 

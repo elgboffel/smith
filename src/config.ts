@@ -40,7 +40,7 @@ export async function loadProjectsManifest(caseRoot: string): Promise<LoadedProj
     const candidate = candidates[i]!;
     const file = Bun.file(candidate.path);
     if (await file.exists()) {
-      if (i > 0 && !deprecationWarned && process.env.CASE_QUIET !== '1') {
+      if (i > 0 && !deprecationWarned && process.env.SMITH_QUIET !== '1') {
         deprecationWarned = true;
         process.stderr.write(
           `case: deprecation — projects.json read from legacy path ${candidate.path}; move it to ${candidates[0]?.path} (or run 'smith init --migrate-from <repo>').\n`,
@@ -81,7 +81,7 @@ function projectsManifestCandidates(caseRoot: string): ProjectsManifestCandidate
       }
     }
   } catch {
-    // resolveDataDir() can throw if HOME/XDG/CASE_DATA_DIR are all unset.
+    // resolveDataDir() can throw if HOME/XDG/SMITH_DATA_DIR are all unset.
     // Fall through to caseRoot.
   }
   if (!isEmbeddedPackageRoot(caseRoot)) {
@@ -115,7 +115,7 @@ export async function buildPipelineConfig(opts: {
   }
 
   const repoPath = resolveRepoPath(manifest.repoBasePath, project.path);
-  // Mutable task runtime state is repo-local under `<repo>/.case/`.
+  // Mutable task runtime state is repo-local under `<repo>/.smith/`.
   // The field is still named dataDir for API compatibility with the existing pipeline code.
   const dataDir = repoPath;
 

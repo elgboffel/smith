@@ -45,7 +45,7 @@ const { runCliOrchestrator } = await import('../entry/cli-orchestrator.js');
 let tempDir: string;
 
 function taskPath(stem: string, ext: 'task.json' | 'md'): string {
-  return join(tempDir, 'repo', '.case', 'tasks', 'active', `${stem}.${ext}`);
+  return join(tempDir, 'repo', '.smith', 'tasks', 'active', `${stem}.${ext}`);
 }
 
 function makeTaskJson(overrides: Partial<TaskJson> = {}): TaskJson {
@@ -78,7 +78,7 @@ const defaultProject = {
 describe('runCliOrchestrator — re-entry', () => {
   beforeEach(async () => {
     tempDir = join(process.env.TMPDIR ?? '/tmp', `case-orch-test-${Date.now()}`);
-    await mkdir(join(tempDir, 'repo', '.case/tasks/active'), { recursive: true });
+    await mkdir(join(tempDir, 'repo', '.smith/tasks/active'), { recursive: true });
 
     // Reset all mocks
     mockDetectRepo.mockReset();
@@ -168,7 +168,7 @@ describe('runCliOrchestrator — re-entry', () => {
     });
     mockRunCommand.mockResolvedValue({ stdout: '', stderr: '', exitCode: 0 });
 
-    // Need repo dir to exist for .case/active write — make it a git repo
+    // Need repo dir to exist for .smith/active write — make it a git repo
     const repoDir = join(tempDir, 'repo');
     await mkdir(repoDir, { recursive: true });
 

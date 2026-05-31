@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 /**
- * Agent config tests use CASE_DATA_DIR so they never touch real user config.
+ * Agent config tests use SMITH_DATA_DIR so they never touch real user config.
  */
 
 const { loadConfig, getModelForAgent } = await import('../agent/config.js');
@@ -19,18 +19,18 @@ async function writeConfig(config: unknown): Promise<void> {
 
 describe('agent config', () => {
   beforeEach(async () => {
-    originalCaseDataDir = process.env.CASE_DATA_DIR;
+    originalCaseDataDir = process.env.SMITH_DATA_DIR;
     originalXdgConfigHome = process.env.XDG_CONFIG_HOME;
     tempDir = await mkdtemp(join(tmpdir(), 'case-agent-config-'));
     await mkdir(tempDir, { recursive: true });
-    process.env.CASE_DATA_DIR = tempDir;
+    process.env.SMITH_DATA_DIR = tempDir;
     delete process.env.XDG_CONFIG_HOME;
     delete process.env.CASE_MODEL_OVERRIDE;
   });
 
   afterEach(async () => {
-    if (originalCaseDataDir === undefined) delete process.env.CASE_DATA_DIR;
-    else process.env.CASE_DATA_DIR = originalCaseDataDir;
+    if (originalCaseDataDir === undefined) delete process.env.SMITH_DATA_DIR;
+    else process.env.SMITH_DATA_DIR = originalCaseDataDir;
 
     if (originalXdgConfigHome === undefined) delete process.env.XDG_CONFIG_HOME;
     else process.env.XDG_CONFIG_HOME = originalXdgConfigHome;

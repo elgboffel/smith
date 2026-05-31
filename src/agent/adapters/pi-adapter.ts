@@ -47,7 +47,7 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
     const model = this.registry.find(modelConfig.provider, modelConfig.model);
     if (!model) {
       throw new Error(
-        `Model not found: ${modelConfig.provider}/${modelConfig.model}. Check ~/.config/case/config.json`,
+        `Model not found: ${modelConfig.provider}/${modelConfig.model}. Check ~/.config/smith/config.json`,
       );
     }
 

@@ -25,12 +25,12 @@ describe('resolvePackageRoot', () => {
     expect(root).not.toBe('/');
   });
 
-  it('honors CASE_PACKAGE_ROOT when it points at a case package', async () => {
+  it('honors SMITH_PACKAGE_ROOT when it points at a case package', async () => {
     const originalEnv = { ...process.env };
     const tmp = await mkdtemp(join(tmpdir(), 'case-package-root-'));
     try {
-      await writeFile(join(tmp, 'package.json'), JSON.stringify({ name: 'case' }));
-      process.env.CASE_PACKAGE_ROOT = tmp;
+      await writeFile(join(tmp, 'package.json'), JSON.stringify({ name: 'smith' }));
+      process.env.SMITH_PACKAGE_ROOT = tmp;
       expect(resolvePackageRoot()).toBe(tmp);
     } finally {
       process.env = { ...originalEnv };
@@ -43,7 +43,7 @@ describe('resolveDataDir', () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
-    delete process.env.CASE_DATA_DIR;
+    delete process.env.SMITH_DATA_DIR;
     delete process.env.XDG_CONFIG_HOME;
     delete process.env.HOME;
   });
@@ -53,36 +53,36 @@ describe('resolveDataDir', () => {
     process.env = { ...originalEnv };
   });
 
-  it('honors CASE_DATA_DIR override', () => {
-    process.env.CASE_DATA_DIR = '/tmp/case-test-override';
+  it('honors SMITH_DATA_DIR override', () => {
+    process.env.SMITH_DATA_DIR = '/tmp/case-test-override';
     expect(resolveDataDir()).toBe('/tmp/case-test-override');
   });
 
-  it('CASE_DATA_DIR wins over XDG_CONFIG_HOME', () => {
-    process.env.CASE_DATA_DIR = '/tmp/case-explicit';
+  it('SMITH_DATA_DIR wins over XDG_CONFIG_HOME', () => {
+    process.env.SMITH_DATA_DIR = '/tmp/case-explicit';
     process.env.XDG_CONFIG_HOME = '/tmp/xdg';
     process.env.HOME = '/tmp/home';
     expect(resolveDataDir()).toBe('/tmp/case-explicit');
   });
 
-  it('falls back to $XDG_CONFIG_HOME/case', () => {
+  it('falls back to $XDG_CONFIG_HOME/smith', () => {
     process.env.XDG_CONFIG_HOME = '/tmp/xdg';
-    expect(resolveDataDir()).toBe('/tmp/xdg/case');
+    expect(resolveDataDir()).toBe('/tmp/xdg/smith');
   });
 
-  it('XDG_CONFIG_HOME wins over HOME when CASE_DATA_DIR unset', () => {
+  it('XDG_CONFIG_HOME wins over HOME when SMITH_DATA_DIR unset', () => {
     process.env.XDG_CONFIG_HOME = '/tmp/xdg';
     process.env.HOME = '/tmp/home';
-    expect(resolveDataDir()).toBe('/tmp/xdg/case');
+    expect(resolveDataDir()).toBe('/tmp/xdg/smith');
   });
 
-  it('falls back to $HOME/.config/case', () => {
+  it('falls back to $HOME/.config/smith', () => {
     process.env.HOME = '/tmp/home';
-    expect(resolveDataDir()).toBe('/tmp/home/.config/case');
+    expect(resolveDataDir()).toBe('/tmp/home/.config/smith');
   });
 
   it('throws when no env vars are set', () => {
-    expect(() => resolveDataDir()).toThrow(/CASE_DATA_DIR, XDG_CONFIG_HOME, or HOME must be set/);
+    expect(() => resolveDataDir()).toThrow(/SMITH_DATA_DIR, XDG_CONFIG_HOME, or HOME must be set/);
   });
 });
 
@@ -109,7 +109,7 @@ describe('package root walk-up guard', () => {
         const manifestPath = resolve(current, 'package.json');
         if (existsSync(manifestPath)) {
           const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-          if (manifest.name === 'case') return current;
+          if (manifest.name === 'smith') return current;
         }
         const parent = dirname(current);
         if (parent === current) {
@@ -134,7 +134,7 @@ describe('path helpers', () => {
 
   it('resolveTask returns legacy dataDir/tasks/active/<slug>.task.json', () => {
     const originalEnv = { ...process.env };
-    process.env.CASE_DATA_DIR = '/tmp/case-data-test';
+    process.env.SMITH_DATA_DIR = '/tmp/case-data-test';
     try {
       const path = resolveTask('foo-1');
       expect(path).toBe('/tmp/case-data-test/tasks/active/foo-1.task.json');
@@ -143,13 +143,13 @@ describe('path helpers', () => {
     }
   });
 
-  it('resolves repo-local .case paths', () => {
+  it('resolves repo-local .smith paths', () => {
     const repo = '/tmp/repo';
-    expect(resolveRepoActiveMarker(repo)).toBe('/tmp/repo/.case/active');
-    expect(resolveRepoActiveTaskDir(repo)).toBe('/tmp/repo/.case/tasks/active');
-    expect(resolveRepoTaskJson(repo, 'foo-1')).toBe('/tmp/repo/.case/tasks/active/foo-1.task.json');
-    expect(resolveRepoLearnings(repo)).toBe('/tmp/repo/.case/learnings.md');
-    expect(resolveRepoRunLog(repo)).toBe('/tmp/repo/.case/run-log.jsonl');
+    expect(resolveRepoActiveMarker(repo)).toBe('/tmp/repo/.smith/active');
+    expect(resolveRepoActiveTaskDir(repo)).toBe('/tmp/repo/.smith/tasks/active');
+    expect(resolveRepoTaskJson(repo, 'foo-1')).toBe('/tmp/repo/.smith/tasks/active/foo-1.task.json');
+    expect(resolveRepoLearnings(repo)).toBe('/tmp/repo/.smith/learnings.md');
+    expect(resolveRepoRunLog(repo)).toBe('/tmp/repo/.smith/run-log.jsonl');
   });
 });
 

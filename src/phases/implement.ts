@@ -181,7 +181,7 @@ async function attemptRetry(
  */
 function prependWorkingMemory(basePrompt: string, config: PipelineConfig): string {
   const slug = taskSlugFromTaskJsonPath(config.taskJsonPath);
-  const taskDir = resolve(config.repoPath, '.case', slug);
+  const taskDir = resolve(config.repoPath, '.smith', slug);
   const memory = readWorkingMemory(taskDir);
   if (!memory) return basePrompt;
   return formatForImplementer(memory) + '\n' + basePrompt;

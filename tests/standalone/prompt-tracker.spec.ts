@@ -20,10 +20,10 @@ beforeEach(async () => {
   await mkdir(repoDir, { recursive: true });
   await mkdir(dataDir, { recursive: true });
   await mkdir(join(packageRoot, 'docs'), { recursive: true });
-  await writeFile(join(packageRoot, 'package.json'), JSON.stringify({ name: 'case' }));
+  await writeFile(join(packageRoot, 'package.json'), JSON.stringify({ name: 'smith' }));
 
-  process.env.CASE_DATA_DIR = dataDir;
-  process.env.CASE_PACKAGE_ROOT = packageRoot;
+  process.env.SMITH_DATA_DIR = dataDir;
+  process.env.SMITH_PACKAGE_ROOT = packageRoot;
 });
 
 afterEach(async () => {
@@ -40,16 +40,16 @@ describe('findPriorRunId', () => {
         JSON.stringify({ task: 'task-1', runId: 'smith-new' }),
       ].join('\n'),
     );
-    await mkdir(join(repoDir, '.case'), { recursive: true });
-    await writeFile(join(repoDir, '.case/run-log.jsonl'), JSON.stringify({ task: 'task-1', runId: 'repo-run' }));
+    await mkdir(join(repoDir, '.smith'), { recursive: true });
+    await writeFile(join(repoDir, '.smith/run-log.jsonl'), JSON.stringify({ task: 'task-1', runId: 'repo-run' }));
 
     expect(await findPriorRunId(repoDir, 'task-1')).toBe('smith-new');
   });
 
   it('prefers the repo-local run log', async () => {
-    await mkdir(join(repoDir, '.case'), { recursive: true });
+    await mkdir(join(repoDir, '.smith'), { recursive: true });
     await writeFile(
-      join(repoDir, '.case/run-log.jsonl'),
+      join(repoDir, '.smith/run-log.jsonl'),
       [
         JSON.stringify({ task: 'task-1', runId: 'repo-old' }),
         JSON.stringify({ task: 'other', runId: 'other' }),

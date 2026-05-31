@@ -20,8 +20,8 @@ async function setupTemplates() {
 function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
     mode: 'attended',
-    taskJsonPath: join(tempCaseRoot, '.case/tasks/active/cli-1-issue-53.task.json'),
-    taskMdPath: join(tempCaseRoot, '.case/tasks/active/cli-1-issue-53.md'),
+    taskJsonPath: join(tempCaseRoot, '.smith/tasks/active/cli-1-issue-53.task.json'),
+    taskMdPath: join(tempCaseRoot, '.smith/tasks/active/cli-1-issue-53.md'),
     repoPath: tempCaseRoot,
     repoName: 'cli',
     packageRoot: tempCaseRoot,

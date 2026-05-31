@@ -3,11 +3,11 @@ import { createHash } from 'node:crypto';
 import { resolve, join } from 'node:path';
 import { updateTaskJson } from './mark-tested.js';
 
-export const description = 'Mark a repo as manually tested (writes .case/<slug>/manual-tested)';
+export const description = 'Mark a repo as manually tested (writes .smith/<slug>/manual-tested)';
 
 function resolveTaskSlug(): string | null {
-  if (!existsSync('.case/active')) return null;
-  return readFileSync('.case/active', 'utf-8').trim() || null;
+  if (!existsSync('.smith/active')) return null;
+  return readFileSync('.smith/active', 'utf-8').trim() || null;
 }
 
 function countRecentPngs(dir: string, maxAgeMinutes: number): number {
@@ -32,11 +32,11 @@ function countRecentPngs(dir: string, maxAgeMinutes: number): number {
 export async function handler(argv: string[]): Promise<number> {
   const slug = resolveTaskSlug();
   if (!slug) {
-    process.stderr.write('ERROR: No active task — .case/active is missing or empty. Run the orchestrator first.\n');
+    process.stderr.write('ERROR: No active task — .smith/active is missing or empty. Run the orchestrator first.\n');
     return 1;
   }
 
-  const markerDir = `.case/${slug}`;
+  const markerDir = `.smith/${slug}`;
   mkdirSync(markerDir, { recursive: true });
   const timestamp = new Date().toISOString();
   const mode = argv.includes('--library') ? 'library' : 'playwright';
@@ -78,7 +78,7 @@ export async function handler(argv: string[]): Promise<number> {
   }
 
   writeFileSync(resolve(markerDir, 'manual-tested'), `timestamp: ${timestamp}\nevidence: ${evidenceDetails}\n`);
-  process.stderr.write(`.case/${slug}/manual-tested created (${evidenceDetails})\n`);
+  process.stderr.write(`.smith/${slug}/manual-tested created (${evidenceDetails})\n`);
   updateTaskJson(slug, 'manualTested');
   return 0;
 }

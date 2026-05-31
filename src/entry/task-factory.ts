@@ -29,7 +29,7 @@ export interface TaskEnrichment {
 }
 
 /**
- * Create a task.json + task.md pair in the target repo's .case/tasks/active/
+ * Create a task.json + task.md pair in the target repo's .smith/tasks/active/
  * from a TaskCreateRequest.
  * Returns paths to the created files for pipeline dispatch.
  *
@@ -74,7 +74,7 @@ export async function createTask(
 
   await Bun.write(taskJsonPath, JSON.stringify(taskJson, null, 2) + '\n');
   await Bun.write(taskMdPath, taskMd);
-  await mkdir(resolve(repoPath, '.case'), { recursive: true });
+  await mkdir(resolve(repoPath, '.smith'), { recursive: true });
   await Bun.write(resolveRepoActiveMarker(repoPath), `${taskId}\n`);
 
   log.info('task created', {

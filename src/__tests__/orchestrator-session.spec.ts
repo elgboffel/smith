@@ -182,7 +182,7 @@ describe('startOrchestratorSession', () => {
   it('shows existing task instead of fetching when task matches argument', async () => {
     mockFindTaskByIssue.mockResolvedValue({
       taskJson: { id: 'cli-1234', status: 'verifying', prUrl: null },
-      taskJsonPath: '/repos/cli/.case/tasks/active/cli-1234.task.json',
+      taskJsonPath: '/repos/cli/.smith/tasks/active/cli-1234.task.json',
       entryPhase: 'verify',
     });
 

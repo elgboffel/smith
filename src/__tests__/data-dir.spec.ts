@@ -19,8 +19,8 @@ const originalEnv = { ...process.env };
 
 beforeEach(async () => {
   tmp = await mkdtemp(join(tmpdir(), 'case-data-dir-'));
-  // Isolate CASE_DATA_DIR per test. Other case paths fall back through this.
-  process.env.CASE_DATA_DIR = tmp;
+  // Isolate SMITH_DATA_DIR per test. Other case paths fall back through this.
+  process.env.SMITH_DATA_DIR = tmp;
 });
 
 afterEach(async () => {

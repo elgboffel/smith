@@ -67,8 +67,8 @@
           },
           "credentials": {
             "type": "string",
-            "description": "Path to a sourceable env file with credentials for integration testing. Defaults to ~/.config/case/credentials.",
-            "default": "~/.config/case/credentials"
+            "description": "Path to a sourceable env file with credentials for integration testing. Defaults to ~/.config/smith/credentials.",
+            "default": "~/.config/smith/credentials"
           },
           "verificationNotes": {
             "type": "string",

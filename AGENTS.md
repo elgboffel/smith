@@ -23,7 +23,7 @@ echo "$SESSION"
 | authkit-nextjs         | `../authkit-nextjs`         | AuthKit Next.js SDK                                  | TS/pnpm |
 | workos-node            | `../workos-node/main`       | WorkOS Node.js SDK                                   | TS/npm  |
 
-Full metadata (commands, remotes, evidence strategy): `~/.config/case/projects.json`
+Full metadata (commands, remotes, evidence strategy): `~/.config/smith/projects.json`
 
 ## Navigation
 
@@ -36,11 +36,11 @@ Full metadata (commands, remotes, evidence strategy): `~/.config/case/projects.j
 | Playbooks             | `docs/playbooks/`                        |
 | Agent roles           | `agents/`                                |
 | Entropy management    | `docs/conventions/entropy-management.md` |
-| Repo learnings        | Target repo `.case/learnings.md`         |
+| Repo learnings        | Target repo `.smith/learnings.md`         |
 
 ## Task Dispatch
 
-Tasks are markdown files that agents execute. Runtime task files live in the target repo's ignored `.case/tasks/active/`.
+Tasks are markdown files that agents execute. Runtime task files live in the target repo's ignored `.smith/tasks/active/`.
 
 - **Format spec**: `tasks/README.md`
 - **Templates**: `tasks/templates/`
@@ -49,7 +49,7 @@ Pipeline: scout → implementer → verifier → reviewer → closer → (retros
 
 Onboarding agent (out of the pipeline): `interviewer` — invoked by `smith onboard --interview` to capture evidence strategy rationale, verification notes, and repo learnings.
 
-Lifecycle: `.case/tasks/active/` → PR opened/merged status in the task JSON
+Lifecycle: `.smith/tasks/active/` → PR opened/merged status in the task JSON
 
 ## Working in a Target Repo
 

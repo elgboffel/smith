@@ -1,6 +1,6 @@
 # Task File Format
 
-Tasks are markdown files that define work for agents. New runtime task files live in the target repo's ignored `.case/tasks/active/`.
+Tasks are markdown files that define work for agents. New runtime task files live in the target repo's ignored `.smith/tasks/active/`.
 
 ## Naming Convention
 
@@ -33,11 +33,11 @@ Optional: `## Context` for background info, issue links, API specs, etc.
 
 ## Lifecycle
 
-1. Orchestrator creates task file (`.md` + `.task.json`) in the target repo's `.case/tasks/active/`
+1. Orchestrator creates task file (`.md` + `.task.json`) in the target repo's `.smith/tasks/active/`
 2. Implementer writes the fix/feature, runs tests, commits
 3. Verifier tests the specific scenario with fresh context
 4. Reviewer checks the diff against golden principles and conventions
-5. Closer agent opens a PR in the target repo (requires `.case/<task-slug>/reviewed` with critical: 0)
+5. Closer agent opens a PR in the target repo (requires `.smith/<task-slug>/reviewed` with critical: 0)
 6. Post-PR hook updates `.task.json` status to `pr-opened`
 7. After PR merge, status updated to `merged` (manual or automation)
 
@@ -48,8 +48,8 @@ Legacy in-repo harness tasks without a `.task.json` companion still use the old 
 Every new task has a `.task.json` companion alongside the `.md` file. Same filename stem:
 
 ```
-.case/tasks/active/authkit-nextjs-1-issue-53.md         # human-readable
-.case/tasks/active/authkit-nextjs-1-issue-53.task.json   # machine-touched
+.smith/tasks/active/authkit-nextjs-1-issue-53.md         # human-readable
+.smith/tasks/active/authkit-nextjs-1-issue-53.task.json   # machine-touched
 ```
 
 The JSON file stores structured metadata that agents and CLI commands update programmatically. Schema: `tasks/task.schema.json`.
@@ -66,13 +66,13 @@ Read/write via: `smith status <file> <field> [value]`
 
 ### Evidence Markers
 
-Evidence markers live under `.case/<task-slug>/` in the target repo. The `.case/active` file contains the task slug. Add `.case/` to `.gitignore` (bootstrap does this automatically).
+Evidence markers live under `.smith/<task-slug>/` in the target repo. The `.smith/active` file contains the task slug. Add `.smith/` to `.gitignore` (bootstrap does this automatically).
 
 | Marker                            | Created by              | Purpose                                          |
 | --------------------------------- | ----------------------- | ------------------------------------------------ |
-| `.case/<task-slug>/tested`        | `smith mark-tested`        | Proves automated tests ran (hash of test output) |
-| `.case/<task-slug>/manual-tested` | `smith mark-manual-tested` | Proves manual/browser testing was performed      |
-| `.case/<task-slug>/reviewed`      | `smith mark-reviewed`      | Proves code review passed (critical: 0)          |
+| `.smith/<task-slug>/tested`        | `smith mark-tested`        | Proves automated tests ran (hash of test output) |
+| `.smith/<task-slug>/manual-tested` | `smith mark-manual-tested` | Proves manual/browser testing was performed      |
+| `.smith/<task-slug>/reviewed`      | `smith mark-reviewed`      | Proves code review passed (critical: 0)          |
 
 #### `tested` structured format
 

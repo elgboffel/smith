@@ -17,7 +17,7 @@ export interface TaskMatch {
  * Scan active task JSON files for a task matching the given issue.
  * Returns the match with its resolved entry phase, or null if not found.
  *
- * Scans repo-local `.case/tasks/active` first, then legacy global/in-repo locations.
+ * Scans repo-local `.smith/tasks/active` first, then legacy global/in-repo locations.
  */
 export async function findTaskByIssue(
   caseRoot: string,
@@ -64,14 +64,14 @@ function activeDirCandidates(caseRoot: string, repoPath?: string): string[] {
   try {
     list.push(join(resolveTaskDir(), 'active'));
   } catch {
-    // resolveDataDir() may throw if HOME/XDG/CASE_DATA_DIR unset
+    // resolveDataDir() may throw if HOME/XDG/SMITH_DATA_DIR unset
   }
   list.push(resolve(caseRoot, 'tasks/active'));
   return list;
 }
 
 /**
- * Scan for a task via the `.case/active` marker in the given repo directory.
+ * Scan for a task via the `.smith/active` marker in the given repo directory.
  * Reads the task ID from the marker file, then loads the task JSON directly.
  *
  * Handles stale markers (>24h) and missing task files by cleaning up.
@@ -90,7 +90,7 @@ export async function findTaskByMarker(caseRoot: string, repoPath: string): Prom
   const ageMs = Date.now() - markerStat.mtimeMs;
   if (ageMs > STALE_MARKER_MS) {
     await cleanupActiveMarker(markerPath);
-    process.stdout.write('Stale .case/active marker (>24h) cleaned up.\n');
+    process.stdout.write('Stale .smith/active marker (>24h) cleaned up.\n');
     return null;
   }
 

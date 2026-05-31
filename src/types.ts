@@ -155,7 +155,7 @@ export interface PipelineConfig {
   project?: ProjectEntry;
   /** Disk checkout for package asset overrides, or embedded://case in portable binaries. */
   packageRoot: string;
-  /** Target repo root; mutable runtime state lives under `<dataDir>/.case/`. */
+  /** Target repo root; mutable runtime state lives under `<dataDir>/.smith/`. */
   dataDir: string;
   maxRetries: number;
   dryRun: boolean;
@@ -183,7 +183,7 @@ export interface PipelineConfig {
 
 export type EvidenceStrategy = 'ui-screenshot' | 'scenario-script' | 'test-output';
 
-export const DEFAULT_CREDENTIALS_PATH = '~/.config/case/credentials';
+export const DEFAULT_CREDENTIALS_PATH = '~/.config/smith/credentials';
 
 export interface ProjectEntry {
   name: string;
@@ -328,7 +328,7 @@ export interface SpawnAgentOptions {
   agentName: AgentName | 'retrospective';
   /** Disk checkout for package asset overrides, or embedded://case in portable binaries. */
   packageRoot: string;
-  /** Target repo root; mutable runtime state lives under `<dataDir>/.case/`. */
+  /** Target repo root; mutable runtime state lives under `<dataDir>/.smith/`. */
   dataDir: string;
   timeout?: number;
   /** Model provider (default: "anthropic") */
@@ -446,7 +446,7 @@ export interface TaskCreateRequest {
 /**
  * Structured, schema-validated working memory persisted between phases.
  *
- * Lives at `<repoPath>/.case/<task-slug>/working-memory.json`. Written by
+ * Lives at `<repoPath>/.smith/<task-slug>/working-memory.json`. Written by
  * agents via `smith update-memory`, read by the orchestrator to inject prior
  * context into each phase's prompt. Versioned for forward-compat.
  */
@@ -523,7 +523,7 @@ export type RepoType = 'sdk' | 'app' | 'library' | 'cli' | 'monorepo';
  *
  *   1. Override the evidence-strategy heuristic with a human-confirmed choice.
  *   2. Populate `verificationNotes` / `credentials` in the projects.json entry.
- *   3. Seed `<repo>/.case/learnings.md` with initial topic/content pairs.
+ *   3. Seed `<repo>/.smith/learnings.md` with initial topic/content pairs.
  *   4. Seed `<repo>/CLAUDE.local.md` with repo-specific conventions.
  *
  * Optional fields default to a no-op during synthesis. The schema mirrors
@@ -548,7 +548,7 @@ export interface InterviewFindings {
    */
   commandOverrides: Record<string, string>;
 
-  /** Seed entries for `<repo>/.case/learnings.md`. */
+  /** Seed entries for `<repo>/.smith/learnings.md`. */
   learnings: Array<{ topic: string; content: string }>;
 
   /** Convention rules for `<repo>/CLAUDE.local.md`. */

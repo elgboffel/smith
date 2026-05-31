@@ -6,7 +6,7 @@
  *
  * Migration: when invoked from a case repo root, or with `--migrate-from <path>`,
  * copies docs/agent-versions/ and projects.json into the config dir. Per-repo
- * runtime state lives under each target repo's `.case/`.
+ * runtime state lives under each target repo's `.smith/`.
  */
 
 import { parseArgs } from 'node:util';
@@ -21,7 +21,7 @@ import {
   type CaseConfig,
 } from '../data-dir.js';
 
-export const description = 'Scaffold the case config directory at ~/.config/case/';
+export const description = 'Scaffold the smith config directory at ~/.config/smith/';
 
 export interface InitOptions {
   projects?: string;
@@ -37,7 +37,7 @@ export async function init(opts: InitOptions = {}): Promise<number> {
 
   const existing = configExists();
   if (existing && !opts.force) {
-    process.stdout.write(`Case already initialized at ${dataDir}\n`);
+    process.stdout.write(`smith already initialized at ${dataDir}\n`);
     process.stdout.write(`Re-run with --force to rewrite config.json (state is preserved).\n`);
     return 0;
   }
@@ -67,7 +67,7 @@ export async function init(opts: InitOptions = {}): Promise<number> {
     }
   }
 
-  process.stdout.write(`Case initialized at ${dataDir}\n`);
+  process.stdout.write(`smith initialized at ${dataDir}\n`);
   process.stdout.write(`Config: ${resolveConfigPath()}\n`);
   return 0;
 }
@@ -107,7 +107,7 @@ export async function handler(argv: string[]): Promise<number> {
   } catch (err) {
     const msg =
       (err as NodeJS.ErrnoException).code === 'EACCES'
-        ? `permission denied at ${resolveDataDir()} — try CASE_DATA_DIR=/writable/path`
+        ? `permission denied at ${resolveDataDir()} — try SMITH_DATA_DIR=/writable/path`
         : (err as Error).message;
     process.stderr.write(`smith init: ${msg}\n`);
     return 1;
@@ -119,8 +119,8 @@ function printHelp(): void {
     [
       'Usage: smith init [options]',
       '',
-      'Scaffold the case config directory (default: ~/.config/case/) and write config.json.',
-      'Per-repo task runtime state is stored under each target repo .case/ directory.',
+      'Scaffold the smith config directory (default: ~/.config/smith/) and write config.json.',
+      'Per-repo task runtime state is stored under each target repo .smith/ directory.',
       '',
       'Options:',
       '  --projects <path>       Path to projects.json (absolute or relative to config dir)',
@@ -133,7 +133,7 @@ function printHelp(): void {
       'in projects.json absolute or relative to the projects.json file.',
       '',
       'Environment:',
-      '  CASE_DATA_DIR           Override the config/cache directory location',
+      '  SMITH_DATA_DIR           Override the config/cache directory location',
       '  XDG_CONFIG_HOME         Standard XDG override (config dir = $XDG_CONFIG_HOME/case)',
       '',
     ].join('\n'),

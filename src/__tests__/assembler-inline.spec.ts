@@ -23,8 +23,8 @@ async function writeDoc(relPath: string, body: string): Promise<void> {
 function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
     mode: 'attended',
-    taskJsonPath: join(tempCaseRoot, '.case/tasks/active/x.task.json'),
-    taskMdPath: join(tempCaseRoot, '.case/tasks/active/x.md'),
+    taskJsonPath: join(tempCaseRoot, '.smith/tasks/active/x.task.json'),
+    taskMdPath: join(tempCaseRoot, '.smith/tasks/active/x.md'),
     repoPath: tempCaseRoot,
     repoName: 'x',
     packageRoot: tempCaseRoot,

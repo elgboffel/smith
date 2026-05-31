@@ -92,7 +92,7 @@ function printUsage(): void {
   process.stderr.write('\nFlags:\n');
   process.stderr.write('  --interview      Run the interviewer agent after the mechanical probe to capture\n');
   process.stderr.write('                   evidence strategy rationale, verification notes, conventions, and\n');
-  process.stderr.write('                   repo learnings. Writes .case/learnings.md and CLAUDE.local.md in\n');
+  process.stderr.write('                   repo learnings. Writes .smith/learnings.md and CLAUDE.local.md in\n');
   process.stderr.write('                   addition to the projects.json entry.\n');
   process.stderr.write('  --re-interview   Re-run the interview for an already-onboarded repo. The argument\n');
   process.stderr.write('                   is a repo name from projects.json. The existing entry is replaced\n');
@@ -104,7 +104,7 @@ async function runOnboard(repoPath: string, caseRoot: string, options: { intervi
   // Suppress structured JSON logs during interactive onboarding — the human
   // is watching the terminal and doesn't need JSON-lines noise from probeRepo.
   if (options.interview && !process.env.CASE_DEBUG) {
-    process.env.CASE_QUIET = '1';
+    process.env.SMITH_QUIET = '1';
   }
 
   const absPath = resolve(repoPath);
@@ -165,7 +165,7 @@ async function runOnboard(repoPath: string, caseRoot: string, options: { intervi
 
 async function runReInterview(repoName: string, caseRoot: string): Promise<number> {
   if (!process.env.CASE_DEBUG) {
-    process.env.CASE_QUIET = '1';
+    process.env.SMITH_QUIET = '1';
   }
 
   const manifest = await loadProjectsManifest(caseRoot).catch(() => null);

@@ -4,9 +4,9 @@
  * Single source of truth for resolving:
  *   - packageRoot: disk checkout for static asset overrides, or embedded://case
  *   - dataDir:     user-level config/cache state
- *   - repo .case/: mutable task runtime state
+ *   - repo .smith/: mutable task runtime state
  *
- * Task runtime state lives under each target repo's ignored `.case/`
+ * Task runtime state lives under each target repo's ignored `.smith/`
  * directory. The user data dir remains for config, projects.json, and prompt
  * version metadata.
  *
@@ -47,7 +47,7 @@ export function isEmbeddedPackageRoot(packageRoot: string): boolean {
 
 function packageRootStarts(): string[] {
   const starts = [
-    process.env.CASE_PACKAGE_ROOT,
+    process.env.SMITH_PACKAGE_ROOT,
     import.meta.dir,
     process.cwd(),
     dirname(process.execPath),
@@ -66,7 +66,7 @@ function findPackageRootFrom(start: string): string | null {
       try {
         const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8')) as { name?: string };
         // Accept both names during the case → smith rename.
-        if (manifest.name === 'smith' || manifest.name === 'case') {
+        if (manifest.name === 'smith') {
           return current;
         }
       } catch {
@@ -86,27 +86,27 @@ function findPackageRootFrom(start: string): string | null {
  * Resolve the case user config/cache directory using XDG precedence.
  *
  * Precedence:
- *   1. process.env.CASE_DATA_DIR
+ *   1. process.env.SMITH_DATA_DIR
  *   2. ${process.env.XDG_CONFIG_HOME}/case
- *   3. ${process.env.HOME}/.config/case
+ *   3. ${process.env.HOME}/.config/smith
  *
  * This is intentionally separate from repo-local runtime state. Tasks, event logs,
  * markers, amendments, and repo learnings live under each target repo's ignored
- * `.case/` directory.
+ * `.smith/` directory.
  *
- * @throws if HOME is unset and no CASE_DATA_DIR or XDG_CONFIG_HOME override is provided.
+ * @throws if HOME is unset and no SMITH_DATA_DIR or XDG_CONFIG_HOME override is provided.
  */
 export function resolveDataDir(): string {
-  if (process.env.CASE_DATA_DIR) {
-    return resolve(process.env.CASE_DATA_DIR);
+  if (process.env.SMITH_DATA_DIR) {
+    return resolve(process.env.SMITH_DATA_DIR);
   }
   if (process.env.XDG_CONFIG_HOME) {
-    return resolve(process.env.XDG_CONFIG_HOME, 'case');
+    return resolve(process.env.XDG_CONFIG_HOME, 'smith');
   }
   if (process.env.HOME) {
-    return resolve(process.env.HOME, '.config', 'case');
+    return resolve(process.env.HOME, '.config', 'smith');
   }
-  throw new Error('CASE_DATA_DIR, XDG_CONFIG_HOME, or HOME must be set');
+  throw new Error('SMITH_DATA_DIR, XDG_CONFIG_HOME, or HOME must be set');
 }
 
 /** Resolve the path to an agent prompt template under packageRoot/agents when a disk package root exists. */
@@ -131,7 +131,7 @@ export function resolveTaskDir(): string {
 
 /** Resolve the ignored Case state directory inside a target repo. */
 export function resolveRepoCaseDir(repoPath: string): string {
-  return resolve(repoPath, '.case');
+  return resolve(repoPath, '.smith');
 }
 
 /** Resolve the active task marker in a target repo. */

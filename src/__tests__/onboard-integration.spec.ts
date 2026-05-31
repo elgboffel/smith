@@ -9,7 +9,7 @@
  *   - `--re-interview` updates an existing entry in-place,
  *   - `verificationNotes` on the project entry appears in the verifier
  *     prompt assembled by {@link assemblePrompt},
- *   - the interview-seeded `.case/learnings.md` lives at the same path the
+ *   - the interview-seeded `.smith/learnings.md` lives at the same path the
  *     implementer's repo-context prefetch reads.
  *
  * These tests stay at the synthesis + writer + assembler boundary — they do
@@ -79,8 +79,8 @@ function makeDetected(overrides: Partial<DetectedRepoForSynthesis> = {}): Detect
 function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
     mode: 'attended',
-    taskJsonPath: join(tempCaseRoot, '.case/tasks/active/example.task.json'),
-    taskMdPath: join(tempCaseRoot, '.case/tasks/active/example.md'),
+    taskJsonPath: join(tempCaseRoot, '.smith/tasks/active/example.task.json'),
+    taskMdPath: join(tempCaseRoot, '.smith/tasks/active/example.md'),
     repoPath: tempCaseRoot,
     repoName: 'authkit-nextjs',
     packageRoot: tempCaseRoot,
@@ -303,6 +303,6 @@ describe('onboard interview integration — learnings path matches implementer r
     expect(existsSync(expectedPath)).toBe(true);
 
     // Sanity-check the canonical layout (kept in sync with src/paths.ts).
-    expect(expectedPath.endsWith('/.case/learnings.md')).toBe(true);
+    expect(expectedPath.endsWith('/.smith/learnings.md')).toBe(true);
   });
 });

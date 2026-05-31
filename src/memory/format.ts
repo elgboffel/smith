@@ -71,7 +71,7 @@ export function formatForVerifier(memory: WorkingMemory): string {
   return lines.join('\n');
 }
 
-/** Derive the task slug from a `taskJsonPath` like `/path/.case/tasks/active/<slug>.task.json`. */
+/** Derive the task slug from a `taskJsonPath` like `/path/.smith/tasks/active/<slug>.task.json`. */
 export function taskSlugFromTaskJsonPath(taskJsonPath: string): string {
   const base = taskJsonPath.split('/').pop() ?? taskJsonPath;
   return base.replace(/\.task\.json$/, '');

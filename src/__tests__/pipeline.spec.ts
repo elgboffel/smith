@@ -62,7 +62,7 @@ const tempCaseRoot = join(process.env.TMPDIR ?? '/tmp', `case-pipeline-test-${Da
 async function setupTempFiles() {
   const agentsDir = join(tempCaseRoot, 'agents');
   await mkdir(agentsDir, { recursive: true });
-  await mkdir(join(tempCaseRoot, '.case'), { recursive: true });
+  await mkdir(join(tempCaseRoot, '.smith'), { recursive: true });
   for (const agent of ['scout', 'implementer', 'verifier', 'reviewer', 'closer', 'retrospective']) {
     await Bun.write(join(agentsDir, `${agent}.md`), `# ${agent}`);
   }
@@ -77,8 +77,8 @@ const mockRuntime = {
 function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
     mode: 'attended',
-    taskJsonPath: join(tempCaseRoot, '.case/tasks/active/cli-1.task.json'),
-    taskMdPath: join(tempCaseRoot, '.case/tasks/active/cli-1.md'),
+    taskJsonPath: join(tempCaseRoot, '.smith/tasks/active/cli-1.task.json'),
+    taskMdPath: join(tempCaseRoot, '.smith/tasks/active/cli-1.md'),
     repoPath: tempCaseRoot,
     repoName: 'cli',
     packageRoot: tempCaseRoot,

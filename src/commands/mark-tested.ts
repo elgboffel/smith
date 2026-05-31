@@ -3,11 +3,11 @@ import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { resolveDataDir, resolvePackageRoot, resolveRepoTaskJson } from '../paths.js';
 
-export const description = 'Mark a repo as auto-tested (writes .case/<slug>/tested with SHA-256 of test output)';
+export const description = 'Mark a repo as auto-tested (writes .smith/<slug>/tested with SHA-256 of test output)';
 
 function resolveTaskSlug(): string | null {
-  if (!existsSync('.case/active')) return null;
-  return readFileSync('.case/active', 'utf-8').trim() || null;
+  if (!existsSync('.smith/active')) return null;
+  return readFileSync('.smith/active', 'utf-8').trim() || null;
 }
 
 function parseVitestJson(raw: string): {
@@ -56,11 +56,11 @@ export async function handler(argv: string[]): Promise<number> {
 
   const slug = resolveTaskSlug();
   if (!slug) {
-    process.stderr.write('ERROR: No active task — .case/active is missing or empty. Run the orchestrator first.\n');
+    process.stderr.write('ERROR: No active task — .smith/active is missing or empty. Run the orchestrator first.\n');
     return 1;
   }
 
-  const markerDir = `.case/${slug}`;
+  const markerDir = `.smith/${slug}`;
   mkdirSync(markerDir, { recursive: true });
 
   let content: string;
@@ -86,7 +86,7 @@ export async function handler(argv: string[]): Promise<number> {
   }
 
   writeFileSync(resolve(markerDir, 'tested'), markerContent);
-  process.stderr.write(`.case/${slug}/tested created (hash: ${hash.slice(0, 12)}...)\n`);
+  process.stderr.write(`.smith/${slug}/tested created (hash: ${hash.slice(0, 12)}...)\n`);
 
   updateTaskJson(slug, 'tested');
   return 0;

@@ -1,7 +1,7 @@
 /**
  * Data directory management.
  *
- * Owns user-level config/cache state under `resolveDataDir()` — `~/.config/case/` by default.
+ * Owns user-level config/cache state under `resolveDataDir()` — `~/.config/smith/` by default.
  *
  * Responsibilities:
  *   - `ensureDataDir()` — idempotent mkdir of the config/cache subtree.
@@ -10,7 +10,7 @@
  *   - `migrateFromRepo()` — one-time, non-destructive copy of user-level config/cache from an existing case repo.
  *
  * Pure module — no global state. Every function re-reads env via `resolveDataDir()` so tests
- * can swap the target dir per-test by setting `CASE_DATA_DIR`.
+ * can swap the target dir per-test by setting `SMITH_DATA_DIR`.
  */
 
 import {
@@ -45,7 +45,7 @@ export const DEFAULT_CONFIG: CaseConfig = {
   defaultModel: 'claude-sonnet-4-6',
 };
 
-/** Subdirectories created under dataDir. Per-repo runtime state lives in target repo `.case/`. */
+/** Subdirectories created under dataDir. Per-repo runtime state lives in target repo `.smith/`. */
 const DATA_SUBDIRS = ['agent-versions'] as const;
 
 /**
@@ -165,7 +165,7 @@ export async function migrateFromRepo(repoRoot: string): Promise<MigrationStats>
   ensureDataDir();
 
   // Per-repo runtime state (tasks, learnings, amendments, run logs) intentionally
-  // stays with each target repo under `.case/`; `smith init` only migrates user-level
+  // stays with each target repo under `.smith/`; `smith init` only migrates user-level
   // config/cache files.
 
   // agent-versions

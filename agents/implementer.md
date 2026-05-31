@@ -12,7 +12,7 @@ Implement a fix or feature in the target repo. Write code, run automated tests, 
 
 You receive from the orchestrator:
 
-- **Task file path** — absolute path to the `.md` task file under the target repo's ignored `.case/tasks/active/`
+- **Task file path** — absolute path to the `.md` task file under the target repo's ignored `.smith/tasks/active/`
 - **Task JSON path** — the `.task.json` companion (same stem as the .md)
 - **Target repo path** — absolute path to the repo where you'll work
 - **Issue summary** — title, body, and key details from the GitHub/Linear issue
@@ -44,7 +44,7 @@ Read the output to understand: current branch, last commits, task status, which 
 3. Read the target repo's `CLAUDE.md` for project-specific instructions
 4. Read the playbook referenced in the task file
 5. Use the Project Commands section in this prompt for available commands (test, typecheck, lint, build, format). If it is absent, inspect `package.json` and `CLAUDE.md`.
-6. Read the target repo's `.case/learnings.md` for tactical knowledge from previous tasks in this repo, if it exists
+6. Read the target repo's `.smith/learnings.md` for tactical knowledge from previous tasks in this repo, if it exists
 7. Check for working memory — the orchestrator already injects structured working memory as a `## Prior Context` block at the top of this prompt when one exists. Review it carefully: it lists what previous runs tried, what failed, blockers, and files changed so far. **Do not repeat approaches marked `[failed]`**. If a `{task-stem}.working.md` file also exists alongside the task file, read it as well — it's the legacy free-form variant kept for back-compat.
 8. If the task JSON has a `checkCommand`, run it now and record the output as your baseline:
    ```bash
@@ -161,15 +161,15 @@ All checks must pass before proceeding. If any fail, fix the issue and re-run. I
 After each meaningful implementation step (e.g., test written, root cause fixed, validation passing), create a WIP commit:
 
 ```bash
-git add -A -- ':!.case/' && git commit -m "wip: {what this step accomplished}"
+git add -A -- ':!.smith/' && git commit -m "wip: {what this step accomplished}"
 ```
 
-**IMPORTANT**: Always exclude the `.case/` directory from commits using the pathspec exclusion `':!.case/'`. This directory contains harness evidence markers managed by other agents — committing it pollutes the PR and requires manual cleanup.
+**IMPORTANT**: Always exclude the `.smith/` directory from commits using the pathspec exclusion `':!.smith/'`. This directory contains harness evidence markers managed by other agents — committing it pollutes the PR and requires manual cleanup.
 
 WIP commits provide rollback points if a later step goes wrong. Before your final commit (step 4), squash all WIP commits into one clean conventional commit:
 
 ```bash
-git reset --soft $(git merge-base HEAD main) && git add -A -- ':!.case/'
+git reset --soft $(git merge-base HEAD main) && git add -A -- ':!.smith/'
 ```
 
 Then create the final commit as usual.
@@ -200,7 +200,7 @@ Fix any errors before proceeding. Warnings should be addressed if feasible but d
    pnpm test 2>&1 | smith mark-tested
    ```
 
-   This creates `.case/<task-slug>/tested` with a hash of test output AND updates the task JSON `tested` field. You do NOT set `tested` directly.
+   This creates `.smith/<task-slug>/tested` with a hash of test output AND updates the task JSON `tested` field. You do NOT set `tested` directly.
 
 2. **Commit with a conventional message**:
 
@@ -230,7 +230,7 @@ Fix any errors before proceeding. Warnings should be addressed if feasible but d
 
 ### 4b. Update Working Memory
 
-**Always do this, even on failure.** Persist structured progress via the `smith update-memory` CLI. It writes `.case/<task-slug>/working-memory.json`, which the orchestrator reads before dispatching the next phase (or the next implementer cycle).
+**Always do this, even on failure.** Persist structured progress via the `smith update-memory` CLI. It writes `.smith/<task-slug>/working-memory.json`, which the orchestrator reads before dispatching the next phase (or the next implementer cycle).
 
 Record at least the current state and the approach you used. If you tried multiple approaches, record each with its outcome. If you hit errors, record their resolution status. Examples:
 

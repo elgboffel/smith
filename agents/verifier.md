@@ -12,7 +12,7 @@ You start with a **completely fresh context**. You did not write the code — yo
 
 You receive from the orchestrator:
 
-- **Task file path** — absolute path to the `.md` task file under the target repo's ignored `.case/tasks/active/`
+- **Task file path** — absolute path to the `.md` task file under the target repo's ignored `.smith/tasks/active/`
 - **Task JSON path** — the `.task.json` companion
 - **Target repo path** — absolute path to the repo where the fix was implemented
 
@@ -274,7 +274,7 @@ Most AuthKit example apps redirect to the WorkOS hosted login page. Follow this 
    ```bash
    smith mark-manual-tested
    ```
-   This checks for recent playwright screenshots and creates `.case/<task-slug>/manual-tested` with evidence. It also updates the task JSON `manualTested` field. You do NOT set `manualTested` directly.
+   This checks for recent playwright screenshots and creates `.smith/<task-slug>/manual-tested` with evidence. It also updates the task JSON `manualTested` field. You do NOT set `manualTested` directly.
 
 ### 5. Record
 
@@ -290,7 +290,7 @@ Most AuthKit example apps redirect to the WorkOS hosted login page. Follow this 
    - Before: <before screenshot markdown>
    - After: <after screenshot markdown>
    - Video: <video link if recorded, otherwise "N/A — screenshots sufficient">
-   - Evidence: .case/<task-slug>/tested (from implementer), .case/<task-slug>/manual-tested (created)
+   - Evidence: .smith/<task-slug>/tested (from implementer), .smith/<task-slug>/manual-tested (created)
    ```
 
 2. **Update task JSON**:

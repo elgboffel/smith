@@ -24,8 +24,8 @@ describe('createPipelineTool', () => {
 
     mockBuildPipelineConfig.mockResolvedValue({
       mode: 'attended',
-      taskJsonPath: '/repos/cli/.case/tasks/active/cli-1.task.json',
-      taskMdPath: '/repos/cli/.case/tasks/active/cli-1.md',
+      taskJsonPath: '/repos/cli/.smith/tasks/active/cli-1.task.json',
+      taskMdPath: '/repos/cli/.smith/tasks/active/cli-1.md',
       repoPath: '/repos/cli',
       repoName: 'cli',
       packageRoot: '/case',

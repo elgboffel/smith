@@ -2,11 +2,11 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { resolveDataDir, resolvePackageRoot, resolveRepoTaskJson } from '../paths.js';
 
-export const description = 'Mark a repo as reviewed (writes .case/<slug>/reviewed)';
+export const description = 'Mark a repo as reviewed (writes .smith/<slug>/reviewed)';
 
 function resolveTaskSlug(): string | null {
-  if (!existsSync('.case/active')) return null;
-  return readFileSync('.case/active', 'utf-8').trim() || null;
+  if (!existsSync('.smith/active')) return null;
+  return readFileSync('.smith/active', 'utf-8').trim() || null;
 }
 
 export async function handler(argv: string[]): Promise<number> {
@@ -26,18 +26,18 @@ export async function handler(argv: string[]): Promise<number> {
 
   const slug = resolveTaskSlug();
   if (!slug) {
-    process.stderr.write('ERROR: No active task — .case/active is missing or empty. Run the orchestrator first.\n');
+    process.stderr.write('ERROR: No active task — .smith/active is missing or empty. Run the orchestrator first.\n');
     return 1;
   }
 
-  const markerDir = `.case/${slug}`;
+  const markerDir = `.smith/${slug}`;
   mkdirSync(markerDir, { recursive: true });
   const timestamp = new Date().toISOString();
   writeFileSync(
     resolve(markerDir, 'reviewed'),
     `timestamp: ${timestamp}\ncritical: ${critical}\nwarnings: ${warnings}\ninfo: ${info}\n`,
   );
-  process.stderr.write(`.case/${slug}/reviewed created (${warnings} warnings, ${info} info)\n`);
+  process.stderr.write(`.smith/${slug}/reviewed created (${warnings} warnings, ${info} info)\n`);
 
   let dataRoot: string;
   try {

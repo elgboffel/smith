@@ -6,7 +6,7 @@
  *
  *   - {@link writeProjectsEntry} updates `projects.json` (appends new entries
  *     or replaces existing ones in-place during `--re-interview`).
- *   - {@link writeLearnings} writes the seed `<repo>/.case/learnings.md`,
+ *   - {@link writeLearnings} writes the seed `<repo>/.smith/learnings.md`,
  *     appending if a file already exists so we never blow away curated content.
  *   - {@link writeClaudeLocal} writes `<repo>/CLAUDE.local.md`. Because the
  *     content is generated from the interview (not hand-written), this writer
@@ -77,7 +77,7 @@ export function writeProjectsEntry(manifestPath: string, entry: ProjectEntry, ex
 }
 
 /**
- * Write the seed `<repo>/.case/learnings.md`.
+ * Write the seed `<repo>/.smith/learnings.md`.
  *
  * - If the file doesn't exist, the synthesized markdown is written as-is.
  * - If it exists, the synthesized content is appended under a separator so we
@@ -87,7 +87,7 @@ export function writeProjectsEntry(manifestPath: string, entry: ProjectEntry, ex
 export function writeLearnings(repoPath: string, findings: InterviewFindings): void {
   const body = synthesizeLearnings(findings);
   if (body.length === 0) {
-    process.stdout.write(`  Skipped .case/learnings.md (no learnings captured)\n`);
+    process.stdout.write(`  Skipped .smith/learnings.md (no learnings captured)\n`);
     return;
   }
 
@@ -99,12 +99,12 @@ export function writeLearnings(repoPath: string, findings: InterviewFindings): v
     const separator = existing.endsWith('\n\n') || existing.endsWith('\n') ? '' : '\n';
     const appended = `${existing}${separator}\n---\n\n${body}`;
     writeFileSync(target, appended);
-    process.stdout.write(`  Appended .case/learnings.md (${findings.learnings.length} new entries)\n`);
+    process.stdout.write(`  Appended .smith/learnings.md (${findings.learnings.length} new entries)\n`);
     return;
   }
 
   writeFileSync(target, body);
-  process.stdout.write(`  Wrote .case/learnings.md (${findings.learnings.length} entries)\n`);
+  process.stdout.write(`  Wrote .smith/learnings.md (${findings.learnings.length} entries)\n`);
 }
 
 /**

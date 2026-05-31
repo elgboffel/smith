@@ -22,7 +22,7 @@ function makeEvent(partial: Partial<PipelineEvent> & { event: string }): string 
 describe('watchEventLog', () => {
   test('replays existing events and stops on pipeline_end', async () => {
     const taskSlug = 'test-replay';
-    const eventDir = resolve(tmpDir, '.case', taskSlug, 'events');
+    const eventDir = resolve(tmpDir, '.smith', taskSlug, 'events');
     await mkdir(eventDir, { recursive: true });
 
     const logPath = resolve(eventDir, 'run-test.jsonl');
@@ -58,7 +58,7 @@ describe('watchEventLog', () => {
 
   test('structured mode includes tool events (milestone set expanded)', async () => {
     const taskSlug = 'test-filter';
-    const eventDir = resolve(tmpDir, '.case', taskSlug, 'events');
+    const eventDir = resolve(tmpDir, '.smith', taskSlug, 'events');
     await mkdir(eventDir, { recursive: true });
 
     const logPath = resolve(eventDir, 'run-filter.jsonl');
@@ -105,7 +105,7 @@ describe('watchEventLog', () => {
 
   test('raw mode yields all events', async () => {
     const taskSlug = 'test-raw';
-    const eventDir = resolve(tmpDir, '.case', taskSlug, 'events');
+    const eventDir = resolve(tmpDir, '.smith', taskSlug, 'events');
     await mkdir(eventDir, { recursive: true });
 
     const logPath = resolve(eventDir, 'run-raw.jsonl');
@@ -139,7 +139,7 @@ describe('watchEventLog', () => {
 
   test('skips partial trailing line (no final newline)', async () => {
     const taskSlug = 'test-partial';
-    const eventDir = resolve(tmpDir, '.case', taskSlug, 'events');
+    const eventDir = resolve(tmpDir, '.smith', taskSlug, 'events');
     await mkdir(eventDir, { recursive: true });
 
     const logPath = resolve(eventDir, 'run-partial.jsonl');
@@ -176,7 +176,7 @@ describe('watchEventLog', () => {
 
   test('incremental read yields new events as they are appended', async () => {
     const taskSlug = 'test-incremental';
-    const eventDir = resolve(tmpDir, '.case', taskSlug, 'events');
+    const eventDir = resolve(tmpDir, '.smith', taskSlug, 'events');
     await mkdir(eventDir, { recursive: true });
 
     const logPath = resolve(eventDir, 'run-incr.jsonl');

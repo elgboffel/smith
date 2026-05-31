@@ -83,7 +83,7 @@ const AGENT_RESULT_END = 'AGENT_RESULT>>>';
  */
 export async function startInterviewSession(options: InterviewSessionOptions): Promise<InterviewFindings | null> {
   if (!process.env.CASE_DEBUG) {
-    process.env.CASE_QUIET = '1';
+    process.env.SMITH_QUIET = '1';
   }
 
   // Run pi fully isolated — no global settings, extensions, packages,

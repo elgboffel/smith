@@ -1,7 +1,7 @@
 # Playbook: Cross-Repo Update
 
 > For coordinated changes across multiple WorkOS OSS repos.
-> Repo list: configured `projects.json` (`~/.config/case/projects.json` for portable binary installs, or the case checkout during local development).
+> Repo list: configured `projects.json` (`~/.config/smith/projects.json` for portable binary installs, or the case checkout during local development).
 
 ## When to Use
 

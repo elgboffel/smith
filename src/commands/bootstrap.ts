@@ -115,10 +115,10 @@ function ensureCaseIgnored(repoPath: string): void {
   if (!existsSync(gitignore)) return;
 
   const current = readFileSync(gitignore, 'utf-8');
-  if (current.split(/\r?\n/).some((line) => line.trim() === '.case/')) return;
+  if (current.split(/\r?\n/).some((line) => line.trim() === '.smith/')) return;
 
   const prefix = current.endsWith('\n') ? '' : '\n';
-  writeFileSync(gitignore, `${current}${prefix}\n# Case harness markers\n.case/\n`);
+  writeFileSync(gitignore, `${current}${prefix}\n# Case harness markers\n.smith/\n`);
 }
 
 function lastLines(text: string, count: number): string[] {

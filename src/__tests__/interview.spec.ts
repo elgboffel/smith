@@ -57,9 +57,9 @@ describe('validateInterviewFindings', () => {
   });
 
   it('accepts optional credentials when present', () => {
-    const findings = makeFindings({ credentials: '~/.config/case/credentials' });
+    const findings = makeFindings({ credentials: '~/.config/smith/credentials' });
     const out = validateInterviewFindings(findings);
-    expect(out.credentials).toBe('~/.config/case/credentials');
+    expect(out.credentials).toBe('~/.config/smith/credentials');
   });
 
   it('rejects null or array top-level values', () => {
@@ -208,9 +208,9 @@ describe('synthesizeProjectEntry', () => {
   });
 
   it('populates credentials when provided', () => {
-    const findings = makeFindings({ credentials: '~/.config/case/creds' });
+    const findings = makeFindings({ credentials: '~/.config/smith/creds' });
     const entry = synthesizeProjectEntry(findings, makeDetected());
-    expect(entry.credentials).toBe('~/.config/case/creds');
+    expect(entry.credentials).toBe('~/.config/smith/creds');
   });
 
   it('omits credentials when blank', () => {

@@ -38,11 +38,11 @@ function preparePiAssetDir(): string {
 
 function candidatePiAssetDirs(): string[] {
   const candidates: string[] = [];
-  if (process.env.CASE_DATA_DIR) candidates.push(join(process.env.CASE_DATA_DIR, 'pi-package'));
-  if (process.env.XDG_CONFIG_HOME) candidates.push(join(process.env.XDG_CONFIG_HOME, 'case', 'pi-package'));
+  if (process.env.SMITH_DATA_DIR) candidates.push(join(process.env.SMITH_DATA_DIR, 'pi-package'));
+  if (process.env.XDG_CONFIG_HOME) candidates.push(join(process.env.XDG_CONFIG_HOME, 'smith', 'pi-package'));
   const home = process.env.HOME || homedir();
-  if (home) candidates.push(join(home, '.config', 'case', 'pi-package'));
-  candidates.push(join(dirname(process.execPath), '.case', 'pi-package'));
-  candidates.push(join(tmpdir(), 'case', 'pi-package'));
+  if (home) candidates.push(join(home, '.config', 'smith', 'pi-package'));
+  candidates.push(join(dirname(process.execPath), '.smith', 'pi-package'));
+  candidates.push(join(tmpdir(), 'smith', 'pi-package'));
   return candidates;
 }
