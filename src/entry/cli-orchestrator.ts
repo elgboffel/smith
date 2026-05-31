@@ -64,7 +64,10 @@ export async function runCliOrchestrator(options: CliOrchestratorOptions): Promi
   if (!fresh) {
     if (argument) {
       const argType = detectArgumentType(argument);
-      match = await findTaskByIssue(caseRoot, detected.name, argType, argument, detected.path);
+      // For local-md the stored issue id is the slug of the file's H1 title,
+      // not the raw path. Resolve it so re-running the same file resumes its task.
+      const matchId = argType === 'local-md' ? (await fetchIssue(argType, argument)).issueNumber : argument;
+      match = await findTaskByIssue(caseRoot, detected.name, argType, matchId, detected.path);
     } else {
       match = await findTaskByMarker(caseRoot, detected.path);
     }

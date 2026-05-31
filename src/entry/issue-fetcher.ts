@@ -2,17 +2,20 @@ import { resolve } from 'node:path';
 import { homedir } from 'node:os';
 import type { IssueContext } from '../types.js';
 import { extractOwnerRepo } from './repo-detector.js';
+import { loadIssue } from './issue-source.js';
 import { slugify } from '../util/slugify.js';
 
 const CREDENTIALS_PATH = resolve(homedir(), '.config/smith/credentials');
 
 /**
  * Detect argument type from a CLI positional argument.
+ * - Ends with `.md`: local markdown issue file (contents are read and parsed)
  * - Pure digits: GitHub issue number
  * - UPPER-N pattern: Linear issue ID
  * - Anything else: freeform text
  */
-export function detectArgumentType(arg: string): 'github' | 'linear' | 'freeform' {
+export function detectArgumentType(arg: string): 'github' | 'linear' | 'freeform' | 'local-md' {
+  if (arg.endsWith('.md')) return 'local-md';
   if (/^\d+$/.test(arg)) return 'github';
   if (/^[A-Z]+-\d+$/.test(arg)) return 'linear';
   return 'freeform';
@@ -22,7 +25,7 @@ export function detectArgumentType(arg: string): 'github' | 'linear' | 'freeform
  * Unified issue fetcher — dispatches to the right source based on type.
  */
 export async function fetchIssue(
-  type: 'github' | 'linear' | 'freeform',
+  type: 'github' | 'linear' | 'freeform' | 'local-md',
   identifier: string,
   repoRemote?: string,
 ): Promise<IssueContext> {
@@ -32,6 +35,8 @@ export async function fetchIssue(
       return fetchGitHubIssue(repoRemote, identifier);
     case 'linear':
       return fetchLinearIssue(identifier);
+    case 'local-md':
+      return loadIssue(identifier);
     case 'freeform':
       return freeformIssue(identifier);
   }

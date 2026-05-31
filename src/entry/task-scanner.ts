@@ -22,7 +22,7 @@ export interface TaskMatch {
 export async function findTaskByIssue(
   caseRoot: string,
   repoName: string,
-  issueType: 'github' | 'linear' | 'freeform',
+  issueType: 'github' | 'linear' | 'freeform' | 'local-md',
   issueNumber: string,
   repoPath?: string,
 ): Promise<TaskMatch | null> {
