@@ -34,7 +34,7 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
     const systemPrompt = await loadSystemPrompt(options.packageRoot, options.agentName);
     const tools = this.createPiTools(options.agentName, options.cwd);
 
-    const modelOverride = process.env.CASE_MODEL_OVERRIDE;
+    const modelOverride = process.env.SMITH_MODEL_OVERRIDE;
     let modelConfig: AgentModelConfig;
     if (options.model) {
       modelConfig = { provider: options.provider ?? 'anthropic', model: options.model };

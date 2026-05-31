@@ -41,7 +41,7 @@ export async function handler(argv: string[]): Promise<number> {
 
   // --model flag: override model for all agents in this run
   if (values.model) {
-    process.env.CASE_MODEL_OVERRIDE = values.model as string;
+    process.env.SMITH_MODEL_OVERRIDE = values.model as string;
   }
 
   if (values.agent) {

@@ -31,8 +31,8 @@ export interface OrchestratorSessionOptions {
 
 export async function startOrchestratorSession(options: OrchestratorSessionOptions): Promise<void> {
   // Suppress structured JSON logs in interactive mode — the TUI provides its own feedback.
-  // Preserve logging if CASE_DEBUG is explicitly set.
-  if (!process.env.CASE_DEBUG) {
+  // Preserve logging if SMITH_DEBUG is explicitly set.
+  if (!process.env.SMITH_DEBUG) {
     process.env.SMITH_QUIET = '1';
   }
 
@@ -56,7 +56,7 @@ export async function startOrchestratorSession(options: OrchestratorSessionOptio
   const modelRegistry = ModelRegistry.create(authStorage);
 
   // Resolve model: CLI override (env var) > config file > Pi defaults
-  const modelOverride = process.env.CASE_MODEL_OVERRIDE;
+  const modelOverride = process.env.SMITH_MODEL_OVERRIDE;
   const modelConfig = modelOverride
     ? { provider: 'anthropic', model: modelOverride }
     : await getModelForAgent('orchestrator');
@@ -120,7 +120,7 @@ export async function startOrchestratorSession(options: OrchestratorSessionOptio
     sessionManager,
   });
 
-  if (process.env.CASE_DEBUG) {
+  if (process.env.SMITH_DEBUG) {
     for (const diag of runtime.diagnostics) {
       process.stderr.write(`⚠ ${diag.message}\n`);
     }

@@ -11,7 +11,7 @@ import { createLogger } from '../util/logger.js';
 
 const log = createLogger();
 
-/** Default scout time budget (3 minutes). Configurable via `CASE_SCOUT_TIMEOUT_MS`. */
+/** Default scout time budget (3 minutes). Configurable via `SMITH_SCOUT_TIMEOUT_MS`. */
 const DEFAULT_SCOUT_TIMEOUT_MS = 3 * 60 * 1000;
 
 /**
@@ -217,7 +217,7 @@ function buildScoutContextBlock(config: PipelineConfig, task: TaskJson): string 
 }
 
 function scoutTimeoutMs(): number {
-  const raw = process.env.CASE_SCOUT_TIMEOUT_MS;
+  const raw = process.env.SMITH_SCOUT_TIMEOUT_MS;
   if (!raw) return DEFAULT_SCOUT_TIMEOUT_MS;
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_SCOUT_TIMEOUT_MS;

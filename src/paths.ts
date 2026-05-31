@@ -17,11 +17,11 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-export const EMBEDDED_PACKAGE_ROOT = 'embedded://case';
+export const EMBEDDED_PACKAGE_ROOT = 'embedded://smith';
 
 /**
- * Resolve the case package root by walking up from likely runtime anchors
- * until a package.json with `name === "case"` is found.
+ * Resolve the smith package root by walking up from likely runtime anchors
+ * until a package.json with `name === "smith"` is found.
  *
  * Falls back to an embedded pseudo-root when running from a self-contained
  * binary with package assets bundled into the executable.
@@ -30,7 +30,7 @@ export function resolvePackageRoot(): string {
   return tryResolvePackageRoot() ?? EMBEDDED_PACKAGE_ROOT;
 }
 
-/** Resolve the on-disk case package root, if one is available. */
+/** Resolve the on-disk smith package root, if one is available. */
 export function tryResolvePackageRoot(): string | null {
   const starts = packageRootStarts();
   for (const start of starts) {
@@ -65,7 +65,6 @@ function findPackageRootFrom(start: string): string | null {
     if (existsSync(manifestPath)) {
       try {
         const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8')) as { name?: string };
-        // Accept both names during the case → smith rename.
         if (manifest.name === 'smith') {
           return current;
         }
@@ -83,11 +82,11 @@ function findPackageRootFrom(start: string): string | null {
 }
 
 /**
- * Resolve the case user config/cache directory using XDG precedence.
+ * Resolve the smith user config/cache directory using XDG precedence.
  *
  * Precedence:
  *   1. process.env.SMITH_DATA_DIR
- *   2. ${process.env.XDG_CONFIG_HOME}/case
+ *   2. ${process.env.XDG_CONFIG_HOME}/smith
  *   3. ${process.env.HOME}/.config/smith
  *
  * This is intentionally separate from repo-local runtime state. Tasks, event logs,
@@ -129,7 +128,7 @@ export function resolveTaskDir(): string {
   return resolve(resolveDataDir(), 'tasks');
 }
 
-/** Resolve the ignored Case state directory inside a target repo. */
+/** Resolve the ignored smith state directory inside a target repo. */
 export function resolveRepoCaseDir(repoPath: string): string {
   return resolve(repoPath, '.smith');
 }

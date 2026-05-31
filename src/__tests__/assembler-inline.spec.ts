@@ -118,12 +118,12 @@ describe('assembler doc inlining', () => {
     expect(xCount).toBeGreaterThanOrEqual(8_000);
   });
 
-  it('respects CASE_INLINE_MAX_BYTES env override', async () => {
+  it('respects SMITH_INLINE_MAX_BYTES env override', async () => {
     const body = 'Y'.repeat(2_000);
     await writeDoc('docs/medium.md', body);
     await writeAgent('implementer', '<!-- inject: docs/medium.md -->');
 
-    process.env.CASE_INLINE_MAX_BYTES = '500';
+    process.env.SMITH_INLINE_MAX_BYTES = '500';
     try {
       const prompt = await assemblePrompt('implementer', makeConfig(), makeTask(), emptyRepoContext, new Map());
 
@@ -132,7 +132,7 @@ describe('assembler doc inlining', () => {
       expect(yCount).toBeLessThan(2_000);
       expect(yCount).toBeLessThanOrEqual(500);
     } finally {
-      delete process.env.CASE_INLINE_MAX_BYTES;
+      delete process.env.SMITH_INLINE_MAX_BYTES;
     }
   });
 

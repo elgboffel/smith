@@ -7,7 +7,7 @@
  *   - `ensureDataDir()` — idempotent mkdir of the config/cache subtree.
  *   - `readConfig()`  — merge defaults over the on-disk config; never throws on missing/corrupt files.
  *   - `writeConfig()` — atomic temp-file-then-rename write with shallow merge.
- *   - `migrateFromRepo()` — one-time, non-destructive copy of user-level config/cache from an existing case repo.
+ *   - `migrateFromRepo()` — one-time, non-destructive copy of user-level config/cache from an existing smith repo.
  *
  * Pure module — no global state. Every function re-reads env via `resolveDataDir()` so tests
  * can swap the target dir per-test by setting `SMITH_DATA_DIR`.
@@ -82,7 +82,7 @@ export function readConfig(): CaseConfig {
   try {
     raw = readFileSync(p, 'utf-8');
   } catch (err) {
-    process.stderr.write(`case: warning — could not read config.json (${(err as Error).message}); using defaults.\n`);
+    process.stderr.write(`smith: warning — could not read config.json (${(err as Error).message}); using defaults.\n`);
     return { ...DEFAULT_CONFIG };
   }
   let parsed: Partial<CaseConfig> & { version?: number };
@@ -90,13 +90,13 @@ export function readConfig(): CaseConfig {
     parsed = JSON.parse(raw) as Partial<CaseConfig> & { version?: number };
   } catch (err) {
     process.stderr.write(
-      `case: warning — config.json could not be parsed (${(err as Error).message}); using defaults.\n`,
+      `smith: warning — config.json could not be parsed (${(err as Error).message}); using defaults.\n`,
     );
     return { ...DEFAULT_CONFIG };
   }
   if (typeof parsed.version === 'number' && parsed.version > CONFIG_VERSION) {
     process.stderr.write(
-      `case: warning — config.json version ${parsed.version} is newer than supported ${CONFIG_VERSION}; some fields may be ignored.\n`,
+      `smith: warning — config.json version ${parsed.version} is newer than supported ${CONFIG_VERSION}; some fields may be ignored.\n`,
     );
   }
   return { ...DEFAULT_CONFIG, ...parsed };
@@ -136,7 +136,7 @@ export interface MigrationStats {
 const MIGRATED_MARKER = '.migrated';
 
 /**
- * One-time, non-destructive migration of state from an existing case repo.
+ * One-time, non-destructive migration of state from an existing smith repo.
  *
  * Source layout (legacy):
  *   <repoRoot>/docs/agent-versions/
@@ -239,10 +239,10 @@ function copyDirShallow(src: string, dst: string, stats: MigrationStats): number
 }
 
 /**
- * Heuristic: detect whether `cwd` looks like the root of a case repo,
- * for auto-migration in `case init`.
+ * Heuristic: detect whether `cwd` looks like the root of a smith repo,
+ * for auto-migration in `smith init`.
  *
- * A case repo has `projects.json` AND `agents/` at its root.
+ * A smith repo has `projects.json` AND `agents/` at its root.
  */
 export function detectRepoRoot(cwd: string): string | undefined {
   const projects = resolve(cwd, 'projects.json');

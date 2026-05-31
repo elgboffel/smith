@@ -56,13 +56,13 @@ const INJECT_MARKER = /<!--\s*inject:\s*(\S+)\s*-->/g;
  * package asset's content. Single-pass — inlined content is
  * NOT re-scanned for nested markers, preventing recursive loops.
  *
- * Size limit (default 8KB, tunable via `CASE_INLINE_MAX_BYTES`): oversized files
+ * Size limit (default 8KB, tunable via `SMITH_INLINE_MAX_BYTES`): oversized files
  * are truncated and footed with `[truncated]`. Missing files leave the marker
  * verbatim and log a warning to stderr. Empty paths (`<!-- inject: -->`) are
  * left verbatim.
  */
 function inlineDocs(template: string, packageRoot: string): string {
-  const maxBytes = Number(process.env.CASE_INLINE_MAX_BYTES ?? 8192);
+  const maxBytes = Number(process.env.SMITH_INLINE_MAX_BYTES ?? 8192);
 
   return template.replace(INJECT_MARKER, (marker, relPath: string) => {
     if (!relPath) return marker;

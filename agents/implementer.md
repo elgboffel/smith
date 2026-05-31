@@ -180,7 +180,7 @@ Before committing, run the case AST rules against your changes:
 
 ```bash
 fail=0
-for f in $CASE_ROOT/ast-rules/target/*.yml; do
+for f in $SMITH_ROOT/ast-rules/target/*.yml; do
   ast-grep scan --rule "$f" . || fail=1
 done
 exit $fail

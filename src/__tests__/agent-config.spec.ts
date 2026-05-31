@@ -25,7 +25,7 @@ describe('agent config', () => {
     await mkdir(tempDir, { recursive: true });
     process.env.SMITH_DATA_DIR = tempDir;
     delete process.env.XDG_CONFIG_HOME;
-    delete process.env.CASE_MODEL_OVERRIDE;
+    delete process.env.SMITH_MODEL_OVERRIDE;
   });
 
   afterEach(async () => {
@@ -35,7 +35,7 @@ describe('agent config', () => {
     if (originalXdgConfigHome === undefined) delete process.env.XDG_CONFIG_HOME;
     else process.env.XDG_CONFIG_HOME = originalXdgConfigHome;
 
-    delete process.env.CASE_MODEL_OVERRIDE;
+    delete process.env.SMITH_MODEL_OVERRIDE;
     await rm(tempDir, { recursive: true, force: true });
   });
 

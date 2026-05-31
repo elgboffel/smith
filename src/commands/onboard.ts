@@ -103,7 +103,7 @@ function printUsage(): void {
 async function runOnboard(repoPath: string, caseRoot: string, options: { interview: boolean }): Promise<number> {
   // Suppress structured JSON logs during interactive onboarding — the human
   // is watching the terminal and doesn't need JSON-lines noise from probeRepo.
-  if (options.interview && !process.env.CASE_DEBUG) {
+  if (options.interview && !process.env.SMITH_DEBUG) {
     process.env.SMITH_QUIET = '1';
   }
 
@@ -164,7 +164,7 @@ async function runOnboard(repoPath: string, caseRoot: string, options: { intervi
 }
 
 async function runReInterview(repoName: string, caseRoot: string): Promise<number> {
-  if (!process.env.CASE_DEBUG) {
+  if (!process.env.SMITH_DEBUG) {
     process.env.SMITH_QUIET = '1';
   }
 

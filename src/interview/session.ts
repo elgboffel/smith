@@ -62,7 +62,7 @@ export interface InterviewSessionOptions {
   repoPath: string;
   /** Mechanical probe results from `probeRepo()`. */
   detected: InterviewSessionDetected;
-  /** Case package root (used to locate the agent prompt). */
+  /** smith package root (used to locate the agent prompt). */
   caseRoot: string;
   /** Optional existing entry — populated for `--re-interview`. */
   existingEntry?: ProjectEntry;
@@ -82,7 +82,7 @@ const AGENT_RESULT_END = 'AGENT_RESULT>>>';
  * parseable result, or the findings fail validation.
  */
 export async function startInterviewSession(options: InterviewSessionOptions): Promise<InterviewFindings | null> {
-  if (!process.env.CASE_DEBUG) {
+  if (!process.env.SMITH_DEBUG) {
     process.env.SMITH_QUIET = '1';
   }
 
@@ -108,7 +108,7 @@ export async function startInterviewSession(options: InterviewSessionOptions): P
   const authStorage = AuthStorage.create();
   const modelRegistry = ModelRegistry.create(authStorage);
 
-  const modelOverride = process.env.CASE_MODEL_OVERRIDE;
+  const modelOverride = process.env.SMITH_MODEL_OVERRIDE;
   const modelConfig = modelOverride
     ? { provider: 'anthropic', model: modelOverride }
     : await getModelForAgent('interviewer');
