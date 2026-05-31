@@ -10,6 +10,7 @@ import {
 } from '@mariozechner/pi-coding-agent';
 import { loadSystemPrompt } from '../prompt-loader.js';
 import { getModelForAgent } from '../config.js';
+import { isEmbeddedPackageRoot } from '../../paths.js';
 import { parseAgentResult } from '../../util/parse-agent-result.js';
 import { createLogger } from '../../util/logger.js';
 import { sanitizeForTrace } from '../../tracing/sanitize.js';
@@ -32,6 +33,14 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
 
     // Agent prompt templates are package assets: disk override in dev, embedded in binaries.
     const systemPrompt = await loadSystemPrompt(options.packageRoot, options.agentName);
+
+    // Expose the on-disk harness root to the agent's shell tools (e.g. the
+    // implementer's pre-commit AST-lint loop reads `$SMITH_ROOT/ast-rules`).
+    // Skipped for embedded binaries, where rules ship as bundled assets and no
+    // on-disk path exists — the prompt guards for the directory's absence.
+    if (options.packageRoot && !isEmbeddedPackageRoot(options.packageRoot)) {
+      process.env.SMITH_ROOT = options.packageRoot;
+    }
     const tools = this.createPiTools(options.agentName, options.cwd);
 
     const modelOverride = process.env.SMITH_MODEL_OVERRIDE;

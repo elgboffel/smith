@@ -176,14 +176,18 @@ Then create the final commit as usual.
 
 ### 3c. Pre-Commit: AST Lint
 
-Before committing, run the case AST rules against your changes:
+Before committing, run the smith AST rules against your changes. The harness
+sets `$SMITH_ROOT` to its checkout root; if it is unset or the rules directory
+is absent (e.g. running from a packaged binary), skip this step.
 
 ```bash
-fail=0
-for f in $SMITH_ROOT/ast-rules/target/*.yml; do
-  ast-grep scan --rule "$f" . || fail=1
-done
-exit $fail
+if [ -n "$SMITH_ROOT" ] && [ -d "$SMITH_ROOT/ast-rules/target" ]; then
+  fail=0
+  for f in "$SMITH_ROOT"/ast-rules/target/*.yml; do
+    ast-grep scan --rule "$f" . || fail=1
+  done
+  [ "$fail" -eq 0 ] || exit 1
+fi
 ```
 
 Fix any errors before proceeding. Warnings should be addressed if feasible but do not block the commit.
