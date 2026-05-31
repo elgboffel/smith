@@ -23,7 +23,7 @@ const PHASE_EVIDENCE_GATES: Record<string, string[]> = {
   implement: ['commit'],
   verify: ['tested'],
   review: ['reviewed'],
-  close: ['pr-opened'],
+  close: ['committed'],
   retrospective: [],
 };
 

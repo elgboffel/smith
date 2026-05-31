@@ -6,8 +6,7 @@ export type TaskStatus =
   | 'reviewing'
   | 'evaluating'
   | 'closing'
-  | 'pr-opened'
-  | 'merged';
+  | 'committed';
 
 export type AgentName = 'orchestrator' | 'implementer' | 'verifier' | 'reviewer' | 'closer' | 'scout';
 

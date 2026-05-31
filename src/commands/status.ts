@@ -11,9 +11,8 @@ const TRANSITIONS: Record<string, TaskStatus[]> = {
   verifying: ['reviewing', 'evaluating', 'closing', 'implementing'],
   reviewing: ['evaluating', 'closing', 'verifying'],
   evaluating: ['closing', 'implementing', 'verifying', 'reviewing'],
-  closing: ['pr-opened', 'verifying'],
-  'pr-opened': ['pr-opened', 'merged'],
-  merged: [],
+  closing: ['committed', 'verifying'],
+  committed: [],
 };
 
 const VALID_AGENT_STATUSES = ['pending', 'running', 'completed', 'failed'] as const;

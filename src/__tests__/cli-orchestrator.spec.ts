@@ -278,10 +278,9 @@ describe('runCliOrchestrator — re-entry', () => {
     expect(combined).toContain('✓ setup completed');
   });
 
-  it('exits early for pr-opened status', async () => {
+  it('exits early for committed status', async () => {
     const task = makeTaskJson({
-      status: 'pr-opened',
-      prUrl: 'https://github.com/workos/cli/pull/42',
+      status: 'committed',
     });
 
     mockDetectArgumentType.mockReturnValue('github');
@@ -311,8 +310,7 @@ describe('runCliOrchestrator — re-entry', () => {
     }
 
     const strip = (s: string) => s.replace(/\[[0-9;]*m/g, '');
-    expect(writes.some((w) => strip(w).includes('PR already exists'))).toBe(true);
-    expect(writes.some((w) => strip(w).includes('https://github.com/workos/cli/pull/42'))).toBe(true);
+    expect(writes.some((w) => strip(w).includes('Task already committed'))).toBe(true);
     expect(mockRunPipeline).not.toHaveBeenCalled();
   });
 });

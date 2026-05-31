@@ -11,8 +11,8 @@
     },
     "status": {
       "type": "string",
-      "enum": ["active", "implementing", "verifying", "reviewing", "evaluating", "closing", "pr-opened", "merged"],
-      "description": "Current lifecycle status. Transitions are enforced by the task store and smith status, not this schema."
+      "enum": ["active", "implementing", "verifying", "reviewing", "evaluating", "closing", "committed"],
+      "description": "Current lifecycle status. `committed` is the terminal state after the commit-only close phase (smith never opens a PR). Transitions are enforced by the task store and smith status, not this schema."
     },
     "created": {
       "type": "string",
@@ -29,8 +29,8 @@
     },
     "issueType": {
       "type": "string",
-      "enum": ["github", "linear", "freeform"],
-      "description": "How the task was created"
+      "enum": ["github", "linear", "freeform", "local-md"],
+      "description": "How the task was created. `local-md` = sourced from a local markdown issue file path passed to `smith run`."
     },
     "contractPath": {
       "type": ["string", "null"],

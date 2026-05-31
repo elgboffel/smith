@@ -37,9 +37,8 @@ Optional: `## Context` for background info, issue links, API specs, etc.
 2. Implementer writes the fix/feature, runs tests, commits
 3. Verifier tests the specific scenario with fresh context
 4. Reviewer checks the diff against golden principles and conventions
-5. Closer agent opens a PR in the target repo (requires `.smith/<task-slug>/reviewed` with critical: 0)
-6. Post-PR hook updates `.task.json` status to `pr-opened`
-7. After PR merge, status updated to `merged` (manual or automation)
+5. Closer agent runs a **commit-only close** (requires `.smith/<task-slug>/reviewed` with critical: 0): it confirms the work is committed on the feature branch and flips the source issue file's `Status:` to done. **Smith never opens a PR, pushes, or runs `gh`** — the implementer's commit is the record.
+6. Pipeline marks `.task.json` status `committed` (terminal). Opening/pushing a PR is left to the human, per target-repo workflow rules.
 
 Legacy in-repo harness tasks without a `.task.json` companion still use the old file-move behavior (`active/` → `done/`).
 
@@ -54,11 +53,11 @@ Every new task has a `.task.json` companion alongside the `.md` file. Same filen
 
 The JSON file stores structured metadata that agents and CLI commands update programmatically. Schema: `tasks/task.schema.json`.
 
-Fields: `id`, `status`, `created`, `repo`, `issue`, `issueType`, `branch`, `profile`, `agents`, `tested`, `manualTested`, `prUrl`, `prNumber`, `contractPath`.
+Fields: `id`, `status`, `created`, `repo`, `issue`, `issueType`, `branch`, `profile`, `agents`, `tested`, `manualTested`, `prUrl`, `prNumber`, `contractPath`. (`prUrl`/`prNumber` stay `null` under commit-only close — reserved for future opt-in PR support.)
 
 Profile values: `tiny` (skip verify — docs, config, typos) and `standard` (all phases — default).
 
-Issue types: `github`, `linear`, `freeform`.
+Issue types: `github`, `linear`, `freeform`, `local-md` (a local markdown issue file path passed to `smith run`).
 
 Read/write via: `smith status <file> <field> [value]`
 
@@ -96,7 +95,7 @@ Plain-text fallback uses grep heuristics for pass/fail indicators only.
 ## Status Lifecycle
 
 ```
-active → implementing → verifying/reviewing/evaluating → closing → pr-opened → merged
+active → implementing → verifying/reviewing/evaluating → closing → committed
 
 Recovery transitions:
   implementing → active       (restart after failure)
@@ -104,7 +103,8 @@ Recovery transitions:
   reviewing    → verifying    (critical findings, re-verify after fix)
   evaluating   → implementing (evaluator requested revision)
   closing      → verifying    (hook failure, re-verify)
-  pr-opened    → pr-opened    (idempotent, hook re-fire)
+
+`committed` is terminal: a commit exists on the feature branch and no PR was opened.
 ```
 
 Pipeline agents: implementer → verifier → reviewer → closer → (retrospective)

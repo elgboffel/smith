@@ -57,7 +57,7 @@ function determineEntryPhaseFromTask(task: TaskJson, profile?: PipelineProfile):
  *   verifying           -> verify (if verifier not completed), review (if completed)
  *   reviewing           -> review (if reviewer not completed), close (if completed)
  *   closing             -> close
- *   pr-opened / merged  -> complete
+ *   committed           -> complete
  */
 function determineRawEntryPhase(task: TaskJson): PipelinePhase {
   // A persisted revision means an evaluator requested fixes before the process exited.
@@ -90,8 +90,7 @@ function determineRawEntryPhase(task: TaskJson): PipelinePhase {
     case 'closing':
       return 'close';
 
-    case 'pr-opened':
-    case 'merged':
+    case 'committed':
       return 'complete';
 
     default:

@@ -89,12 +89,8 @@ describe('determineEntryPhase', () => {
     expect(determineEntryPhase(makeTask({ status: 'closing' }))).toBe('close');
   });
 
-  it('pr-opened -> complete', () => {
-    expect(determineEntryPhase(makeTask({ status: 'pr-opened' }))).toBe('complete');
-  });
-
-  it('merged -> complete', () => {
-    expect(determineEntryPhase(makeTask({ status: 'merged' }))).toBe('complete');
+  it('committed -> complete', () => {
+    expect(determineEntryPhase(makeTask({ status: 'committed' }))).toBe('complete');
   });
 
   // Profile-aware tests
@@ -133,7 +129,6 @@ describe('determineEntryPhase', () => {
   });
 
   it('terminal phases pass through regardless of profile', () => {
-    expect(determineEntryPhase(makeTask({ status: 'pr-opened' }), 'tiny')).toBe('complete');
-    expect(determineEntryPhase(makeTask({ status: 'merged' }), 'tiny')).toBe('complete');
+    expect(determineEntryPhase(makeTask({ status: 'committed' }), 'tiny')).toBe('complete');
   });
 });

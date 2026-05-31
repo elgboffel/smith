@@ -40,16 +40,10 @@ export function projectStatusFromGraph(graph: PipelineGraph): TaskStatus {
   // Close completed
   const closeNode = graph.nodes.get('close');
   if (closeNode?.state === 'completed') {
-    // Check if all nodes are done
-    let allDone = true;
-    for (const [, node] of graph.nodes) {
-      if (node.state !== 'completed' && node.state !== 'skipped') {
-        allDone = false;
-        break;
-      }
-    }
-    if (allDone) return 'merged';
-    return 'pr-opened';
+    // Commit-only close: once the close phase completes, the work is committed
+    // on the feature branch. Smith never opens a PR, so there is no
+    // pr-opened/merged distinction — the terminal status is `committed`.
+    return 'committed';
   }
 
   return 'active';

@@ -109,8 +109,8 @@ describe('task-scanner', () => {
       expect(result!.entryPhase).toBe('verify');
     });
 
-    it('returns complete phase for pr-opened task', async () => {
-      const task = makeTaskJson({ status: 'pr-opened', prUrl: 'https://github.com/org/repo/pull/42' });
+    it('returns complete phase for committed task', async () => {
+      const task = makeTaskJson({ status: 'committed' });
       await writeRepoTask('cli-abc-fix-test', task);
 
       const result = await findTaskByIssue(tempDir, 'cli', 'github', '1523', repoDir);

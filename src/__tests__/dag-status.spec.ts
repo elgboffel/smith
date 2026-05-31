@@ -60,7 +60,7 @@ describe('projectStatusFromGraph', () => {
     expect(projectStatusFromGraph(graph)).toBe('closing');
   });
 
-  test('returns pr-opened when close is completed but retrospective is pending', () => {
+  test('returns committed when close is completed but retrospective is pending', () => {
     const graph = buildGraph('standard', 2);
     setNodeState(graph, 'implement_0', 'completed');
     setNodeState(graph, 'verify_0', 'completed');
@@ -72,10 +72,10 @@ describe('projectStatusFromGraph', () => {
       setNodeState(graph, `verify_${c}`, 'skipped');
       setNodeState(graph, `review_${c}`, 'skipped');
     }
-    expect(projectStatusFromGraph(graph)).toBe('pr-opened');
+    expect(projectStatusFromGraph(graph)).toBe('committed');
   });
 
-  test('returns merged when all nodes are completed/skipped', () => {
+  test('returns committed when all nodes are completed/skipped', () => {
     const graph = buildGraph('standard', 2);
     setNodeState(graph, 'scout_0', 'completed');
     setNodeState(graph, 'implement_0', 'completed');
@@ -88,7 +88,7 @@ describe('projectStatusFromGraph', () => {
       setNodeState(graph, `verify_${c}`, 'skipped');
       setNodeState(graph, `review_${c}`, 'skipped');
     }
-    expect(projectStatusFromGraph(graph)).toBe('merged');
+    expect(projectStatusFromGraph(graph)).toBe('committed');
   });
 
   test('tiny profile: review_0 completed marks evaluating (no verify)', () => {

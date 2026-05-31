@@ -141,7 +141,7 @@ export async function runCliOrchestrator(options: CliOrchestratorOptions): Promi
 
 /**
  * Resume an existing task from the correct pipeline phase.
- * Handles terminal states (pr-opened) and branch recovery.
+ * Handles the terminal state (committed) and branch recovery.
  */
 async function resumeTask(
   match: TaskMatch,
@@ -154,12 +154,11 @@ async function resumeTask(
 ): Promise<void> {
   const { taskJson, taskJsonPath, entryPhase } = match;
 
-  // Guard: task already has a PR open
-  if (taskJson.status === 'pr-opened' || taskJson.status === 'merged') {
-    const prInfo = taskJson.prUrl ? `: ${taskJson.prUrl}` : '';
-    setupStep(notifier, 'Status', `${taskJson.status}${prInfo}`);
+  // Guard: task already completed (commit-only close already ran).
+  if (taskJson.status === 'committed') {
+    setupStep(notifier, 'Status', taskJson.status);
     notifier.phaseEnd(SETUP_PHASE, 'cli', Date.now() - setupStartedAt, 'completed');
-    notifier.send(`PR already exists${prInfo}. Nothing to do.`);
+    notifier.send('Task already committed. Nothing to do.');
     return;
   }
 

@@ -13,7 +13,7 @@ const PLAN: PlanArtifact = {
     { phase: 'implement', agent: 'implementer', evidenceGates: ['commit'] },
     { phase: 'verify', agent: 'verifier', evidenceGates: ['tested'] },
     { phase: 'review', agent: 'reviewer', evidenceGates: ['reviewed'] },
-    { phase: 'close', agent: 'closer', evidenceGates: ['pr-opened'] },
+    { phase: 'close', agent: 'closer', evidenceGates: ['committed'] },
     { phase: 'retrospective', agent: 'retrospective', evidenceGates: [] },
   ],
   revisionBudget: 2,
