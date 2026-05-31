@@ -72,7 +72,7 @@ export class LearningsStore {
     return new Set(content.split('\n').filter(Boolean));
   }
 
-  async append(key: string, entry: string, area?: string): Promise<void> {
+  async append(key: string, entry: string, area?: string): Promise<string> {
     const keyDir = join(this.basePath, key);
     mkdirSync(keyDir, { recursive: true });
     const targetFile = area ? `${area}.md` : GENERAL_FILE;
@@ -85,6 +85,8 @@ export class LearningsStore {
     if (!area) {
       this.maybePromote(keyDir, entry);
     }
+
+    return this.extractSlug(line);
   }
 
   private maybePromote(keyDir: string, entry: string): void {
@@ -128,6 +130,10 @@ export class LearningsStore {
     if (match) return match[1].trim().toLowerCase().replace(/\s+/g, '-');
     // Fallback: hash from content
     const content = line.slice(2).trim();
-    return content.slice(0, 40).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+$/, '');
+    return content
+      .slice(0, 40)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/-+$/, '');
   }
 }

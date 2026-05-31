@@ -202,8 +202,10 @@ export interface ProjectEntry {
   output?: string;
   /** Notification config. */
   notify?: Record<string, unknown>;
-  /** Promotion target for merged work. */
-  promoteTo?: string;
+  /** Promotion target for merged work. `null` ⇒ repo takes no docs (durable-only). */
+  promoteTo?: string | null;
+  /** Per-repo recurrence threshold that emits a promotion proposal (default 3). */
+  promotionThreshold?: number;
 }
 
 export function resolveEvidenceStrategy(project?: ProjectEntry): EvidenceStrategy {

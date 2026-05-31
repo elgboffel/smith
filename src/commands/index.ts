@@ -26,6 +26,8 @@ import * as analyzeFailure from './analyze-failure.js';
 import * as bootstrap from './bootstrap.js';
 import * as check from './check.js';
 import * as onboard from './onboard.js';
+import * as promote from './promote.js';
+import * as record from './record.js';
 
 export type CommandGroup = 'human' | 'agent' | 'internal';
 
@@ -42,6 +44,7 @@ export const commandMap: Record<string, Command> = {
   check: { handler: check.handler, description: check.description, group: 'human' },
   bootstrap: { handler: bootstrap.handler, description: bootstrap.description, group: 'human' },
   onboard: { handler: onboard.handler, description: onboard.description, group: 'human' },
+  promote: { handler: promote.handler, description: promote.description, group: 'human' },
   session: { handler: session.handler, description: session.description, group: 'agent' },
   status: { handler: status.handler, description: status.description, group: 'agent' },
   'mark-tested': { handler: markTested.handler, description: markTested.description, group: 'agent' },
@@ -52,6 +55,7 @@ export const commandMap: Record<string, Command> = {
   },
   'mark-reviewed': { handler: markReviewed.handler, description: markReviewed.description, group: 'agent' },
   'update-memory': { handler: updateMemory.handler, description: updateMemory.description, group: 'agent' },
+  record: { handler: record.handler, description: record.description, group: 'agent' },
   upload: { handler: upload.handler, description: upload.description, group: 'agent' },
   snapshot: { handler: snapshot.handler, description: snapshot.description, group: 'agent' },
   create: { handler: create.handler, description: create.description, group: 'internal' },
