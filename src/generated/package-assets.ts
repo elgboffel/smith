@@ -30,21 +30,14 @@ import asset26 from '../../docs/conventions/pull-requests.md' with { type: 'text
 import asset27 from '../../docs/conventions/testing.md' with { type: 'text' };
 import asset28 from '../../docs/failure-matrix.md' with { type: 'text' };
 import asset29 from '../../docs/golden-principles.md' with { type: 'text' };
-import asset30 from '../../docs/learnings/README.md' with { type: 'text' };
-import asset31 from '../../docs/learnings/authkit-nextjs.md' with { type: 'text' };
-import asset32 from '../../docs/learnings/authkit-session.md' with { type: 'text' };
-import asset33 from '../../docs/learnings/authkit-tanstack-start.md' with { type: 'text' };
-import asset34 from '../../docs/learnings/cli.md' with { type: 'text' };
-import asset35 from '../../docs/learnings/skills.md' with { type: 'text' };
-import asset36 from '../../docs/learnings/workos-node.md' with { type: 'text' };
-import asset37 from '../../docs/philosophy.md' with { type: 'text' };
-import asset38 from '../../docs/playbooks/README.md' with { type: 'text' };
-import asset39 from '../../docs/playbooks/add-authkit-framework.md' with { type: 'text' };
-import asset40 from '../../docs/playbooks/add-cli-command.md' with { type: 'text' };
-import asset41 from '../../docs/playbooks/add-feature.md' with { type: 'text' };
-import asset42 from '../../docs/playbooks/cross-repo-update.md' with { type: 'text' };
-import asset43 from '../../docs/playbooks/fix-bug.md' with { type: 'text' };
-import asset44 from '../../docs/proposed-amendments/README.md' with { type: 'text' };
+import asset30 from '../../docs/philosophy.md' with { type: 'text' };
+import asset31 from '../../docs/playbooks/README.md' with { type: 'text' };
+import asset32 from '../../docs/playbooks/add-authkit-framework.md' with { type: 'text' };
+import asset33 from '../../docs/playbooks/add-cli-command.md' with { type: 'text' };
+import asset34 from '../../docs/playbooks/add-feature.md' with { type: 'text' };
+import asset35 from '../../docs/playbooks/cross-repo-update.md' with { type: 'text' };
+import asset36 from '../../docs/playbooks/fix-bug.md' with { type: 'text' };
+import asset37 from '../../docs/proposed-amendments/README.md' with { type: 'text' };
 
 export const embeddedPackageAssets: Record<string, string> = {
   'agents/closer.md': asset0,
@@ -77,19 +70,12 @@ export const embeddedPackageAssets: Record<string, string> = {
   'docs/conventions/testing.md': asset27,
   'docs/failure-matrix.md': asset28,
   'docs/golden-principles.md': asset29,
-  'docs/learnings/README.md': asset30,
-  'docs/learnings/authkit-nextjs.md': asset31,
-  'docs/learnings/authkit-session.md': asset32,
-  'docs/learnings/authkit-tanstack-start.md': asset33,
-  'docs/learnings/cli.md': asset34,
-  'docs/learnings/skills.md': asset35,
-  'docs/learnings/workos-node.md': asset36,
-  'docs/philosophy.md': asset37,
-  'docs/playbooks/README.md': asset38,
-  'docs/playbooks/add-authkit-framework.md': asset39,
-  'docs/playbooks/add-cli-command.md': asset40,
-  'docs/playbooks/add-feature.md': asset41,
-  'docs/playbooks/cross-repo-update.md': asset42,
-  'docs/playbooks/fix-bug.md': asset43,
-  'docs/proposed-amendments/README.md': asset44,
+  'docs/philosophy.md': asset30,
+  'docs/playbooks/README.md': asset31,
+  'docs/playbooks/add-authkit-framework.md': asset32,
+  'docs/playbooks/add-cli-command.md': asset33,
+  'docs/playbooks/add-feature.md': asset34,
+  'docs/playbooks/cross-repo-update.md': asset35,
+  'docs/playbooks/fix-bug.md': asset36,
+  'docs/proposed-amendments/README.md': asset37,
 };
