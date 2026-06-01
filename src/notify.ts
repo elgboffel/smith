@@ -10,6 +10,8 @@ export interface Notifier {
     durationMs: number,
     status: 'completed' | 'failed',
     contextTokens?: number,
+    model?: string,
+    effort?: string,
   ): void;
   askUser(prompt: string, options: string[]): Promise<string>;
   /** Indicate a tool invocation has started (rendered as indented tool line). */

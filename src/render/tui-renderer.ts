@@ -116,8 +116,16 @@ function colorToolLine(tool: string, args: string, durationMs?: number): string 
 }
 
 /** Re-color a formatted phase-end line. */
-function colorPhaseEndLine(phase: string, agent: string, durationMs: number, status: 'completed' | 'failed'): string {
-  const raw = formatPhaseEnd(phase, agent, durationMs, status);
+function colorPhaseEndLine(
+  phase: string,
+  agent: string,
+  durationMs: number,
+  status: 'completed' | 'failed',
+  contextTokens?: number,
+  model?: string,
+  effort?: string,
+): string {
+  const raw = formatPhaseEnd(phase, agent, durationMs, status, contextTokens, model, effort);
   const durText = formatDuration(durationMs);
   const body = raw.endsWith(durText) ? raw.slice(0, raw.length - durText.length) : raw;
   const icon = status === 'completed' ? green(body[0]!) : red(body[0]!);
@@ -358,14 +366,14 @@ export function createTuiRenderer(options: TuiRendererOptions): TuiRenderer {
       pushFeed(colorPhaseHeader(phase, agent));
     },
 
-    phaseEnd(phase, agent, durationMs, status) {
-      if (fallback) return fallback.phaseEnd(phase, agent, durationMs, status);
+    phaseEnd(phase, agent, durationMs, status, contextTokens, model, effort) {
+      if (fallback) return fallback.phaseEnd(phase, agent, durationMs, status, contextTokens, model, effort);
       if (state.activePhase === phase) {
         state.completedPhases.push(phase);
         state.activePhase = null;
       }
       refreshHeader();
-      pushFeed(colorPhaseEndLine(phase, agent, durationMs, status));
+      pushFeed(colorPhaseEndLine(phase, agent, durationMs, status, contextTokens, model, effort));
     },
 
     toolStart(tool, args) {

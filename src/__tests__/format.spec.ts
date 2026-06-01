@@ -62,6 +62,13 @@ describe('formatPhaseEnd', () => {
     expect(out.startsWith('✗ implement failed')).toBe(true);
     expect(out.endsWith('1m 42s')).toBe(true);
   });
+
+  test('shows shortened model + effort when provided', () => {
+    const out = formatPhaseEnd('implement', 'implementer', 102_000, 'completed', 120_000, 'claude-sonnet-4-5-20250929', 'high');
+    expect(out).toContain('(sonnet-4-5 high)');
+    expect(out).toContain('120.0k ctx');
+    expect(out.endsWith('1m 42s')).toBe(true);
+  });
 });
 
 describe('formatToolLine', () => {
@@ -198,5 +205,19 @@ describe('formatPipelineComplete', () => {
     const lines = formatPipelineComplete([], 0);
     expect(lines).toHaveLength(1);
     expect(lines[0].startsWith('✓ Pipeline complete [0/0]')).toBe(true);
+  });
+
+  test('adds model + effort columns when rows carry them', () => {
+    const withMeta = [
+      { phase: 'scout', durationMs: 192_000, contextTokens: 47_000, model: 'claude-sonnet-4-5-20250929', effort: 'high' },
+      { phase: 'implement', durationMs: 604_000, contextTokens: 120_000, model: 'claude-sonnet-4-5-20250929', effort: 'medium' },
+    ];
+    const lines = formatPipelineComplete(withMeta, 796_000);
+    expect(lines[1]).toContain('sonnet-4-5');
+    expect(lines[1]).toContain('high');
+    expect(lines[2]).toContain('medium');
+    // Columns still align across rows.
+    const widths = new Set(lines.slice(1).map((l) => l.length));
+    expect(widths.size).toBe(1);
   });
 });

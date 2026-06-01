@@ -88,7 +88,7 @@ export async function executeGraph(ctx: ExecuteGraphContext): Promise<void> {
           durationMs: elapsed,
           result,
         });
-        ctx.notifier.phaseEnd(node.phase, node.agent, elapsed, 'completed', result.contextTokens);
+        ctx.notifier.phaseEnd(node.phase, node.agent, elapsed, 'completed', result.contextTokens, result.model, result.effort);
       } else {
         node.state = 'failed';
         node.completedAt = new Date().toISOString();
@@ -101,7 +101,7 @@ export async function executeGraph(ctx: ExecuteGraphContext): Promise<void> {
           durationMs: elapsed,
           result,
         });
-        ctx.notifier.phaseEnd(node.phase, node.agent, elapsed, 'failed', result.contextTokens);
+        ctx.notifier.phaseEnd(node.phase, node.agent, elapsed, 'failed', result.contextTokens, result.model, result.effort);
       }
     }
 
@@ -151,7 +151,7 @@ export async function executeGraph(ctx: ExecuteGraphContext): Promise<void> {
           durationMs: elapsed,
           result,
         });
-        ctx.notifier.phaseEnd('retrospective', 'retrospective', elapsed, 'completed', result.contextTokens);
+        ctx.notifier.phaseEnd('retrospective', 'retrospective', elapsed, 'completed', result.contextTokens, result.model, result.effort);
       }
       break;
     }

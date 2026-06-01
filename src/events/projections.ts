@@ -80,6 +80,8 @@ export function projectMetrics(state: PipelineState): RunMetrics {
       status: phase.status === 'running' ? 'completed' : (phase.status as 'completed' | 'failed' | 'skipped'),
       retried: phase.phase === 'implement' && state.revisionCycles > 0,
       contextTokens: phase.result?.contextTokens ?? 0,
+      model: phase.result?.model,
+      effort: phase.result?.effort,
     });
 
     if (phase.result?.findings) {

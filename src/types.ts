@@ -69,6 +69,10 @@ export interface AgentResult {
    * per phase — never summed across phases (each phase is a fresh agent).
    */
   contextTokens?: number;
+  /** Model ID the agent ran on (e.g. "claude-sonnet-4-5-20250929"). */
+  model?: string;
+  /** Reasoning effort the agent ran with. "off" when extended thinking was disabled. */
+  effort?: AgentEffort;
   error: string | null;
 }
 
@@ -429,6 +433,10 @@ export interface PhaseMetrics {
   retried: boolean;
   /** Peak context occupancy for this phase's agent. 0 when unknown (dry-run, skipped). */
   contextTokens: number;
+  /** Model ID this phase's agent ran on. Undefined when unknown (dry-run, skipped). */
+  model?: string;
+  /** Reasoning effort this phase's agent ran with. Undefined when unknown. */
+  effort?: string;
 }
 
 export interface RunMetrics {

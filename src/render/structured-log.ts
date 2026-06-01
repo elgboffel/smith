@@ -54,8 +54,10 @@ function colorPhaseEndLine(
   durationMs: number,
   status: 'completed' | 'failed',
   contextTokens?: number,
+  model?: string,
+  effort?: string,
 ): string {
-  const raw = formatPhaseEnd(phase, agent, durationMs, status, contextTokens);
+  const raw = formatPhaseEnd(phase, agent, durationMs, status, contextTokens, model, effort);
   const icon = status === 'completed' ? green(raw[0]!) : red(raw[0]!);
   let body = raw.slice(1);
 
@@ -175,8 +177,8 @@ export function createStructuredLogRenderer(options: StructuredLogRendererOption
       writeLine(colorPhaseHeader(phase, agent));
     },
 
-    phaseEnd(phase, agent, durationMs, status, contextTokens) {
-      writeLine(colorPhaseEndLine(phase, agent, durationMs, status, contextTokens));
+    phaseEnd(phase, agent, durationMs, status, contextTokens, model, effort) {
+      writeLine(colorPhaseEndLine(phase, agent, durationMs, status, contextTokens, model, effort));
     },
 
     toolStart(tool, args) {

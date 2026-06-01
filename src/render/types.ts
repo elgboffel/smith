@@ -19,4 +19,8 @@ export interface PhaseSummaryRow {
   phase: string;
   durationMs: number;
   contextTokens: number;
+  /** Model ID this phase's agent ran on, when known. */
+  model?: string;
+  /** Reasoning effort this phase's agent ran with, when known. */
+  effort?: string;
 }

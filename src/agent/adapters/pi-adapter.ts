@@ -240,6 +240,8 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
               prNumber: null,
             },
             error: agentError,
+            model: modelConfig.model,
+            effort: thinkingLevel ?? 'off',
           },
           durationMs,
           tokens: contextTokens,
@@ -247,11 +249,17 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
       }
 
       const result = parseAgentResult(responseText);
+      // Tag the result with the model + effort this agent actually ran on so the
+      // renderers can surface them per-step and in the final summary.
+      result.model = modelConfig.model;
+      result.effort = thinkingLevel ?? 'off';
       log.info('agent completed', {
         agent: options.agentName,
         durationMs,
         status: result.status,
         contextTokens,
+        model: modelConfig.model,
+        effort: thinkingLevel ?? 'off',
       });
 
       return { raw: responseText, result, durationMs, tokens: contextTokens };
@@ -278,6 +286,8 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
             prNumber: null,
           },
           error: `Agent spawn error: ${errorMsg}`,
+          model: modelConfig.model,
+          effort: thinkingLevel ?? 'off',
         },
         durationMs,
         tokens: contextTokens,

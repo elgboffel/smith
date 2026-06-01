@@ -38,9 +38,10 @@ export function formatPhaseHeader(phase: string, agent: string): string {
 /**
  * Format the end-of-phase line. When `contextTokens` is provided (> 0) the
  * phase's peak context occupancy is shown alongside the duration so each
- * completed step reports the same context number as the final summary.
- * Example: "✓ implement completed              120.0k ctx   1m 42s"
- *          "✗ implement failed                              1m 42s"
+ * completed step reports the same context number as the final summary. When
+ * `model`/`effort` are provided they're shown right after the status label.
+ * Example: "✓ implement completed  (sonnet-4-5 high)   120.0k ctx   1m 42s"
+ *          "✗ implement failed                                       1m 42s"
  */
 export function formatPhaseEnd(
   phase: string,
@@ -48,13 +49,33 @@ export function formatPhaseEnd(
   durationMs: number,
   status: 'completed' | 'failed',
   contextTokens?: number,
+  model?: string,
+  effort?: string,
 ): string {
   const icon = status === 'completed' ? '✓' : '✗';
   const label = status === 'completed' ? 'completed' : 'failed';
-  const left = `${icon} ${phase} ${label}`;
+  const meta = formatModelEffort(model, effort);
+  const left = `${icon} ${phase} ${label}${meta ? `  (${meta})` : ''}`;
   const dur = formatDuration(durationMs);
   const right = contextTokens ? `${formatTokenCount(contextTokens)} ctx   ${dur}` : dur;
   return padRight(left, right);
+}
+
+/**
+ * Shorten a model ID for display by dropping a trailing release date
+ * (`-YYYYMMDD` or `-YYYY-MM-DD`) and the leading `claude-` vendor prefix.
+ * Example: "claude-sonnet-4-5-20250929" → "sonnet-4-5".
+ */
+export function formatModelLabel(model: string): string {
+  return model.replace(/-\d{4}-?\d{2}-?\d{2}$/, '').replace(/^claude-/, '');
+}
+
+/** Join a shortened model label and effort into a compact "model effort" string. */
+function formatModelEffort(model?: string, effort?: string): string {
+  const parts: string[] = [];
+  if (model) parts.push(formatModelLabel(model));
+  if (effort) parts.push(effort);
+  return parts.join(' ');
 }
 
 /**
@@ -100,11 +121,14 @@ export function formatTokenCount(tokens: number): string {
  * Each phase is a fresh agent, so the context column is a per-phase value —
  * never a running total.
  *
+ * When any row carries a model/effort, two extra columns are inserted between
+ * the phase name and the duration.
+ *
  * Example:
  *   ✓ Pipeline complete [6/6]                       18m 6s
- *       scout            3m 12s    47.0k ctx
- *       implement       10m  4s   120.0k ctx
- *       verify           2m 30s    88.0k ctx
+ *       scout       sonnet-4-5  high      3m 12s    47.0k ctx
+ *       implement   sonnet-4-5  high     10m  4s   120.0k ctx
+ *       verify      sonnet-4-5  medium    2m 30s    88.0k ctx
  *       ...
  */
 export function formatPipelineComplete(rows: PhaseSummaryRow[], totalDurationMs: number): string[] {
@@ -116,12 +140,19 @@ export function formatPipelineComplete(rows: PhaseSummaryRow[], totalDurationMs:
   const durW = Math.max(...rows.map((r) => formatDuration(r.durationMs).length));
   const tokW = Math.max(...rows.map((r) => formatTokenCount(r.contextTokens).length));
 
+  const hasModel = rows.some((r) => r.model);
+  const hasEffort = rows.some((r) => r.effort);
+  const modelW = hasModel ? Math.max(...rows.map((r) => (r.model ? formatModelLabel(r.model).length : 0))) : 0;
+  const effortW = hasEffort ? Math.max(...rows.map((r) => (r.effort ? r.effort.length : 0))) : 0;
+
   const lines = [header];
   for (const r of rows) {
     const name = r.phase.padEnd(nameW);
     const dur = formatDuration(r.durationMs).padStart(durW);
     const tok = formatTokenCount(r.contextTokens).padStart(tokW);
-    lines.push(`    ${name}   ${dur}   ${tok} ctx`);
+    const model = hasModel ? `   ${(r.model ? formatModelLabel(r.model) : '').padEnd(modelW)}` : '';
+    const effort = hasEffort ? `   ${(r.effort ?? '').padEnd(effortW)}` : '';
+    lines.push(`    ${name}${model}${effort}   ${dur}   ${tok} ctx`);
   }
   return lines;
 }

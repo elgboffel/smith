@@ -293,10 +293,16 @@ interface PipelineCallbacks {
 function buildPhaseSummary(metrics: RunMetrics, profile: PipelineProfile): PhaseSummaryRow[] {
   const durations = new Map<string, number>();
   const contextTokens = new Map<string, number>();
+  const models = new Map<string, string>();
+  const efforts = new Map<string, string>();
   for (const p of metrics.phases) {
     if (p.status === 'skipped') continue;
     durations.set(p.phase, (durations.get(p.phase) ?? 0) + p.durationMs);
     contextTokens.set(p.phase, Math.max(contextTokens.get(p.phase) ?? 0, p.contextTokens));
+    // Model + effort are stable across a phase's revision cycles (same agent),
+    // so the last non-empty value wins.
+    if (p.model) models.set(p.phase, p.model);
+    if (p.effort) efforts.set(p.phase, p.effort);
   }
   return PROFILE_PHASES[profile]
     .filter((phase) => durations.has(phase))
@@ -304,6 +310,8 @@ function buildPhaseSummary(metrics: RunMetrics, profile: PipelineProfile): Phase
       phase,
       durationMs: durations.get(phase) ?? 0,
       contextTokens: contextTokens.get(phase) ?? 0,
+      model: models.get(phase),
+      effort: efforts.get(phase),
     }));
 }
 
