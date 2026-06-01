@@ -262,7 +262,7 @@ Each agent runs with a reasoning (thinking) effort level. The ladder is tuned to
 | ------------- | -------- | ----------------------------------------------------------- |
 | scout         | `low`    | Exploration is tool-driven; only light synthesis needed.    |
 | implementer   | `medium` | Core problem-solving and working through test failures.     |
-| verifier      | `medium` | Must design a check that exercises the *changed* path.      |
+| verifier      | `medium` | Must design a check that exercises the _changed_ path.      |
 | reviewer      | `high`   | Subtle principle/architecture bugs reward deeper reasoning. |
 | closer        | `off`    | Mechanical: confirm evidence markers, open the PR.          |
 | retrospective | `low`    | Light synthesis of learnings.                               |

@@ -1,12 +1,5 @@
 /** Status lifecycle — derived from pipeline graph node state via projectStatusFromGraph() */
-export type TaskStatus =
-  | 'active'
-  | 'implementing'
-  | 'verifying'
-  | 'reviewing'
-  | 'evaluating'
-  | 'closing'
-  | 'committed';
+export type TaskStatus = 'active' | 'implementing' | 'verifying' | 'reviewing' | 'evaluating' | 'closing' | 'committed';
 
 export type AgentName = 'orchestrator' | 'implementer' | 'verifier' | 'reviewer' | 'closer' | 'scout';
 

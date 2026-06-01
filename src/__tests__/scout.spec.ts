@@ -199,5 +199,4 @@ describe('synthesizeForImplementer', () => {
     const out = synthesizeForImplementer(findings);
     expect(out).toContain('`src/a.ts`');
   });
-
 });

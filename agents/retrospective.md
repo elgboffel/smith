@@ -128,7 +128,7 @@ Check each dimension:
 
 - Did any agent phase take unusually long? (Compare started/completed timestamps)
 - Could instructions be more specific to reduce exploration time?
-- Use the event log's per-tool `durationMs` (Step 1b) to find *which* tool calls dominated a slow phase — a 90s phase spent entirely in one browser-boot command is a different problem from 90s of exploration.
+- Use the event log's per-tool `durationMs` (Step 1b) to find _which_ tool calls dominated a slow phase — a 90s phase spent entirely in one browser-boot command is a different problem from 90s of exploration.
 
 ### 3. Classify Improvements
 

@@ -79,10 +79,7 @@ describe('reconcileIssue', () => {
     // Human forced a retry by editing Status back to `ready`; the old claimed
     // task is still on disk. The `ready` status is authoritative — a fresh task
     // is created rather than resuming the stale one.
-    const issuePath = writeIssue(
-      '06-reset.md',
-      '# Reset issue\n\nStatus: ready\nTask: demo-6-reset-issue\n\nBody.\n',
-    );
+    const issuePath = writeIssue('06-reset.md', '# Reset issue\n\nStatus: ready\nTask: demo-6-reset-issue\n\nBody.\n');
     writeTask('demo-6-reset-issue', { status: 'implementing', issuePath });
 
     const decision = await reconcileIssue({ issuePath, caseRoot, repoPath });

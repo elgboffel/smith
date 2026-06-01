@@ -74,12 +74,12 @@ available.
 
 Commit-only close: the closer opens no PR and runs no `gh`. It confirms the work is committed on a feature branch, then flips the source issue file's `Status:` to done and appends a `## Comments` entry. There is no network surface, so no `fail-github-unreachable` outcome.
 
-| Outcome               | Condition                               | Action                      | Rationale                                                  |
-| --------------------- | --------------------------------------- | --------------------------- | ---------------------------------------------------------- |
-| `success`             | Issue marked done + comment appended    | `advance` → `retrospective` | Happy path.                                                |
-| `fail-agent-protocol` | Closer `AGENT_RESULT` malformed         | `surface` (manual)          | Issue file may be partially updated; require human review. |
-| `fail-timeout`        | Closer agent exceeded wall-clock budget | `surface` (manual)          | Issue file may be partially updated — never silently retry.|
-| `abort-user`          | User-initiated abort                    | `abort`                     | Honour the explicit user signal.                           |
+| Outcome               | Condition                               | Action                      | Rationale                                                   |
+| --------------------- | --------------------------------------- | --------------------------- | ----------------------------------------------------------- |
+| `success`             | Issue marked done + comment appended    | `advance` → `retrospective` | Happy path.                                                 |
+| `fail-agent-protocol` | Closer `AGENT_RESULT` malformed         | `surface` (manual)          | Issue file may be partially updated; require human review.  |
+| `fail-timeout`        | Closer agent exceeded wall-clock budget | `surface` (manual)          | Issue file may be partially updated — never silently retry. |
+| `abort-user`          | User-initiated abort                    | `abort`                     | Honour the explicit user signal.                            |
 
 ## Phase: retrospective
 

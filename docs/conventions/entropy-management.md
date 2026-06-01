@@ -32,8 +32,8 @@ This runs every 30 minutes while your session is active. The scan:
 
 ### Recommended intervals
 
-| Scenario                 | Interval | Command                           |
-| ------------------------ | -------- | --------------------------------- |
+| Scenario                 | Interval | Command                              |
+| ------------------------ | -------- | ------------------------------------ |
 | Active multi-repo work   | 30m      | `/loop 30m smith check`              |
 | Focused single-repo work | 1h       | `/loop 1h smith check --repo {name}` |
 | Background monitoring    | 2h       | `/loop 2h smith check`               |

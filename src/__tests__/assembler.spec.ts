@@ -273,13 +273,7 @@ describe('assemblePrompt', () => {
 
   it('closer context includes the source issue file path when set', async () => {
     const issuePath = join(tempCaseRoot, 'issues', '06-finalizer.md');
-    const prompt = await assemblePrompt(
-      'closer',
-      makeConfig({ issuePath }),
-      makeTask(),
-      emptyRepoContext,
-      new Map(),
-    );
+    const prompt = await assemblePrompt('closer', makeConfig({ issuePath }), makeTask(), emptyRepoContext, new Map());
 
     expect(prompt).toContain('Issue file');
     expect(prompt).toContain(issuePath);

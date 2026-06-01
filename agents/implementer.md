@@ -226,12 +226,11 @@ Fix any errors before proceeding. Warnings should be addressed if feasible but d
 2. **Commit, matching the repo's existing commit style.**
 
    Do **not** apply a generic format from memory — the repo's own history is the source of truth. Before writing the message:
-
    - Look at the **`### Recent Commits`** block in your Task Context (the orchestrator injects the last commits). Mirror the type set, scope usage, and casing you see there.
    - If you need more, run `git log --oneline -20` and skim how subjects are phrased.
    - Check the repo's `CLAUDE.md` / `CLAUDE.local.md` and any git-convention rule file it points to; those override anything here.
 
-   Most WorkOS repos use Conventional Commits (`type(scope): description`, imperative mood, subject under 72 chars, body explains *why*), but **scopes and the exact type set are repo-specific** — match what the history shows (e.g. don't invent a `(scope)` the repo never uses, and don't switch casing). When the repo's convention and this guidance disagree, follow the repo.
+   Most WorkOS repos use Conventional Commits (`type(scope): description`, imperative mood, subject under 72 chars, body explains _why_), but **scopes and the exact type set are repo-specific** — match what the history shows (e.g. don't invent a `(scope)` the repo never uses, and don't switch casing). When the repo's convention and this guidance disagree, follow the repo.
 
 3. **Append to the task file's Progress Log**:
 

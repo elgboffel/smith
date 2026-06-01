@@ -36,7 +36,7 @@ Full metadata (commands, remotes, evidence strategy): `~/.config/smith/projects.
 | Playbooks             | `docs/playbooks/`                        |
 | Agent roles           | `agents/`                                |
 | Entropy management    | `docs/conventions/entropy-management.md` |
-| Repo learnings        | Target repo `.smith/learnings.md`         |
+| Repo learnings        | Target repo `.smith/learnings.md`        |
 
 ## Task Dispatch
 

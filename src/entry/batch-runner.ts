@@ -43,9 +43,7 @@ export async function runBatch(
       return { processed, halted: true, haltedAt: item.issuePath };
     }
     if (outcome === 'failed') {
-      notifier.send(
-        `Folder batch halted at ${basename(item.issuePath)}. Issue stays claimed — re-run to resume.`,
-      );
+      notifier.send(`Folder batch halted at ${basename(item.issuePath)}. Issue stays claimed — re-run to resume.`);
       return { processed, halted: true, haltedAt: item.issuePath };
     }
   }

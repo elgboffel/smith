@@ -51,10 +51,7 @@ export interface DiscoverOptions {
  * injected manifest stays small. Every read is best-effort: missing directories
  * yield empty lists, never throw.
  */
-export async function discoverAgentResources(
-  repoPath: string,
-  opts: DiscoverOptions = {},
-): Promise<AgentResources> {
+export async function discoverAgentResources(repoPath: string, opts: DiscoverOptions = {}): Promise<AgentResources> {
   const home = opts.home ?? homedir();
   const allow = opts.globalSkillNames;
   const [projectRules, projectSkills, globalSkills] = await Promise.all([

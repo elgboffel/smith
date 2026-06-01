@@ -122,7 +122,7 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
       // context) and surface it so the pipeline can report the peak occupancy.
       if (event.type === 'turn_end') {
         const u = event.message?.usage;
-        const turnContext = u ? (u.totalTokens || u.input + u.output + u.cacheRead + u.cacheWrite) : 0;
+        const turnContext = u ? u.totalTokens || u.input + u.output + u.cacheRead + u.cacheWrite : 0;
         if (turnContext > contextTokens) {
           contextTokens = turnContext;
           if (options.onUsage) {

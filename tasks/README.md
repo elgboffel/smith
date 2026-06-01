@@ -67,8 +67,8 @@ Read/write via: `smith status <file> <field> [value]`
 
 Evidence markers live under `.smith/<task-slug>/` in the target repo. The `.smith/active` file contains the task slug. Add `.smith/` to `.gitignore` (bootstrap does this automatically).
 
-| Marker                            | Created by              | Purpose                                          |
-| --------------------------------- | ----------------------- | ------------------------------------------------ |
+| Marker                             | Created by                 | Purpose                                          |
+| ---------------------------------- | -------------------------- | ------------------------------------------------ |
 | `.smith/<task-slug>/tested`        | `smith mark-tested`        | Proves automated tests ran (hash of test output) |
 | `.smith/<task-slug>/manual-tested` | `smith mark-manual-tested` | Proves manual/browser testing was performed      |
 | `.smith/<task-slug>/reviewed`      | `smith mark-reviewed`      | Proves code review passed (critical: 0)          |

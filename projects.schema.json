@@ -62,7 +62,10 @@
               "lint": { "type": "string", "description": "Run linter" },
               "typecheck": { "type": "string", "description": "Run type checker" },
               "format": { "type": "string", "description": "Run formatter" },
-              "build-dev": { "type": "string", "description": "One-shot dev build (no watcher) for non-editing verification" },
+              "build-dev": {
+                "type": "string",
+                "description": "One-shot dev build (no watcher) for non-editing verification"
+              },
               "start": { "type": "string", "description": "Start the built app" }
             },
             "additionalProperties": { "type": "string" }

@@ -7,9 +7,7 @@ import { tmpdir } from 'node:os';
  * Agent config tests use SMITH_DATA_DIR so they never touch real user config.
  */
 
-const { loadConfig, getModelForAgent, getEffortForAgent, resolveThinkingLevel } = await import(
-  '../agent/config.js'
-);
+const { loadConfig, getModelForAgent, getEffortForAgent, resolveThinkingLevel } = await import('../agent/config.js');
 
 let tempDir: string;
 let originalSmithDataDir: string | undefined;

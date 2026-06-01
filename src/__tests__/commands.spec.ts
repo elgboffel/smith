@@ -458,7 +458,10 @@ describe('upload handler — per-task assets dir', () => {
   it('an active task slug wins over a config assetsDir (evidence stays where markers look)', async () => {
     // A stale global assetsDir must not scatter a run's screenshots into a
     // shared dir that mark-manual-tested does not search.
-    fs.writeFileSync(path.join(process.env.SMITH_DATA_DIR!, 'config.json'), JSON.stringify({ assetsDir: '.smith/assets' }));
+    fs.writeFileSync(
+      path.join(process.env.SMITH_DATA_DIR!, 'config.json'),
+      JSON.stringify({ assetsDir: '.smith/assets' }),
+    );
     fs.mkdirSync(path.join(tmp, '.smith'), { recursive: true });
     fs.writeFileSync(path.join(tmp, '.smith', 'active'), 'fix-login-bug\n');
     fs.writeFileSync(path.join(tmp, 'shot.png'), 'fake-png-bytes');
@@ -473,7 +476,10 @@ describe('upload handler — per-task assets dir', () => {
   });
 
   it('honours config assetsDir for ad-hoc uploads when no task is active', async () => {
-    fs.writeFileSync(path.join(process.env.SMITH_DATA_DIR!, 'config.json'), JSON.stringify({ assetsDir: 'custom-shots' }));
+    fs.writeFileSync(
+      path.join(process.env.SMITH_DATA_DIR!, 'config.json'),
+      JSON.stringify({ assetsDir: 'custom-shots' }),
+    );
     fs.writeFileSync(path.join(tmp, 'shot.png'), 'fake-png-bytes');
 
     const { handler } = await import('../commands/upload.js');

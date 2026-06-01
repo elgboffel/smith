@@ -8,7 +8,10 @@ let repoDir: string;
 let homeDir: string;
 
 beforeEach(async () => {
-  tempDir = join(process.env.TMPDIR ?? '/tmp', `case-agent-resources-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  tempDir = join(
+    process.env.TMPDIR ?? '/tmp',
+    `case-agent-resources-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
   repoDir = join(tempDir, 'repo');
   homeDir = join(tempDir, 'home');
   await mkdir(repoDir, { recursive: true });
@@ -58,8 +61,16 @@ describe('discoverAgentResources', () => {
   });
 
   it('parses skill frontmatter (single-line and folded descriptions)', async () => {
-    await writeSkill(repoDir, 'playwright', '---\nname: playwright\ndescription: Playwright E2E testing and flake validation.\n---\n\nbody');
-    await writeSkill(repoDir, 'mui-styling', '---\nname: mui-styling\ndescription: >\n  Styling conventions for MUI components.\n  Use sx props consistently.\n---\n\nbody');
+    await writeSkill(
+      repoDir,
+      'playwright',
+      '---\nname: playwright\ndescription: Playwright E2E testing and flake validation.\n---\n\nbody',
+    );
+    await writeSkill(
+      repoDir,
+      'mui-styling',
+      '---\nname: mui-styling\ndescription: >\n  Styling conventions for MUI components.\n  Use sx props consistently.\n---\n\nbody',
+    );
 
     const res = await discoverAgentResources(repoDir, { home: homeDir });
 
@@ -124,8 +135,16 @@ describe('formatAgentResources', () => {
 
   it('renders rules and skills with paths the Read tool can use', () => {
     const out = formatAgentResources({
-      projectRules: [{ name: 'frontend-validation.md', description: 'Frontend Validation Rules', path: '/repo/.agents/rules/frontend-validation.md' }],
-      projectSkills: [{ name: 'playwright', description: 'E2E testing', path: '/repo/.agents/skills/playwright/SKILL.md' }],
+      projectRules: [
+        {
+          name: 'frontend-validation.md',
+          description: 'Frontend Validation Rules',
+          path: '/repo/.agents/rules/frontend-validation.md',
+        },
+      ],
+      projectSkills: [
+        { name: 'playwright', description: 'E2E testing', path: '/repo/.agents/skills/playwright/SKILL.md' },
+      ],
       globalSkills: [{ name: 'test-ui', description: 'Browser helper', path: '/home/.agents/skills/test-ui/SKILL.md' }],
     });
 

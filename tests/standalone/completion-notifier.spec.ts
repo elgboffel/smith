@@ -53,10 +53,7 @@ describe('completion-notifier', () => {
 
   it('does not invoke a hook when none is configured', () => {
     const calls: string[] = [];
-    const notifier = createCompletionNotifier(
-      {},
-      { write: () => {}, runHook: (command) => calls.push(command) },
-    );
+    const notifier = createCompletionNotifier({}, { write: () => {}, runHook: (command) => calls.push(command) });
 
     notifier.notify({ task: 'add-foo', repo: 'cli', outcome: 'done' });
 

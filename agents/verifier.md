@@ -151,7 +151,7 @@ This is the critical step. Write a short script (10-30 lines) that exercises the
 
 **This is the critical step.** You must test the exact scenario described in the issue — not just the happy path.
 
-> **Project-specific testing belongs in skills and notes, not here.** This agent describes the *generic* verification loop. For how to run, authenticate against, and interact with a specific repo's UI, defer to (in priority order): the task's **Verification Notes** (captured by the interviewer in `projects.json`), the repo's `CLAUDE.md`, and any project skill the task or repo points you to (e.g. a framework-specific AuthKit or app skill). Do not hardcode framework, port, or login assumptions you find here — read them from config and notes.
+> **Project-specific testing belongs in skills and notes, not here.** This agent describes the _generic_ verification loop. For how to run, authenticate against, and interact with a specific repo's UI, defer to (in priority order): the task's **Verification Notes** (captured by the interviewer in `projects.json`), the repo's `CLAUDE.md`, and any project skill the task or repo points you to (e.g. a framework-specific AuthKit or app skill). Do not hardcode framework, port, or login assumptions you find here — read them from config and notes.
 
 1. Read the issue description from the task file's `## Issue Reference` or `## Objective` section
 2. Identify the specific bug/feature scenario to reproduce
@@ -188,7 +188,7 @@ If the implementer added a new export, alias, or API:
 6. Read test credentials from the path in Task Context → **Credentials** (use for .env files only — **never log credentials**)
 7. Load the browser-automation skill for your environment (the tooling skill named in the Task Context or your global skills) and use it for all browser steps below
 8. Open browser and navigate to `http://localhost:$PORT`
-9. **The BEFORE is the scout's baseline — don't fake one.** The scout ran before the commit and captured the genuine pre-change state; `smith upload` already recorded it in the task file (under `### Evidence (auto-captured)`) and the screen is named in your `## Scout Baseline` block. You run *after* the commit, so you cannot reproduce the real before — screenshotting the current (already-changed) screen and labelling it "before" is fake evidence.
+9. **The BEFORE is the scout's baseline — don't fake one.** The scout ran before the commit and captured the genuine pre-change state; `smith upload` already recorded it in the task file (under `### Evidence (auto-captured)`) and the screen is named in your `## Scout Baseline` block. You run _after_ the commit, so you cannot reproduce the real before — screenshotting the current (already-changed) screen and labelling it "before" is fake evidence.
    - If the scout did **not** provide a baseline (cold start, or a non-visual scout), capture the current state as a best-effort before, and **state in your record that it is post-change** so the reviewer knows the comparison is limited.
    - For interaction-type changes (the before/after is about clicking, not the commit), an in-session before is still legitimate — capture it.
 10. **If the app requires authentication**, follow the login flow (see 3c below)

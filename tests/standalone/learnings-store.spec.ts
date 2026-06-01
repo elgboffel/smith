@@ -88,9 +88,7 @@ describe('LearningsStore', () => {
       expect(mwEntries.length).toBe(3);
 
       // _general should no longer have those entries
-      const generalEntries = result.entries.filter(
-        (e) => e.source === '_general.md' && e.text.includes('middleware:'),
-      );
+      const generalEntries = result.entries.filter((e) => e.source === '_general.md' && e.text.includes('middleware:'));
       expect(generalEntries.length).toBe(0);
     });
   });
