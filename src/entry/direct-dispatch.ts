@@ -1,5 +1,5 @@
 import { fetchIssue } from './issue-fetcher.js';
-import { findTaskByIssue } from './task-scanner.js';
+import { reconcileIssue } from './issue-dedup.js';
 import { createTask } from './task-factory.js';
 import { resolveDispatch } from './dispatch-resolver.js';
 import { gitPolicyForMode } from './git-policy.js';
@@ -56,12 +56,17 @@ export async function runDirectDispatch(options: DirectDispatchOptions): Promise
   setupStep(notifier, 'Dispatch', 'direct (local, no git writes)');
   setupStep(notifier, 'Workspace', `${project.name} (${workspacePath})`);
 
-  // --- Re-entry: resume an existing task for this issue file ---
+  // --- Dedup: reconcile the issue's Status + task back-link before creating ---
   if (!fresh) {
-    const matchId = (await fetchIssue('local-md', issuePath)).issueNumber;
-    const match = await findTaskByIssue(caseRoot, project.name, 'local-md', matchId, workspacePath);
-    if (match) {
-      return resumeTask(match, workspacePath, mode, dryRun, notifier, setupStartedAt, renderer);
+    const decision = await reconcileIssue({ issuePath, caseRoot, repoPath: workspacePath });
+    if (decision.action === 'skip') {
+      setupStep(notifier, 'Dedup', decision.reason);
+      notifier.phaseEnd(SETUP_PHASE, 'cli', Date.now() - setupStartedAt, 'completed');
+      notifier.send(`Skipping: ${decision.reason}.`);
+      return;
+    }
+    if (decision.action === 'resume') {
+      return resumeTask(decision.match, workspacePath, mode, dryRun, notifier, setupStartedAt, renderer);
     }
   }
 

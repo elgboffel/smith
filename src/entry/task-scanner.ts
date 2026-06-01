@@ -55,6 +55,61 @@ export async function findTaskByIssue(
   return null;
 }
 
+/** Signals that link an issue file to the task created from it. */
+export interface IssueBackLink {
+  /** The issue's `Task:` line value, or null when absent. */
+  taskId: string | null;
+  /** Absolute path to the source issue `.md` file. */
+  issuePath: string;
+  /** The issue title slug (matches `TaskJson.issue` for local-md tasks). */
+  slug: string;
+}
+
+/**
+ * Scan active task JSON files for one that back-links the given issue — by its
+ * `Task:` id, by a matching `issuePath`, or by a matching issue slug. Returns
+ * the match with its resolved entry phase, or null if none back-links it.
+ */
+export async function findTaskByBackLink(
+  caseRoot: string,
+  link: IssueBackLink,
+  repoPath?: string,
+): Promise<TaskMatch | null> {
+  const issuePath = resolve(link.issuePath);
+
+  for (const activeDir of activeDirCandidates(caseRoot, repoPath)) {
+    let entries: string[];
+    try {
+      entries = await readdir(activeDir);
+    } catch {
+      continue;
+    }
+
+    for (const file of entries.filter((f) => f.endsWith('.task.json'))) {
+      const taskJsonPath = resolve(activeDir, file);
+      try {
+        const raw = await Bun.file(taskJsonPath).text();
+        const task = JSON.parse(raw) as TaskJson;
+
+        const matches =
+          (link.taskId !== null && task.id === link.taskId) ||
+          (task.issuePath != null && resolve(task.issuePath) === issuePath) ||
+          task.issue === link.slug;
+
+        if (matches) {
+          const entryPhase = determineEntryPhase(task);
+          const taskMdPath = taskJsonPath.replace(/\.task\.json$/, '.md');
+          return { taskJson: task, taskJsonPath, taskMdPath, entryPhase };
+        }
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  return null;
+}
+
 /** Candidate active-tasks dirs in resolution order. */
 function activeDirCandidates(caseRoot: string, repoPath?: string): string[] {
   const list: string[] = [];
