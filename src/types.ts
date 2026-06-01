@@ -391,6 +391,12 @@ export interface IssueContext {
   labels: string[];
   issueType: 'github' | 'linear' | 'freeform' | 'local-md';
   issueNumber: string;
+  /**
+   * Absolute path to the originating issue file, for `local-md` tasks. Carried
+   * into the task JSON's `issuePath` so the closer can update the source issue
+   * without filesystem-scanning to rediscover it.
+   */
+  sourcePath?: string;
 }
 
 // --- Wave 5: Metrics ---

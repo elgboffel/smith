@@ -285,9 +285,12 @@ describe('assemblePrompt', () => {
     expect(prompt).toContain(issuePath);
   });
 
-  it('closer context omits the issue file line when issuePath is unset', async () => {
-    const prompt = await assemblePrompt('closer', makeConfig(), makeTask(), emptyRepoContext, new Map());
-    expect(prompt).not.toContain('Issue file');
+  it('closer context falls back to the task file (no filesystem scan) when issuePath is unset', async () => {
+    const config = makeConfig();
+    const prompt = await assemblePrompt('closer', config, makeTask(), emptyRepoContext, new Map());
+    expect(prompt).toContain('Issue file**: none');
+    expect(prompt).toContain(config.taskMdPath);
+    expect(prompt).toContain('Do not search the filesystem');
   });
 
   it('missing learnings file results in empty string (not error)', async () => {

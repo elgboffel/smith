@@ -260,6 +260,14 @@ function appendCloserContext(
   if (config.issuePath) {
     lines.push(`- **Issue file**: \`${config.issuePath}\``);
     lines.push('');
+  } else {
+    // No source issue file (e.g. github/linear/freeform tasks). Point the closer
+    // at the task .md as the closed-loop record so it never filesystem-scans to
+    // rediscover one.
+    lines.push(
+      `- **Issue file**: none — no source issue file for this task; record the outcome in the task file \`${config.taskMdPath}\` instead. Do not search the filesystem for an issue file.`,
+    );
+    lines.push('');
   }
 
   const verifierResult = previousResults.get('verifier');

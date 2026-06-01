@@ -57,6 +57,7 @@ export async function createTask(
     repo: request.repo,
     issue: request.issue,
     issueType: request.issueType ?? 'freeform',
+    issuePath: enrichment?.issueContext?.sourcePath ?? null,
     branch: enrichment?.branch,
     mode: request.mode ?? 'attended',
     profile: request.profile ?? 'standard',

@@ -1,4 +1,5 @@
 import { readFile, stat } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import type { IssueContext } from '../types.js';
 import { slugify } from '../util/slugify.js';
 
@@ -63,6 +64,7 @@ async function parseLocalMd(filePath: string): Promise<IssueContext> {
     labels,
     issueType: 'local-md',
     issueNumber: slugify(title, 40),
+    sourcePath: resolve(filePath),
   };
 }
 

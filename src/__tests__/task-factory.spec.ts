@@ -72,6 +72,49 @@ describe('createTask', () => {
     expect(taskMd).toContain('webhook');
   });
 
+  it('writes issuePath from the local-md issueContext sourcePath', async () => {
+    const request: TaskCreateRequest = {
+      repo: 'cli',
+      title: 'Remove highlight',
+      description: 'body',
+      issueType: 'local-md',
+      issue: 'remove-highlight',
+      mode: 'attended',
+      trigger: { type: 'cli', user: 'local' },
+      evidenceExpectations: '',
+    };
+    const sourcePath = '/abs/path/.scratch/issues/01-remove-highlight.md';
+    const result = await createTask(tempDir, request, {
+      repoPath: tempDir,
+      issueContext: {
+        title: 'Remove highlight',
+        body: 'body',
+        labels: [],
+        issueType: 'local-md',
+        issueNumber: 'remove-highlight',
+        sourcePath,
+      },
+    });
+    const taskJson = JSON.parse(await Bun.file(result.taskJsonPath).text());
+    expect(taskJson.issuePath).toBe(sourcePath);
+  });
+
+  it('leaves issuePath null when no issueContext sourcePath is present', async () => {
+    const request: TaskCreateRequest = {
+      repo: 'cli',
+      title: 'Freeform task',
+      description: 'body',
+      issueType: 'freeform',
+      issue: 'freeform-task',
+      mode: 'attended',
+      trigger: { type: 'cli', user: 'local' },
+      evidenceExpectations: '',
+    };
+    const result = await createTask(tempDir, request, { repoPath: tempDir });
+    const taskJson = JSON.parse(await Bun.file(result.taskJsonPath).text());
+    expect(taskJson.issuePath).toBeNull();
+  });
+
   it('includes check fields when provided', async () => {
     const request: TaskCreateRequest = {
       repo: 'cli',
