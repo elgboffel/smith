@@ -90,10 +90,20 @@ export async function dispatch(argv: string[]): Promise<number> {
 
   const cmd = commandMap[verb!];
   if (!cmd) {
-    // Not a registered verb — forward to `run` as a bare positional argument
-    // (issue number, Linear ID, freeform text). Preserves back-compat with
-    // `case 1234`, `smith DX-1234`, `smith "fix login bug"`.
-    return commandMap.run.handler(argv);
+    // Only forward to `run` when the verb looks like an issue reference:
+    // pure digits (GitHub), UPPER-N (Linear), or ends with .md (local-md).
+    // Anything else is an unknown command — reject with a suggestion.
+    if (looksLikeIssueRef(verb!)) {
+      return commandMap.run.handler(argv);
+    }
+
+    const suggestion = suggest(verb!, Object.keys(commandMap));
+    if (suggestion) {
+      process.stderr.write(`Unknown command "${verb}". Did you mean "${suggestion}"?\n`);
+    } else {
+      process.stderr.write(`Unknown command "${verb}". Run smith --help for usage.\n`);
+    }
+    return 1;
   }
 
   return cmd.handler(argv.slice(1));
@@ -134,6 +144,22 @@ export function printHelp(): void {
   lines.push('Run `smith --version` to print the version.');
   lines.push('');
   process.stdout.write(lines.join('\n'));
+}
+
+/**
+ * Returns true when `arg` looks like an issue reference that should be
+ * forwarded to the `run` handler as a positional argument.
+ *
+ * Recognised patterns:
+ * - Pure digits: GitHub issue number (`1234`)
+ * - UPPER-N: Linear issue ID (`DX-1234`)
+ * - Ends with `.md`: local markdown issue file
+ */
+export function looksLikeIssueRef(arg: string): boolean {
+  if (/^\d+$/.test(arg)) return true;
+  if (/^[A-Z]+-\d+$/.test(arg)) return true;
+  if (arg.endsWith('.md')) return true;
+  return false;
 }
 
 /**

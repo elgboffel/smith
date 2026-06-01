@@ -30,6 +30,11 @@ import type { PipelineGraph } from './dag/types.js';
 const log = createLogger();
 
 export async function runPipeline(config: PipelineConfig): Promise<void> {
+  // Mark the process tree as inside a pipeline run so nested `smith` invocations
+  // (e.g. an agent shelling out to `smith <word>`) are blocked from accidentally
+  // creating new tasks. Agent-facing subcommands (status, mark-tested, etc.) still work.
+  process.env.SMITH_RUN_ID = 'pipeline';
+
   // Task JSON lives in the target repo's ignored .smith directory.
   const store = new TaskStore(config.taskJsonPath, config.packageRoot);
   // Renderer selection: TUI wins when explicitly requested (even over a
@@ -73,6 +78,7 @@ export async function runPipeline(config: PipelineConfig): Promise<void> {
   } finally {
     process.off('SIGINT', sigintHandler);
     tuiRenderer?.destroy();
+    delete process.env.SMITH_RUN_ID;
   }
 }
 

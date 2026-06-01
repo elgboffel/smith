@@ -84,6 +84,16 @@ export async function runCliOrchestrator(options: CliOrchestratorOptions): Promi
     return;
   }
 
+  // Re-entrancy guard: block task creation when running inside a pipeline.
+  // Agents shell out to `smith` for status/mark-tested/etc., but must never
+  // accidentally create new tasks (e.g. `smith skills` inside a verifier).
+  if (process.env.SMITH_RUN_ID) {
+    throw new Error(
+      `Refusing to create a new task from inside a pipeline run (SMITH_RUN_ID=${process.env.SMITH_RUN_ID}). ` +
+        `If this was intentional, unset SMITH_RUN_ID first.`,
+    );
+  }
+
   // --- Step 1: Fetch issue context ---
   const argType = detectArgumentType(argument);
   setupStep(notifier, 'Issue type', `${argType} (${argument})`);

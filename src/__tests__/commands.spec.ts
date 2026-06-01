@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { commandMap, dispatch, suggest, printHelp } from '../commands/index.js';
+import { commandMap, dispatch, suggest, looksLikeIssueRef, printHelp } from '../commands/index.js';
 
 /**
  * Capture process.stdout / process.stderr writes.
@@ -59,6 +59,29 @@ describe('commandMap registration', () => {
   });
 });
 
+describe('looksLikeIssueRef', () => {
+  it('accepts pure digit strings (GitHub issue)', () => {
+    expect(looksLikeIssueRef('1234')).toBe(true);
+    expect(looksLikeIssueRef('1')).toBe(true);
+  });
+
+  it('accepts UPPER-N patterns (Linear ID)', () => {
+    expect(looksLikeIssueRef('DX-1234')).toBe(true);
+    expect(looksLikeIssueRef('PROJ-1')).toBe(true);
+  });
+
+  it('accepts .md file paths', () => {
+    expect(looksLikeIssueRef('issue.md')).toBe(true);
+    expect(looksLikeIssueRef('.scratch/issues/fix-login.md')).toBe(true);
+  });
+
+  it('rejects freeform words', () => {
+    expect(looksLikeIssueRef('skills')).toBe(false);
+    expect(looksLikeIssueRef('fix-login-bug')).toBe(false);
+    expect(looksLikeIssueRef('hello world')).toBe(false);
+  });
+});
+
 describe('suggest', () => {
   const verbs = Object.keys(commandMap);
 
@@ -106,7 +129,7 @@ describe('dispatch — help and routing', () => {
     expect(outCapture.lines.join('')).toContain('Commands:');
   });
 
-  it('unrecognized verb forwards to run handler as positional arg', async () => {
+  it('forwards GitHub issue numbers to run handler', async () => {
     const original = commandMap.run!.handler;
     let receivedArgv: string[] | undefined;
     commandMap.run!.handler = async (argv) => {
@@ -136,6 +159,36 @@ describe('dispatch — help and routing', () => {
     } finally {
       commandMap.run!.handler = original;
     }
+  });
+
+  it('forwards .md file paths to run handler', async () => {
+    const original = commandMap.run!.handler;
+    let receivedArgv: string[] | undefined;
+    commandMap.run!.handler = async (argv) => {
+      receivedArgv = argv;
+      return 0;
+    };
+    try {
+      const code = await dispatch(['.scratch/issues/fix-login.md']);
+      expect(code).toBe(0);
+      expect(receivedArgv).toEqual(['.scratch/issues/fix-login.md']);
+    } finally {
+      commandMap.run!.handler = original;
+    }
+  });
+
+  it('rejects unknown freeform words with suggestion', async () => {
+    const code = await dispatch(['skills']);
+    expect(code).toBe(1);
+    const stderr = errCapture.lines.join('');
+    expect(stderr).toContain('Unknown command');
+  });
+
+  it('rejects unknown words and suggests close matches', async () => {
+    const code = await dispatch(['statis']);
+    expect(code).toBe(1);
+    const stderr = errCapture.lines.join('');
+    expect(stderr).toContain('Did you mean "status"');
   });
 
   it('flag-only argv (no verb) routes to run handler', async () => {
