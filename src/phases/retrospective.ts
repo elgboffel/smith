@@ -84,6 +84,7 @@ export async function runRetrospectivePhase(
     `- **Task JSON**: \`${config.taskJsonPath}\``,
     `- **Target repo**: \`${config.repoPath}\``,
     `- **Repo name**: ${config.repoName}`,
+    config.eventAppender ? `- **Event log (raw tool stream)**: \`${config.eventAppender.path}\`` : '',
     '',
     retroContext,
     metricsContext,

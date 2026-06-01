@@ -241,6 +241,24 @@ describe('runPipeline', () => {
     expect(mockWriteRunMetrics).toHaveBeenCalled();
   });
 
+  it('retrospective prompt includes the event-log path for struggle mining', async () => {
+    mockSpawnAgent
+      .mockResolvedValueOnce(scoutSpawn()) // scout
+      .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // implementer
+      .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // verifier
+      .mockResolvedValueOnce({ raw: agentRaw(completedAgentOutput), result: completedAgentOutput, durationMs: 100 }) // reviewer
+      .mockResolvedValueOnce({ raw: agentRaw(closeAgentOutput), result: closeAgentOutput, durationMs: 100 }) // closer
+      .mockResolvedValueOnce({ raw: '', result: completedAgentOutput, durationMs: 100 }); // retrospective
+
+    // The pipeline builds its own EventAppender; the retrospective prompt should
+    // surface its path so the agent can mine the raw tool stream.
+    await runPipeline(makeConfig());
+
+    const retroPrompt = mockSpawnAgent.mock.calls.at(-1)![0].prompt;
+    expect(retroPrompt).toContain('Event log (raw tool stream)');
+    expect(retroPrompt).toMatch(/events\/run-[\w-]+\.jsonl/);
+  });
+
   it('implement failure -> user aborts -> retrospective runs', async () => {
     mockSpawnAgent
       .mockResolvedValueOnce(scoutSpawn()) // scout

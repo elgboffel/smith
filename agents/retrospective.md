@@ -35,6 +35,61 @@ Read the output to understand: current branch, last commits, task status, which 
 1. Read the task file — focus on the `## Progress Log` section
 2. Read the task JSON — check agent phase statuses, timing, evidence flags
 3. If the pipeline failed, read the failed agent's error from AGENT_RESULT
+4. Mine the **event log** (see Step 1b) — the raw tool stream catches struggles the progress log doesn't narrate
+
+### 1b. Mine the Event Log for Silent Struggles
+
+The progress log is what agents **chose to write down**. The event log is what **actually happened** — every `tool_start`/`tool_end`, with `isError`, `durationMs`, the command (`args`), and the output (`result`). An agent that fumbled the test command four times before finding the fifth that works will look clean in the progress log ("Tested: PASS") but the thrash is plainly visible here. This is the single richest source of learnings — do not skip it.
+
+The path is in **Task Context → Event log**. It is JSONL, one event per line. Read it with `bash` (it can be large — filter, don't dump). Schema fields you care about: `event`, `phase`, `agent`, `tool`, `toolCallId`, `args`, `isError`, `durationMs`, `result`.
+
+**Find failed tool calls (the primary struggle signal):**
+
+```bash
+EVENTS="<event-log-path>"
+# Every errored tool call, with phase and the command that failed
+python3 -c "import sys,json
+for l in open('$EVENTS'):
+    e=json.loads(l)
+    if e.get('event')=='tool_end' and e.get('isError'):
+        print(e['phase'], e['tool'], '|', (e.get('result','') or '')[:160])"
+```
+
+**Detect thrash — the same tool retried with near-identical commands in one phase:**
+
+```bash
+# Count repeated bash command prefixes per phase; 3+ near-identical = a struggle worth a learning
+python3 -c "import sys,json,collections
+c=collections.Counter()
+for l in open('$EVENTS'):
+    e=json.loads(l)
+    if e.get('event')=='tool_start' and e.get('tool')=='bash':
+        cmd=' '.join((e.get('args','') or '').split()[:6])
+        c[(e['phase'],cmd)]+=1
+for (ph,cmd),n in c.most_common(15):
+    if n>=3: print(n, ph, cmd)"
+```
+
+**Spot slow tool calls (env setup, builds, browser boot that hint at friction):**
+
+```bash
+python3 -c "import sys,json
+rows=[]
+for l in open('$EVENTS'):
+    e=json.loads(l)
+    if e.get('event')=='tool_end' and e.get('durationMs',0)>20000:
+        rows.append((e['durationMs'],e['phase'],e['tool'],(e.get('args','') or '')[:80]))
+for d,ph,t,a in sorted(rows,reverse=True)[:10]: print(d//1000,'s',ph,t,a)"
+```
+
+**What to extract as a learning from the event log:**
+
+- A failed-then-succeeded command pair → the **working** command is the learning (e.g. "tests run via `pnpm --filter X test`, not root `pnpm test`").
+- Repeated `isError` on the same tool before a success → the recovery is the learning (e.g. "Playwright needs `build-dev` running first; bare `playwright open` fails").
+- A `git`/checkout/stash command that needed a `-f` retry → note the workflow quirk.
+- Long browser/build boot that the agent didn't anticipate → note the setup step so future agents budget for it.
+
+Ground every event-log learning by citing the phase and the failing-then-passing commands you saw. Apply the same dedup and qualification bar as progress-log learnings (Step 4b) — a one-off network blip is not a learning; a reproducible setup quirk is.
 
 ### 2. Analyze for Improvement Signals
 
@@ -50,6 +105,7 @@ Check each dimension:
 
 - Did the verifier fail and trigger a fix-and-retry loop?
 - What did the verifier catch that the implementer missed? Is there a pattern the implementer should have followed?
+- Cross-check the event log (Step 1b): `revision_requested`, `revision_budget_exhausted`, and `fingerprint_match` events pinpoint where loops happened and whether a cycle repeated identical work.
 
 **Revision loops**
 
@@ -72,6 +128,7 @@ Check each dimension:
 
 - Did any agent phase take unusually long? (Compare started/completed timestamps)
 - Could instructions be more specific to reduce exploration time?
+- Use the event log's per-tool `durationMs` (Step 1b) to find *which* tool calls dominated a slow phase — a 90s phase spent entirely in one browser-boot command is a different problem from 90s of exploration.
 
 ### 3. Classify Improvements
 
