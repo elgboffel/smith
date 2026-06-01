@@ -34,6 +34,9 @@ mock.module('@mariozechner/pi-agent-core', () => ({
 
 mock.module('@mariozechner/pi-ai', () => ({
   streamSimple: mock(),
+  // config.ts (imported transitively via pi-runner) needs this export; the
+  // mock replaces the whole module, so the identity clamp keeps it available.
+  clampThinkingLevel: mock((_model: unknown, level: unknown) => level),
 }));
 
 mock.module('@mariozechner/pi-coding-agent', () => ({
