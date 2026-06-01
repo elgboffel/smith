@@ -6,6 +6,7 @@ import { gitPolicyForMode } from './git-policy.js';
 import { BranchNamer } from './branch-namer.js';
 import { BatchPlanner } from './batch-planner.js';
 import type { WorkItem } from './batch-planner.js';
+import { runBatch } from './batch-runner.js';
 import { defaultEvidenceExpectations, ensureBranch, resumeTask, setupStep, SETUP_PHASE } from './setup-phase.js';
 import type { RendererKind } from './setup-phase.js';
 import { buildPipelineConfig, loadProjectsManifest, resolveRepoPath } from '../config.js';
@@ -13,7 +14,7 @@ import { runPipeline } from '../pipeline.js';
 import { runBootstrap } from '../commands/bootstrap.js';
 import { createStructuredLogRenderer } from '../render/structured-log.js';
 import { resolveEvidenceStrategy } from '../types.js';
-import type { IssueContext, PipelineMode, ProjectEntry, TaskCreateRequest } from '../types.js';
+import type { IssueContext, PipelineMode, PipelineOutcome, ProjectEntry, TaskCreateRequest } from '../types.js';
 
 export interface FolderDispatchOptions {
   /** Path to the directory of issue `.md` files. */
@@ -30,8 +31,9 @@ export interface FolderDispatchOptions {
  * Resolves the workspace from the folder location, derives one branch from the
  * folder name, then works each issue in lexical order through the existing
  * pipeline — creating a task (which commits in managed mode) or resuming a
- * stuck one — until the work list is exhausted. The build/test baseline runs
- * once up front. Halt-on-failure handling is a separate slice.
+ * stuck one — until the work list is exhausted, halting at the first failure so
+ * later lexical slices never build on a broken base. The build/test baseline
+ * runs once up front.
  */
 export async function runFolderDispatch(options: FolderDispatchOptions): Promise<void> {
   const { folderArg, mode, dryRun, caseRoot, renderer } = options;
@@ -78,12 +80,9 @@ export async function runFolderDispatch(options: FolderDispatchOptions): Promise
   setupStep(notifier, 'Baseline', 'passed');
   notifier.phaseEnd(SETUP_PHASE, 'cli', Date.now() - setupStartedAt, 'completed');
 
-  // --- Work each issue in order, one commit per completed issue ---
-  for (const item of workItems) {
-    await runWorkItem(item, { project, branch: branch.name, caseRoot, workspacePath, mode, dryRun, renderer });
-  }
-
-  notifier.send(`Folder batch complete: ${workItems.length} issue(s) processed.`);
+  // --- Work each issue in order, one commit per completed issue, halt on failure ---
+  const ctx: RunWorkItemContext = { project, branch: branch.name, caseRoot, workspacePath, mode, dryRun, renderer };
+  await runBatch(workItems, (item) => runWorkItem(item, ctx), notifier);
 }
 
 interface RunWorkItemContext {
@@ -97,7 +96,7 @@ interface RunWorkItemContext {
 }
 
 /** Run one work item — resume a stuck task, or create and run a fresh one. */
-async function runWorkItem(item: WorkItem, ctx: RunWorkItemContext): Promise<void> {
+async function runWorkItem(item: WorkItem, ctx: RunWorkItemContext): Promise<PipelineOutcome> {
   const notifier = createStructuredLogRenderer({ mode: ctx.mode });
   const startedAt = Date.now();
   notifier.phaseStart(SETUP_PHASE, 'cli');
@@ -133,7 +132,7 @@ async function runWorkItem(item: WorkItem, ctx: RunWorkItemContext): Promise<voi
     mode: ctx.mode,
     dryRun: ctx.dryRun,
   });
-  await runPipeline({ ...config, notifier, renderer: ctx.renderer });
+  return runPipeline({ ...config, notifier, renderer: ctx.renderer });
 }
 
 /** Find the registered project whose resolved root is the workspace directory. */

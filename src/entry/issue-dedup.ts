@@ -34,6 +34,13 @@ export async function reconcileIssue(opts: ReconcileIssueOptions): Promise<Recon
     return { action: 'skip', reason: 'issue already done' };
   }
 
+  // A `ready` status is an authoritative human signal for a clean start: it
+  // supersedes any stale back-link (e.g. a manual reset-to-ready to force a
+  // retry after a halt), so we create a fresh task rather than resuming.
+  if (record.status === 'ready') {
+    return { action: 'create' };
+  }
+
   const match = await findTaskByBackLink(
     opts.caseRoot,
     { taskId: record.taskId, issuePath: opts.issuePath, slug: slugify(record.title, 40) },

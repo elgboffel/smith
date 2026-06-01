@@ -82,7 +82,8 @@ export async function runCliOrchestrator(options: CliOrchestratorOptions): Promi
   }
 
   if (match) {
-    return resumeTask(match, detected.path, mode, dryRun, notifier, setupStartedAt, renderer);
+    await resumeTask(match, detected.path, mode, dryRun, notifier, setupStartedAt, renderer);
+    return;
   }
 
   // No existing task found — create new or exit

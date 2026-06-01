@@ -10,6 +10,9 @@ export type TaskStatus =
 
 export type AgentName = 'orchestrator' | 'implementer' | 'verifier' | 'reviewer' | 'closer' | 'scout';
 
+/** Terminal outcome of a single pipeline run. */
+export type PipelineOutcome = 'completed' | 'failed';
+
 export interface AgentPhase {
   started: string | null;
   completed: string | null;

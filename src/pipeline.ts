@@ -2,6 +2,7 @@ import type {
   AgentName,
   AgentResult,
   PipelineConfig,
+  PipelineOutcome,
   PipelineProfile,
   RevisionRequest,
   RunMetrics,
@@ -38,7 +39,7 @@ import type { PipelineGraph } from './dag/types.js';
 
 const log = createLogger();
 
-export async function runPipeline(config: PipelineConfig): Promise<void> {
+export async function runPipeline(config: PipelineConfig): Promise<PipelineOutcome> {
   // Mark the process tree as inside a pipeline run so nested `smith` invocations
   // (e.g. an agent shelling out to `smith <word>`) are blocked from accidentally
   // creating new tasks. Agent-facing subcommands (status, mark-tested, etc.) still work.
@@ -83,7 +84,7 @@ export async function runPipeline(config: PipelineConfig): Promise<void> {
   process.on('SIGINT', sigintHandler);
 
   try {
-    await runPipelineBody(config, store, notifier, previousResults);
+    return await runPipelineBody(config, store, notifier, previousResults);
   } finally {
     process.off('SIGINT', sigintHandler);
     tuiRenderer?.destroy();
@@ -96,7 +97,7 @@ async function runPipelineBody(
   store: TaskStore,
   notifier: Notifier,
   previousResults: Map<AgentName, AgentResult>,
-): Promise<void> {
+): Promise<PipelineOutcome> {
   let humanOverrides = 0;
 
   const task = await store.read();
@@ -266,6 +267,8 @@ async function runPipelineBody(
 
   // Completion signal for queued, walk-away runs (default bell + optional hook).
   notifyRunCompletion(config, outcome === 'failed' ? 'failed' : 'done');
+
+  return outcome;
 }
 
 interface PipelineCallbacks {

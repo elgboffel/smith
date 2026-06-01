@@ -3,7 +3,7 @@ import { runPipeline } from '../pipeline.js';
 import { runCommand } from '../util/run-command.js';
 import { formatSetupStep } from '../render/format.js';
 import type { Notifier } from '../notify.js';
-import type { EvidenceStrategy, IssueContext, PipelineMode, PipelinePhase } from '../types.js';
+import type { EvidenceStrategy, IssueContext, PipelineMode, PipelineOutcome, PipelinePhase } from '../types.js';
 import type { TaskMatch } from './task-scanner.js';
 
 export const SETUP_PHASE: PipelinePhase = 'setup';
@@ -31,7 +31,7 @@ export async function resumeTask(
   notifier: Notifier,
   setupStartedAt: number,
   renderer?: RendererKind,
-): Promise<void> {
+): Promise<PipelineOutcome> {
   const { taskJson, taskJsonPath, entryPhase } = match;
 
   // Guard: task already completed (commit-only close already ran).
@@ -39,7 +39,7 @@ export async function resumeTask(
     setupStep(notifier, 'Status', taskJson.status);
     notifier.phaseEnd(SETUP_PHASE, 'cli', Date.now() - setupStartedAt, 'completed');
     notifier.send('Task already committed. Nothing to do.');
-    return;
+    return 'completed';
   }
 
   setupStep(notifier, 'Resume task', `${taskJson.id} (entry: ${entryPhase})`);
@@ -54,7 +54,7 @@ export async function resumeTask(
 
   notifier.phaseEnd(SETUP_PHASE, 'cli', Date.now() - setupStartedAt, 'completed');
 
-  await runPipeline({ ...config, notifier, renderer });
+  return runPipeline({ ...config, notifier, renderer });
 }
 
 /**

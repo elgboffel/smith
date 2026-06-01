@@ -66,7 +66,8 @@ export async function runDirectDispatch(options: DirectDispatchOptions): Promise
       return;
     }
     if (decision.action === 'resume') {
-      return resumeTask(decision.match, workspacePath, mode, dryRun, notifier, setupStartedAt, renderer);
+      await resumeTask(decision.match, workspacePath, mode, dryRun, notifier, setupStartedAt, renderer);
+      return;
     }
   }
 
