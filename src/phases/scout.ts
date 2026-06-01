@@ -217,7 +217,7 @@ function buildScoutContextBlock(config: PipelineConfig, task: TaskJson): string 
       lines.push(`- **${name}**: \`${command}\``);
     }
   }
-  const uiHint = formatUiTestingHint(config.project);
+  const uiHint = formatUiTestingHint(config.project, config.repoPath);
   if (uiHint) {
     lines.push('', uiHint.trimEnd());
   }

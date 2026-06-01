@@ -229,7 +229,7 @@ function appendVerifierContext(lines: string[], config: PipelineConfig): void {
   const creds = config.project?.credentials ?? DEFAULT_CREDENTIALS_PATH;
   lines.push(`- **Credentials**: \`${creds}\``);
 
-  const uiHint = formatUiTestingHint(config.project);
+  const uiHint = formatUiTestingHint(config.project, config.repoPath);
   if (uiHint) {
     lines.push('');
     lines.push(uiHint.trimEnd());
