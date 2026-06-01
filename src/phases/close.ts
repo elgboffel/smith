@@ -72,7 +72,10 @@ export async function runClosePhase(
       try {
         await new IssueStore().markDone(config.issuePath);
       } catch (err) {
-        log.phase('close', 'issue-markdone-skip', { issuePath: config.issuePath, error: String(err) });
+        log.phase('close', 'issue-markdone-skip', {
+          issuePath: config.issuePath,
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
     previousResults.set('closer', result);

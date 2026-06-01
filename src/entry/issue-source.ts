@@ -6,8 +6,15 @@ import { slugify } from '../util/slugify.js';
 
 const issueStore = new IssueStore();
 
+/**
+ * Statuses that clear the readiness gate. Covers the current lifecycle value
+ * (`ready`, per the local-md issue lifecycle `ready → claimed → done`) and the
+ * legacy `ready-for-agent` marker so older issue files still dispatch.
+ */
+const READY_STATUSES: ReadonlySet<string> = new Set(['ready', 'ready-for-agent']);
+
 export interface LoadIssueOptions {
-  /** When true, refuse issues whose Status is not 'ready-for-agent'. Default: false. */
+  /** When true, refuse issues whose Status is not a ready value. Default: false. */
   gate?: boolean;
 }
 
@@ -17,7 +24,7 @@ export interface LoadIssueOptions {
  * Local-md parsing:
  * - First H1 (`# ...`) → title
  * - Full file content → body
- * - `Status: <value>` line → added to labels; gates execution if not ready-for-agent
+ * - `Status: <value>` line → added to labels; gates execution if not ready
  *
  * If the argument is not a path to an existing .md file, falls through to
  * freeform text (same behavior as the inherited issue-fetcher).
@@ -31,8 +38,8 @@ export async function loadIssue(arg: string, opts: LoadIssueOptions = {}): Promi
 
     const record = await issueStore.read(arg);
 
-    if (opts.gate && record.status && record.status !== 'ready-for-agent') {
-      throw new Error(`Issue is not ready: status is '${record.status}' (expected 'ready-for-agent')`);
+    if (opts.gate && record.status && !READY_STATUSES.has(record.status)) {
+      throw new Error(`Issue is not ready: status is '${record.status}' (expected 'ready')`);
     }
 
     return {

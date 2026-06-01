@@ -83,7 +83,13 @@ export async function runFolderDispatch(options: FolderDispatchOptions): Promise
 
   // --- Work each issue in order, one commit per completed issue, halt on failure ---
   const ctx: RunWorkItemContext = { project, branch: branch.name, caseRoot, workspacePath, mode, dryRun, renderer };
-  await runBatch(workItems, (item) => runWorkItem(item, ctx), notifier);
+  const result = await runBatch(workItems, (item) => runWorkItem(item, ctx), notifier);
+
+  // A halt leaves later slices unprocessed; surface it so callers/CI can tell a
+  // batch stopped early from one that ran clean to the end.
+  if (result.halted) {
+    process.exitCode = 1;
+  }
 }
 
 interface RunWorkItemContext {
@@ -113,7 +119,8 @@ async function runWorkItem(item: WorkItem, ctx: RunWorkItemContext): Promise<Pip
   const request: TaskCreateRequest = {
     repo: ctx.project.name,
     title: issueContext.title,
-    description: issueContext.body || issueContext.title,
+    // Empty body falls back to the title; `??` would keep an empty string.
+    description: issueContext.body.trim().length > 0 ? issueContext.body : issueContext.title,
     issue: issueContext.issueNumber,
     issueType: issueContext.issueType,
     mode: ctx.mode,

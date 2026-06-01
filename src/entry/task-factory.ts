@@ -86,7 +86,7 @@ export async function createTask(
     try {
       await new IssueStore().claim(sourcePath, taskId);
     } catch (err) {
-      log.info('issue claim skipped', { sourcePath, taskId, error: String(err) });
+      log.info('issue claim skipped', { sourcePath, taskId, error: err instanceof Error ? err.message : String(err) });
     }
   }
 

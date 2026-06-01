@@ -1,6 +1,7 @@
 import { describe, it, expect, mock, beforeEach, afterAll } from 'bun:test';
 import { mockSpawnAgent, mockRunCommand } from './mocks.js';
 import type { AgentResult, PipelineConfig } from '../types.js';
+import type { TaskStore } from '../state/task-store.js';
 import { mkdir, rm, writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -82,7 +83,7 @@ describe('runClosePhase (commit-only close)', () => {
     mockSpawnAgent.mockResolvedValue({ raw: '', result: completedResult, durationMs: 100 });
 
     const store = makeMockStore();
-    const output = await runClosePhase(makeConfig(), store as any, new Map());
+    const output = await runClosePhase(makeConfig(), store as unknown as TaskStore, new Map());
 
     expect(output.nextPhase).toBe('retrospective');
     expect(output.outcome).toEqual({ phase: 'close', outcome: 'success' });
@@ -101,7 +102,7 @@ describe('runClosePhase (commit-only close)', () => {
     await writeFile(issuePath, '# Close me\n\nStatus: claimed\nTask: cli-1\n\nBody.\n');
 
     const store = makeMockStore();
-    await runClosePhase(makeConfig({ issuePath }), store as any, new Map());
+    await runClosePhase(makeConfig({ issuePath }), store as unknown as TaskStore, new Map());
 
     const issue = await readFile(issuePath, 'utf-8');
     expect(issue).toContain('Status: done');
@@ -116,7 +117,7 @@ describe('runClosePhase (commit-only close)', () => {
     await writeFile(issuePath, '# Stay claimed\n\nStatus: claimed\nTask: cli-1\n\nBody.\n');
 
     const store = makeMockStore();
-    await runClosePhase(makeConfig({ issuePath }), store as any, new Map());
+    await runClosePhase(makeConfig({ issuePath }), store as unknown as TaskStore, new Map());
 
     const issue = await readFile(issuePath, 'utf-8');
     expect(issue).toContain('Status: claimed');
@@ -132,7 +133,7 @@ describe('runClosePhase (commit-only close)', () => {
     mockSpawnAgent.mockResolvedValue({ raw: '', result: failed, durationMs: 100 });
 
     const store = makeMockStore();
-    const output = await runClosePhase(makeConfig(), store as any, new Map());
+    const output = await runClosePhase(makeConfig(), store as unknown as TaskStore, new Map());
 
     expect(output.nextPhase).toBe('abort');
     expect(output.outcome?.outcome).not.toBe('fail-github-unreachable');

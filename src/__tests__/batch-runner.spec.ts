@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'bun:test';
 import { runBatch } from '../entry/batch-runner.js';
 import type { WorkItem } from '../entry/batch-planner.js';
+import type { TaskMatch } from '../entry/task-scanner.js';
 import type { PipelineOutcome } from '../types.js';
 import type { Notifier } from '../notify.js';
 
@@ -30,7 +31,7 @@ function create(issuePath: string): WorkItem {
 
 function resume(issuePath: string): WorkItem {
   // The TaskMatch shape is irrelevant to runBatch — it only drives the runner.
-  return { kind: 'resume', issuePath, match: {} as never };
+  return { kind: 'resume', issuePath, match: {} as unknown as TaskMatch };
 }
 
 describe('runBatch', () => {

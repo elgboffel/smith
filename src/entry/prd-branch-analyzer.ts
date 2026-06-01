@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { Agent } from '@mariozechner/pi-agent-core';
 import { streamSimple } from '@mariozechner/pi-ai';
 import { AuthStorage, ModelRegistry } from '@mariozechner/pi-coding-agent';
@@ -24,7 +23,7 @@ const SYSTEM_PROMPT = [
  * from the PRD's first heading so branch naming never blocks a batch.
  */
 export async function analyzePrdForBranch(prdPath: string): Promise<DerivedBranch> {
-  const content = await readFile(prdPath, 'utf8');
+  const content = await Bun.file(prdPath).text();
   try {
     return await runAgent(content);
   } catch (err) {
@@ -69,7 +68,8 @@ function parseBranch(response: string): DerivedBranch {
   const parsed = JSON.parse(match[0]) as { name?: unknown; prefix?: unknown };
   const slug = typeof parsed.name === 'string' ? slugify(parsed.name) : '';
   if (slug.length === 0) throw new Error(`Missing branch name in response: ${match[0]}`);
-  const prefix = parsed.prefix === 'feat' || parsed.prefix === 'fix' || parsed.prefix === 'chore' ? parsed.prefix : 'fix';
+  const prefix =
+    parsed.prefix === 'feat' || parsed.prefix === 'fix' || parsed.prefix === 'chore' ? parsed.prefix : 'fix';
   return { prefix, name: `${prefix}/${slug}` };
 }
 
