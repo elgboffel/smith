@@ -21,6 +21,14 @@ describe('resolveDispatch', () => {
     rmSync(projectRoot, { recursive: true, force: true });
   });
 
+  it('classifies a directory argument as folder dispatch', async () => {
+    const result = await resolveDispatch(join(projectRoot, '.scratch', 'issues'), { projectRoots: [projectRoot] });
+    expect(result.mode).toBe('folder');
+    if (result.mode !== 'folder') throw new Error('unreachable');
+    expect(result.folderPath).toBe(resolve(projectRoot, '.scratch', 'issues'));
+    expect(result.workspacePath).toBe(resolve(projectRoot));
+  });
+
   it('classifies a .md file as direct dispatch with the absolute issue path', async () => {
     const result = await resolveDispatch(issuePath, { projectRoots: [projectRoot] });
     expect(result.mode).toBe('direct');

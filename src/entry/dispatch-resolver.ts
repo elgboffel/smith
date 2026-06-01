@@ -1,7 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
-export type DispatchMode = 'direct' | 'github' | 'linear' | 'freeform';
+export type DispatchMode = 'direct' | 'folder' | 'github' | 'linear' | 'freeform';
 
 export interface DirectDispatch {
   readonly mode: 'direct';
@@ -11,12 +11,20 @@ export interface DirectDispatch {
   readonly workspacePath: string;
 }
 
+export interface FolderDispatch {
+  readonly mode: 'folder';
+  /** Absolute path of the directory of issue files to batch through. */
+  readonly folderPath: string;
+  /** Absolute path of the working tree the agent edits. */
+  readonly workspacePath: string;
+}
+
 export interface LegacyDispatch {
   readonly mode: 'github' | 'linear' | 'freeform';
   readonly argument: string;
 }
 
-export type DispatchResolution = DirectDispatch | LegacyDispatch;
+export type DispatchResolution = DirectDispatch | FolderDispatch | LegacyDispatch;
 
 export interface ResolveDispatchOptions {
   /** Absolute paths of registered project roots; the workspace is the deepest match. */
@@ -28,17 +36,24 @@ export interface ResolveDispatchOptions {
  *
  * A `.md` file argument is `direct` dispatch: the issue is read from the file
  * and the workspace is resolved by walking up to the containing project root.
+ * A directory argument is `folder` dispatch: a batch pass over its issue files.
  * Everything else falls through to the legacy detection (github/linear/freeform).
  */
 export async function resolveDispatch(arg: string, opts: ResolveDispatchOptions): Promise<DispatchResolution> {
   if (await isMarkdownFile(arg)) {
     const issuePath = resolve(arg);
-    const workspacePath = resolveWorkspace(issuePath, opts.projectRoots);
+    const workspacePath = resolveWorkspaceFrom(dirname(issuePath), opts.projectRoots, issuePath);
     return { mode: 'direct', issuePaths: [issuePath], workspacePath };
   }
 
   if (arg.endsWith('.md')) {
     throw new Error(`Issue file not found: ${arg}`);
+  }
+
+  if (await isDirectory(arg)) {
+    const folderPath = resolve(arg);
+    const workspacePath = resolveWorkspaceFrom(folderPath, opts.projectRoots, folderPath);
+    return { mode: 'folder', folderPath, workspacePath };
   }
 
   return { mode: detectLegacyMode(arg), argument: arg };
@@ -54,6 +69,15 @@ async function isMarkdownFile(arg: string): Promise<boolean> {
   }
 }
 
+/** A directory argument: folder (batch) dispatch. */
+async function isDirectory(arg: string): Promise<boolean> {
+  try {
+    return (await stat(arg)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 /** Legacy detection: digits = github, `ABC-1` = linear, else freeform. */
 function detectLegacyMode(arg: string): 'github' | 'linear' | 'freeform' {
   if (/^\d+$/.test(arg)) return 'github';
@@ -62,13 +86,14 @@ function detectLegacyMode(arg: string): 'github' | 'linear' | 'freeform' {
 }
 
 /**
- * Walk up from the issue file to the deepest registered project root that
- * contains it. Replaces the implicit `detectRepo(cwd)` coupling.
+ * Walk up from `startDir` to the deepest registered project root that contains
+ * it. Replaces the implicit `detectRepo(cwd)` coupling. `source` names the path
+ * being resolved (issue file or folder) for the not-found error.
  */
-function resolveWorkspace(issuePath: string, projectRoots: readonly string[]): string {
+function resolveWorkspaceFrom(startDir: string, projectRoots: readonly string[], source: string): string {
   const roots = projectRoots.map((root) => resolve(root));
   let candidate: string | null = null;
-  for (let dir = dirname(issuePath); ; dir = dirname(dir)) {
+  for (let dir = startDir; ; dir = dirname(dir)) {
     if (roots.includes(dir)) {
       candidate = dir;
       break;
@@ -77,7 +102,7 @@ function resolveWorkspace(issuePath: string, projectRoots: readonly string[]): s
     if (parent === dir) break;
   }
   if (candidate === null) {
-    throw new Error(`No registered project contains the issue file: ${issuePath}`);
+    throw new Error(`No registered project contains: ${source}`);
   }
   return candidate;
 }

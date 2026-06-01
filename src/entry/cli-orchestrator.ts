@@ -2,14 +2,11 @@ import { detectRepo } from './repo-detector.js';
 import { detectArgumentType, fetchIssue } from './issue-fetcher.js';
 import { findTaskByIssue, findTaskByMarker } from './task-scanner.js';
 import { createTask } from './task-factory.js';
+import { stat } from 'node:fs/promises';
 import { runDirectDispatch } from './direct-dispatch.js';
-import {
-  defaultEvidenceExpectations,
-  ensureBranch,
-  resumeTask,
-  setupStep,
-  SETUP_PHASE,
-} from './setup-phase.js';
+import { runFolderDispatch } from './folder-dispatch.js';
+import { deriveBranchPrefix } from './branch-namer.js';
+import { defaultEvidenceExpectations, ensureBranch, resumeTask, setupStep, SETUP_PHASE } from './setup-phase.js';
 import type { RendererKind } from './setup-phase.js';
 import { buildPipelineConfig } from '../config.js';
 import { runPipeline } from '../pipeline.js';
@@ -57,6 +54,11 @@ export async function runCliOrchestrator(options: CliOrchestratorOptions): Promi
   // Direct dispatch: a `.md` file runs fully local with no git writes.
   if (argument?.endsWith('.md')) {
     return runDirectDispatch({ issueArg: argument, mode, dryRun, fresh, caseRoot, renderer });
+  }
+
+  // Folder dispatch: a directory runs a managed batch pass over its issues.
+  if (argument && (await isDirectoryArg(argument))) {
+    return runFolderDispatch({ folderArg: argument, mode, dryRun, caseRoot, renderer });
   }
 
   const notifier = createStructuredLogRenderer({ mode });
@@ -156,6 +158,15 @@ export async function runCliOrchestrator(options: CliOrchestratorOptions): Promi
   await runPipeline({ ...config, notifier, renderer });
 }
 
+/** Whether the positional argument points at an existing directory. */
+async function isDirectoryArg(arg: string): Promise<boolean> {
+  try {
+    return (await stat(arg)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Derive a branch name from issue context.
  * Prefix from labels: feat/ for feature, fix/ for bug, chore/ for maintenance.
@@ -163,7 +174,6 @@ export async function runCliOrchestrator(options: CliOrchestratorOptions): Promi
  */
 function deriveBranchName(issue: IssueContext): string {
   const prefix = deriveBranchPrefix(issue.labels);
-
   switch (issue.issueType) {
     case 'github':
       return `${prefix}/issue-${issue.issueNumber}`;
@@ -174,15 +184,6 @@ function deriveBranchName(issue: IssueContext): string {
     case 'local-md':
       return `${prefix}/${issue.issueNumber}`;
   }
-}
-
-/** Derive branch prefix from labels. Default: fix/. */
-function deriveBranchPrefix(labels: string[]): string {
-  const lowered = labels.map((l) => l.toLowerCase());
-
-  if (lowered.some((l) => l.includes('feature') || l.includes('enhancement'))) return 'feat';
-  if (lowered.some((l) => l.includes('chore') || l.includes('maintenance') || l.includes('docs'))) return 'chore';
-  return 'fix';
 }
 
 /**
