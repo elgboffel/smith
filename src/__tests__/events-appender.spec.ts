@@ -258,6 +258,33 @@ describe('EventAppender', () => {
     expect(appender.getState().markers.has('reviewed')).toBe(true);
   });
 
+  test('reconciles an out-of-band manual-tested marker so it survives re-projection', async () => {
+    const store = new MockTaskStore(taskJsonPath) as any;
+    const appender = new EventAppender(tmpDir, 'task-1', 'run-manual-tested', store);
+
+    await appender.append({ event: 'pipeline_start', taskId: 'task-1', profile: 'standard', plan: PLAN });
+    await appender.append({ event: 'phase_start', phase: 'implement', agent: 'implementer' });
+
+    // Simulate the `mark-manual-tested` CLI writing the marker in another
+    // process (the orchestrator's in-memory reducer never sees an event for it).
+    const markerDir = resolve(tmpDir, '.smith/task-1');
+    await mkdir(markerDir, { recursive: true });
+    await writeFile(resolve(markerDir, 'manual-tested'), 'timestamp: now\n');
+
+    // The next event must NOT clobber manualTested back to false.
+    await appender.append({
+      event: 'phase_end',
+      phase: 'implement',
+      agent: 'implementer',
+      outcome: 'completed',
+      durationMs: 100,
+    });
+
+    expect(appender.getState().markers.has('manual-tested')).toBe(true);
+    const lastProjection = writtenProjections[writtenProjections.length - 1];
+    expect(lastProjection.manualTested).toBe(true);
+  });
+
   test('restoreState allows resuming from existing state', async () => {
     const store = new MockTaskStore(taskJsonPath) as any;
     const appender = new EventAppender(tmpDir, 'task-1', 'run-8', store);
