@@ -184,13 +184,21 @@ is absent (e.g. running from a packaged binary), skip this step.
 
 ```bash
 if [ -n "$SMITH_ROOT" ] && [ -d "$SMITH_ROOT/ast-rules/target" ]; then
-  fail=0
-  for f in "$SMITH_ROOT"/ast-rules/target/*.yml; do
-    ast-grep scan --rule "$f" . || fail=1
-  done
-  [ "$fail" -eq 0 ] || exit 1
+  if ! command -v ast-grep >/dev/null 2>&1; then
+    echo "WARN: ast-grep not on PATH — skipping AST lint. Run 'smith init' to install it."
+  else
+    fail=0
+    for f in "$SMITH_ROOT"/ast-rules/target/*.yml; do
+      ast-grep scan --rule "$f" . || fail=1
+    done
+    [ "$fail" -eq 0 ] || exit 1
+  fi
 fi
 ```
+
+A missing `ast-grep` is skipped loudly (the gate is a no-op without it) rather than
+emitting repeated `command not found` errors. Installing it via `smith init` makes
+the gate active.
 
 Fix any errors before proceeding. Warnings should be addressed if feasible but do not block the commit.
 

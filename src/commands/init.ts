@@ -20,6 +20,7 @@ import {
   writeConfig,
   type CaseConfig,
 } from '../data-dir.js';
+import { ensureAstGrep } from '../util/ensure-ast-grep.js';
 
 export const description = 'Scaffold the smith config directory at ~/.config/smith/';
 
@@ -29,6 +30,8 @@ export interface InitOptions {
   migrateFrom?: string;
   force?: boolean;
   cwd?: string;
+  /** Install missing CLI tools (ast-grep) globally. Off by default; the CLI handler opts in. */
+  installTools?: boolean;
 }
 
 export async function init(opts: InitOptions = {}): Promise<number> {
@@ -39,6 +42,7 @@ export async function init(opts: InitOptions = {}): Promise<number> {
   if (existing && !opts.force) {
     process.stdout.write(`smith already initialized at ${dataDir}\n`);
     process.stdout.write(`Re-run with --force to rewrite config.json (state is preserved).\n`);
+    if (opts.installTools) await ensureTools();
     return 0;
   }
 
@@ -67,9 +71,25 @@ export async function init(opts: InitOptions = {}): Promise<number> {
     }
   }
 
+  if (opts.installTools) await ensureTools();
+
   process.stdout.write(`smith initialized at ${dataDir}\n`);
   process.stdout.write(`Config: ${resolveConfigPath()}\n`);
   return 0;
+}
+
+/**
+ * Ensure optional CLI tools the agents rely on are available. Fail-soft: a missing
+ * or un-installable tool prints a warning but never fails `init`.
+ */
+async function ensureTools(): Promise<void> {
+  try {
+    const result = await ensureAstGrep({ autoInstall: true });
+    const prefix = result.status === 'failed' ? 'WARN' : 'OK';
+    process.stdout.write(`[${prefix}] ${result.message}\n`);
+  } catch (err) {
+    process.stdout.write(`[WARN] ast-grep check skipped — ${(err as Error).message}\n`);
+  }
 }
 
 export async function handler(argv: string[]): Promise<number> {
@@ -103,6 +123,7 @@ export async function handler(argv: string[]): Promise<number> {
       assetsDir: parsed.values['assets-dir'] as string | undefined,
       migrateFrom: parsed.values['migrate-from'] as string | undefined,
       force: parsed.values.force as boolean | undefined,
+      installTools: process.env.SMITH_SKIP_TOOL_INSTALL ? false : true,
     });
   } catch (err) {
     const msg =

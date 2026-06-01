@@ -120,6 +120,7 @@ describe('handler (argv parsing)', () => {
     // Use a cwd without projects.json so migration is skipped
     const originalCwd = process.cwd;
     process.cwd = () => '/no/such/repo';
+    process.env.SMITH_SKIP_TOOL_INSTALL = '1'; // arg-parsing test: no global installs
     try {
       const code = await handler([]);
       expect(code).toBe(0);

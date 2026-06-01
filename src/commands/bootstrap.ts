@@ -2,6 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { loadProjects, loadProjectsManifest, resolveRepoPath } from '../config.js';
 import { resolvePackageRoot } from '../paths.js';
 import { runCommandLine } from '../util/run-command.js';
+import { ensureAstGrep } from '../util/ensure-ast-grep.js';
 import type { ProjectEntry } from '../types.js';
 
 export const description = 'Verify a target repo is ready for agent work';
@@ -41,6 +42,17 @@ export async function runBootstrap(repoName: string, caseRoot = resolvePackageRo
 
   const steps: StepResult[] = [];
   let ok = true;
+
+  // Verify the AST-lint tool the implementer's pre-commit gate depends on.
+  const astGrep = await ensureAstGrep({ autoInstall: false });
+  steps.push({
+    label: `ast-grep: ${astGrep.message}`,
+    command: 'ast-grep --version',
+    exitCode: astGrep.status === 'skipped' ? 1 : 0,
+    durationMs: 0,
+    output: astGrep.message,
+  });
+  if (astGrep.status === 'skipped') ok = false;
 
   for (const key of ['setup', 'test', 'build'] as const) {
     const command = repo.commands?.[key];
