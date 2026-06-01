@@ -57,6 +57,7 @@ const emptyRepoContext = {
   recentCommits: '',
   goldenPrinciples: '',
   workingMemory: null,
+  agentResources: { projectRules: [], projectSkills: [], globalSkills: [] },
 };
 
 describe('assembler doc inlining', () => {

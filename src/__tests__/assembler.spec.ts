@@ -55,6 +55,7 @@ const emptyRepoContext = {
   recentCommits: '',
   goldenPrinciples: '',
   workingMemory: null,
+  agentResources: { projectRules: [], projectSkills: [], globalSkills: [] },
 };
 
 describe('assemblePrompt', () => {

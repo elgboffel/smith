@@ -4,6 +4,8 @@ import { resolveLearningsDir, resolveRepoLearnings } from '../paths.js';
 import { gatherSessionContext } from '../commands/session.js';
 import { runCommand } from '../util/run-command.js';
 import { readPackageAsset } from '../package-assets.js';
+import { discoverAgentResources, type AgentResources } from './agent-resources.js';
+import { readConfig } from '../data-dir.js';
 
 export interface RepoContext {
   sessionJson: Record<string, unknown>;
@@ -11,6 +13,7 @@ export interface RepoContext {
   recentCommits: string;
   goldenPrinciples: string;
   workingMemory: string | null;
+  agentResources: AgentResources;
 }
 
 /**
@@ -32,6 +35,7 @@ export async function prefetchRepoContext(config: PipelineConfig, role: AgentNam
   const promises: Promise<unknown>[] = [
     gatherSessionContext(config.repoPath, config.taskJsonPath),
     runCommand('git', ['log', '--oneline', '-10'], { cwd: config.repoPath }),
+    discoverAgentResources(config.repoPath, { globalSkillNames: readConfig().globalSkills }),
   ];
 
   if (needsLearnings)
@@ -43,8 +47,9 @@ export async function prefetchRepoContext(config: PipelineConfig, role: AgentNam
 
   const sessionJson = results[0] as Record<string, unknown>;
   const commitsResult = results[1] as { stdout: string };
+  const agentResources = results[2] as AgentResources;
 
-  let idx = 2;
+  let idx = 3;
   const learnings = needsLearnings ? (results[idx++] as string) : '';
   const goldenPrinciples = needsPrinciples ? (results[idx++] as string) : '';
   const workingMemory = needsWorkingMemory ? (results[idx++] as string) || null : null;
@@ -55,6 +60,7 @@ export async function prefetchRepoContext(config: PipelineConfig, role: AgentNam
     recentCommits: commitsResult.stdout.trim(),
     goldenPrinciples,
     workingMemory,
+    agentResources,
   };
 }
 

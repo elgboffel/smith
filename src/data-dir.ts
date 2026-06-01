@@ -36,6 +36,15 @@ export interface CaseConfig {
   projects: string;
   /** Informational — consumed by the orchestrator/agents in a later phase. */
   defaultModel: string;
+  /**
+   * Allowlist of global skill names (under `~/.agents/skills/`) to surface in
+   * agent prompts. Opt-in and user-owned: the relevant skills are
+   * machine-specific (and some are repo-specific), so the source ships no
+   * names — the list lives in `config.json`. Empty = inject no global skills.
+   * Matched against the skill's directory name. Project rules/skills are always
+   * injected and never gated by this list.
+   */
+  globalSkills: string[];
 }
 
 export const DEFAULT_CONFIG: CaseConfig = {
@@ -43,6 +52,7 @@ export const DEFAULT_CONFIG: CaseConfig = {
   assetsDir: '.smith/assets',
   projects: './projects.json',
   defaultModel: 'claude-sonnet-4-6',
+  globalSkills: [],
 };
 
 /** Subdirectories created under dataDir. Per-repo runtime state lives in target repo `.smith/`. */

@@ -114,6 +114,7 @@ const emptyRepoContext = {
   recentCommits: '',
   goldenPrinciples: '',
   workingMemory: null,
+  agentResources: { projectRules: [], projectSkills: [], globalSkills: [] },
 };
 
 let stdout: ReturnType<typeof captureStream>;

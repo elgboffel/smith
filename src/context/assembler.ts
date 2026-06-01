@@ -1,6 +1,7 @@
 import type { AgentName, AgentResult, PipelineConfig, RevisionRequest, TaskJson } from '../types.js';
 import { resolveEvidenceStrategy, DEFAULT_CREDENTIALS_PATH } from '../types.js';
 import type { RepoContext } from './prefetch.js';
+import { formatAgentResources } from './agent-resources.js';
 import { readPackageAssetSync } from '../package-assets.js';
 
 /**
@@ -121,6 +122,11 @@ function buildContextBlock(
     lines.push(`- **Package manager**: ${config.project.packageManager}`);
   }
   lines.push('');
+
+  const resourcesSection = formatAgentResources(repoContext.agentResources);
+  if (resourcesSection) {
+    lines.push(resourcesSection, '');
+  }
 
   switch (role) {
     case 'implementer':
