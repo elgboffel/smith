@@ -83,6 +83,24 @@ describe('assemblePrompt', () => {
     expect(prompt).toContain('Phase: implementing');
   });
 
+  it('implementer context surfaces recent commits as the commit-style reference', async () => {
+    const repoContext = {
+      ...emptyRepoContext,
+      recentCommits: 'a1b2c3d feat: add org switcher\ne4f5g6h fix: handle null session',
+    };
+
+    const prompt = await assemblePrompt('implementer', makeConfig(), makeTask(), repoContext, new Map());
+
+    expect(prompt).toContain('Recent Commits (match this commit style)');
+    expect(prompt).toContain('feat: add org switcher');
+    expect(prompt).toContain('fix: handle null session');
+  });
+
+  it('implementer context omits the commit-style section when no history exists', async () => {
+    const prompt = await assemblePrompt('implementer', makeConfig(), makeTask(), emptyRepoContext, new Map());
+    expect(prompt).not.toContain('Recent Commits (match this commit style)');
+  });
+
   it('implementer context includes check command fields', async () => {
     const task = makeTask({
       checkCommand: 'grep -c TODO src/',
@@ -140,6 +158,46 @@ describe('assemblePrompt', () => {
     expect(prompt).toContain('Task file');
     expect(prompt).not.toContain('should not appear');
     expect(prompt).not.toContain('Working Memory');
+  });
+
+  it('verifier context surfaces the UI-testing skill + build/start for ui-screenshot repos', async () => {
+    const config = makeConfig({
+      project: {
+        name: 'embankment-web',
+        evidenceStrategy: 'ui-screenshot',
+        path: '../embankment-web',
+        remote: 'git@example.com:embankment-web.git',
+        language: 'typescript',
+        packageManager: 'pnpm',
+        uiTestingSkill: 'test-ui',
+        commands: { setup: 'pnpm install', test: 'pnpm test', 'build-dev': 'pnpm build-dev', start: 'pnpm start' },
+      },
+    });
+
+    const prompt = await assemblePrompt('verifier', config, makeTask(), emptyRepoContext, new Map());
+
+    expect(prompt).toContain('### UI Testing');
+    expect(prompt).toContain('test-ui');
+    expect(prompt).toContain('pnpm build-dev');
+    expect(prompt).toContain('pnpm start');
+  });
+
+  it('verifier context omits the UI Testing block for non-ui-screenshot repos', async () => {
+    const config = makeConfig({
+      project: {
+        name: 'workos-node',
+        evidenceStrategy: 'scenario-script',
+        path: '../workos-node',
+        remote: 'git@example.com:workos-node.git',
+        language: 'typescript',
+        packageManager: 'npm',
+        uiTestingSkill: 'test-ui',
+        commands: { setup: 'npm install', test: 'npm test' },
+      },
+    });
+
+    const prompt = await assemblePrompt('verifier', config, makeTask(), emptyRepoContext, new Map());
+    expect(prompt).not.toContain('### UI Testing');
   });
 
   it('reviewer context does NOT include implementation details', async () => {

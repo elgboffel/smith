@@ -195,6 +195,13 @@ export interface ProjectEntry {
   commands: Record<string, string>;
   credentials?: string;
   verificationNotes?: string;
+  /**
+   * Name of the repo's UI-testing skill (e.g. `test-ui`). Injected into the
+   * scout and verifier context for `ui-screenshot` repos so they know which
+   * skill to load for build/start, auth, and browser-automation steps. smith
+   * stays project-agnostic — the concrete build commands live in the skill.
+   */
+  uiTestingSkill?: string;
   /** Key used to namespace learnings. Defaults to `name` when absent. */
   learningsKey?: string;
   /** Output mode (e.g. 'commit'). */
@@ -523,6 +530,13 @@ export interface ScoutFindings {
   patterns: Array<{ name: string; file: string; description: string }>;
   constraints: string[];
   suggestedApproach?: string;
+  /**
+   * UI-screenshot tasks only: where the captured feature lives, so the
+   * verifier reaches the *identical* state for its AFTER shot instead of
+   * rediscovering the route. `url` includes any specific entity/id used;
+   * `steps` are the post-load navigation actions (clicks, expands).
+   */
+  location?: { url: string; steps: string[] };
 }
 
 // --- Interview findings (smith onboard --interview) ---

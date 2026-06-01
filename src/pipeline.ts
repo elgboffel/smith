@@ -1,5 +1,5 @@
 import type { AgentName, AgentResult, PipelineConfig, RevisionRequest, ScoutFindings } from './types.js';
-import { PROFILE_PHASES } from './types.js';
+import { PROFILE_PHASES, resolveEvidenceStrategy } from './types.js';
 import { TaskStore } from './state/task-store.js';
 import { formatDuration } from './notify.js';
 import { notifyRunCompletion } from './notify-completion-bridge.js';
@@ -282,6 +282,20 @@ async function dispatchNode(
       const output = await runScoutPhase(config, store);
       consultMatrix(output.outcome);
       callbacks.setScoutFindings(output.findings);
+      // Backstop: a ui-screenshot scout that returns neither a location nor a
+      // BEFORE screenshot silently skipped the baseline. Surface it now so the
+      // gap is visible here instead of three phases later when the verifier has
+      // no genuine before to compare against.
+      if (resolveEvidenceStrategy(config.project) === 'ui-screenshot') {
+        const hasLocation = Boolean(output.findings?.location);
+        const hasBeforeShot = output.result.artifacts.screenshotUrls.length > 0;
+        if (!hasLocation && !hasBeforeShot) {
+          notifier.send(
+            '⚠️  Scout skipped the UI baseline: no location and no BEFORE screenshot. The verifier will lack a genuine before/after.',
+          );
+          log.phase('scout', 'ui-baseline-missing');
+        }
+      }
       // Emit a lightweight audit event so cross-run analytics can track
       // scout coverage without reading the phase_end payload.
       if (config.eventAppender) {
@@ -327,7 +341,7 @@ async function dispatchNode(
     }
 
     case 'verify': {
-      const output = await runVerifyPhase(config, store, previousResults);
+      const output = await runVerifyPhase(config, store, previousResults, callbacks.getScoutFindings());
       consultMatrix(output.outcome);
       if (output.nextPhase === 'abort') {
         const choice = await handleFailure(notifier, config, 'verifier', output.result, [

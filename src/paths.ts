@@ -138,6 +138,28 @@ export function resolveRepoActiveMarker(repoPath: string): string {
   return resolve(resolveRepoCaseDir(repoPath), 'active');
 }
 
+/**
+ * Resolve the active task slug from a repo's `.smith/active` marker.
+ *
+ * Returns null when there is no active task (marker missing or empty). Used by
+ * commands that scope their output to the current task (assets, evidence
+ * markers, working memory).
+ */
+export function resolveActiveSlug(repoPath: string = process.cwd()): string | null {
+  const marker = resolveRepoActiveMarker(repoPath);
+  if (!existsSync(marker)) return null;
+  try {
+    return readFileSync(marker, 'utf-8').trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Resolve the per-task assets directory under a repo's `.smith/<slug>/assets`. */
+export function resolveRepoTaskAssetsDir(repoPath: string, slug: string): string {
+  return resolve(resolveRepoCaseDir(repoPath), slug, 'assets');
+}
+
 /** Resolve the repo-local active task directory. */
 export function resolveRepoActiveTaskDir(repoPath: string): string {
   return resolve(resolveRepoCaseDir(repoPath), 'tasks', 'active');

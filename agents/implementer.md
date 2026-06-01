@@ -69,6 +69,8 @@ Work incrementally. After each meaningful change, run the repo's test command to
 
 ### 2b. Output Redirection (IMPORTANT)
 
+> **Commands below are illustrative, not canonical.** The `pnpm` / `vitest` invocations are placeholders for the most common repo shape. Always substitute the repo's actual **Project Commands** (from `projects.json`) and package manager — e.g. npm-based repos like `workos-node` use `npm`, not `pnpm`. If a command isn't in Project Commands, read `package.json` scripts. Never assume `pnpm`/`vitest` when the repo says otherwise.
+
 **Never let raw command output enter your context window.** Redirect all command output to log files and grep for the results you need:
 
 ```bash
@@ -198,21 +200,30 @@ Fix any errors before proceeding. Warnings should be addressed if feasible but d
    Prefer the JSON reporter for structured evidence (pass/fail counts, duration, per-file breakdown):
 
    ```bash
-   # Preferred — structured evidence via vitest JSON reporter
-   pnpm test --reporter=json 2>&1 | smith mark-tested
+   # Preferred — write the JSON report to a file, then pass it as an argument.
+   # Keeps stderr noise out of the JSON so it parses cleanly.
+   pnpm test --reporter=json > /tmp/test.json 2>/dev/null
+   smith mark-tested /tmp/test.json
    # Fallback — if JSON reporter is unavailable or the repo doesn't use vitest
    pnpm test 2>&1 | smith mark-tested
    ```
 
    This creates `.smith/<task-slug>/tested` with a hash of test output AND updates the task JSON `tested` field. You do NOT set `tested` directly.
 
-2. **Commit with a conventional message**:
+   `smith mark-tested` extracts the vitest JSON even if stderr noise is mixed in,
+   and **refuses to write a marker from empty output** (exit 1) — so if it errors,
+   your test command produced nothing on stdin. Don't loop retrying the CLI; fix
+   the test command (run it non-interactively, redirect to a file).
 
-   ```
-   type(scope): description
-   ```
+2. **Commit, matching the repo's existing commit style.**
 
-   Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`. Use imperative mood. Keep subject under 72 chars. Body explains why, not what.
+   Do **not** apply a generic format from memory — the repo's own history is the source of truth. Before writing the message:
+
+   - Look at the **`### Recent Commits`** block in your Task Context (the orchestrator injects the last commits). Mirror the type set, scope usage, and casing you see there.
+   - If you need more, run `git log --oneline -20` and skim how subjects are phrased.
+   - Check the repo's `CLAUDE.md` / `CLAUDE.local.md` and any git-convention rule file it points to; those override anything here.
+
+   Most WorkOS repos use Conventional Commits (`type(scope): description`, imperative mood, subject under 72 chars, body explains *why*), but **scopes and the exact type set are repo-specific** — match what the history shows (e.g. don't invent a `(scope)` the repo never uses, and don't switch casing). When the repo's convention and this guidance disagree, follow the repo.
 
 3. **Append to the task file's Progress Log**:
 

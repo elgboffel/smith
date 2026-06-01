@@ -50,28 +50,13 @@ Read the output to understand: current branch, last commits, task status, which 
 
 ### 2. Review the Diff
 
+> **Use the principles the orchestrator injected, not a list memorised here.** The `## Golden Principles` section in this prompt is the source of truth and carries the current enforced/advisory split for the repo under review. Do not assume a fixed numbering or a fixed set of repo-specific rules — read them from the injected section every time, and check each changed file against them.
+
 Check each changed file against:
 
-1. **Golden principles (enforced)** — All enforced invariants (principles 1-7, 14-16, 18):
-   - TypeScript strict mode
-   - Tests pass
-   - Conventional commits
-   - pnpm only
-   - No secrets in source control
-   - Formatter passes
-   - Build succeeds
-   - ESM with .js extensions
-   - Explicit dependencies
-   - Session decryption fault-tolerance
+1. **Enforced golden principles** — every invariant the injected `## Golden Principles` section marks as enforced. A violation here is a `critical` finding.
 
-2. **Golden principles (advisory)** — Advisory invariants (principles 8-13, 17):
-   - Public API changes have test coverage
-   - Source files under 300 lines
-   - One concern per commit/PR
-   - Graceful degradation over hard failures
-   - Framework-agnostic logic in authkit-session
-   - Skills fetch docs first
-   - Manual verification after encryption changes
+2. **Advisory golden principles** — every invariant the injected section marks as advisory. A violation here is a `warning`.
 
 3. **File size limits**:
    - Warning at 300 lines (advisory)
@@ -98,7 +83,7 @@ Each finding gets a severity:
 
 - **`critical`** — Blocks PR. Examples:
   - Tests failing (fail count > 0 in `.smith/<task-slug>/tested`)
-  - Enforced golden principle violation (principles 1-7, 14-16)
+  - Enforced golden principle violation (any principle the injected section marks enforced)
   - Secrets in the diff (`sk_*`, API keys, `.env` contents)
   - Missing test for public API change (new/modified export with no test)
   - Source file exceeds 500 lines (non-test)
@@ -106,7 +91,7 @@ Each finding gets a severity:
 - **`warning`** — Advisory, posted as PR comment. Examples:
   - File approaching size limit (300-500 lines)
   - Missing docstring on exported function
-  - Advisory golden principle violation (principles 8-13, 17)
+  - Advisory golden principle violation (any principle the injected section marks advisory)
   - Test coverage could be stronger
 
 - **`info`** — Informational, posted as PR comment. Examples:
@@ -155,7 +140,7 @@ After reviewing, score each category. A `fail` on a hard category (principle-com
 
 | Category               | Question                                                              | Hard/Soft                          |
 | ---------------------- | --------------------------------------------------------------------- | ---------------------------------- |
-| `principle-compliance` | Does the diff violate any enforced golden principle (1-7, 14-16, 18)? | Hard — any fail is critical        |
+| `principle-compliance` | Does the diff violate any enforced golden principle (per the injected section)? | Hard — any fail is critical        |
 | `test-sufficiency`     | Did the implementer add/modify tests for changed src/ files?          | Soft — fail is a warning           |
 | `scope-discipline`     | Is the change minimal? No unrelated churn, no scope creep?            | Hard — excessive scope is critical |
 | `pattern-fit`          | Does the change follow existing repo patterns and conventions?        | Soft — fail is a warning           |
@@ -181,6 +166,6 @@ If critical findings exist, set `"status":"blocked"` and list the critical findi
 - **Always use the Golden Principles supplied by the orchestrator.** They come from the current Case package assets.
 - **Always include file and line references** for critical and warning findings.
 - **Always create the evidence marker via `smith mark-reviewed`** — never `touch` the marker file directly.
-- **Critical findings include the specific principle violated.** Not just "principle 5" but "Principle 5: No secrets in source control — found `sk_live_` in `src/config.ts:42`".
+- **Critical findings name the specific principle violated**, quoting it from the injected section — not just "principle N" but the principle's title and the offending evidence, e.g. "No secrets in source control — found a live key in `src/config.ts:42`".
 - **If critical findings exist, do NOT create the reviewed marker.** The marker script will refuse anyway, but don't even attempt it.
 - **Always end with `<<<AGENT_RESULT` / `AGENT_RESULT>>>`.** The orchestrator depends on this.

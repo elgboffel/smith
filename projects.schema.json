@@ -61,7 +61,9 @@
               "test": { "type": "string", "description": "Run tests" },
               "lint": { "type": "string", "description": "Run linter" },
               "typecheck": { "type": "string", "description": "Run type checker" },
-              "format": { "type": "string", "description": "Run formatter" }
+              "format": { "type": "string", "description": "Run formatter" },
+              "build-dev": { "type": "string", "description": "One-shot dev build (no watcher) for non-editing verification" },
+              "start": { "type": "string", "description": "Start the built app" }
             },
             "additionalProperties": { "type": "string" }
           },
@@ -73,6 +75,10 @@
           "verificationNotes": {
             "type": "string",
             "description": "Free-text hints for the verifier agent — auth flows, env var names, gotchas. Injected into the verifier context."
+          },
+          "uiTestingSkill": {
+            "type": "string",
+            "description": "Name of the repo's UI-testing skill (e.g. \"test-ui\"). Injected into the scout and verifier context for ui-screenshot repos so they know which skill to load for build/start, auth, and browser-automation steps."
           },
           "promoteTo": {
             "type": ["string", "null"],

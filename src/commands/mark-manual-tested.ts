@@ -62,19 +62,33 @@ export async function handler(argv: string[]): Promise<number> {
     }
     evidenceDetails = `library-test-verification: output_hash=${hash.slice(0, 16)} pass_indicators=${passCount}`;
   } else {
-    const playwrightCount = countRecentPngs('.playwright-cli', 60);
-    if (playwrightCount > 0) {
-      evidenceDetails = `playwright-cli screenshots: ${playwrightCount} files in .playwright-cli/ (last hour)`;
-    } else {
-      const tmpCount = countRecentPngs('/tmp', 60);
-      if (tmpCount > 0) evidenceDetails = `screenshots: ${tmpCount} recent .png files in /tmp (last hour)`;
+    // Search the capture dirs the browser-automation skill writes to, plus the
+    // task's own assets dir (where uploaded before/after shots land).
+    const searchDirs = ['.playwright-cli', `${markerDir}/assets`, '/tmp'];
+    let location = '';
+    let screenshotCount = 0;
+    for (const dir of searchDirs) {
+      const count = countRecentPngs(dir, 60);
+      if (count > screenshotCount) {
+        screenshotCount = count;
+        location = dir;
+      }
     }
-    if (!evidenceDetails) {
+    if (screenshotCount === 0) {
       process.stderr.write(
-        'REFUSED: No evidence of manual testing found.\n\nExpected one of:\n  - .playwright-cli/ directory with recent screenshots\n  - Recent .png files in /tmp from playwright-cli screenshot\n\nRun playwright-cli to test the app first, then re-run this script.\n',
+        'REFUSED: No evidence of manual testing found.\n\nExpected recent screenshots in one of:\n  - .playwright-cli/ (browser-automation skill output)\n  - .smith/<slug>/assets/ (uploaded evidence)\n  - /tmp\n\nTest the app in the browser first, then re-run this script.\n',
       );
       return 1;
     }
+    // A UI change needs a BEFORE and an AFTER so the reviewer can compare. A
+    // single screenshot proves a state, not a change.
+    if (screenshotCount < 2) {
+      process.stderr.write(
+        `REFUSED: Only ${screenshotCount} recent screenshot found in ${location}.\n\nUI verification requires at least a BEFORE and an AFTER screenshot so the\nchange can be compared. Capture the initial state before interacting, then\nthe state after exercising the fix, and re-run this script.\n`,
+      );
+      return 1;
+    }
+    evidenceDetails = `screenshots: ${screenshotCount} files in ${location} (last hour, before+after)`;
   }
 
   writeFileSync(resolve(markerDir, 'manual-tested'), `timestamp: ${timestamp}\nevidence: ${evidenceDetails}\n`);

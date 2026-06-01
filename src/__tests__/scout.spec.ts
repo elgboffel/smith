@@ -3,6 +3,7 @@ import {
   parseScoutFindings,
   ScoutFindingsValidationError,
   synthesizeForImplementer,
+  synthesizeLocationForVerifier,
   validateScoutFindings,
 } from '../scout/findings.js';
 import type { ScoutFindings } from '../types.js';
@@ -74,6 +75,32 @@ describe('validateScoutFindings', () => {
     expect(() => validateScoutFindings(bad)).toThrow(/constraints\[1\]/);
   });
 
+  it('accepts an optional location handoff', () => {
+    const withLocation = makeFindings({
+      location: { url: 'http://localhost:9998/back-office/orgs/org_123', steps: ['expand the row', 'open the panel'] },
+    });
+    const out = validateScoutFindings(withLocation);
+    expect(out.location).toEqual({
+      url: 'http://localhost:9998/back-office/orgs/org_123',
+      steps: ['expand the row', 'open the panel'],
+    });
+  });
+
+  it('accepts a location with no steps', () => {
+    const out = validateScoutFindings(makeFindings({ location: { url: 'http://x', steps: [] } }));
+    expect(out.location).toEqual({ url: 'http://x', steps: [] });
+  });
+
+  it('rejects a malformed location (missing url)', () => {
+    const bad = { relevantFiles: [], patterns: [], constraints: [], location: { steps: [] } };
+    expect(() => validateScoutFindings(bad)).toThrow(/location\.url/);
+  });
+
+  it('rejects a location with non-string steps', () => {
+    const bad = { relevantFiles: [], patterns: [], constraints: [], location: { url: 'http://x', steps: [1] } };
+    expect(() => validateScoutFindings(bad)).toThrow(/steps\[0\]/);
+  });
+
   it('ignores unknown top-level fields', () => {
     const withExtras = { ...makeFindings(), unexpected: 'value', another: [1, 2, 3] };
     const out = validateScoutFindings(withExtras);
@@ -92,6 +119,29 @@ describe('parseScoutFindings', () => {
   it('returns validated findings on valid input', () => {
     const findings = makeFindings();
     expect(parseScoutFindings(findings)).toEqual(findings);
+  });
+});
+
+describe('synthesizeLocationForVerifier', () => {
+  it('returns null when there is no location', () => {
+    expect(synthesizeLocationForVerifier(null)).toBeNull();
+    expect(synthesizeLocationForVerifier(makeFindings())).toBeNull();
+  });
+
+  it('renders the captured screen and nav steps', () => {
+    const out = synthesizeLocationForVerifier(
+      makeFindings({ location: { url: 'http://localhost:9998/orgs/org_1', steps: ['expand row', 'open panel'] } }),
+    );
+    expect(out).toContain('## Scout Baseline (BEFORE already captured)');
+    expect(out).toContain('http://localhost:9998/orgs/org_1');
+    expect(out).toContain('expand row');
+    expect(out).toContain('open panel');
+  });
+
+  it('omits the nav-steps list when there are no steps', () => {
+    const out = synthesizeLocationForVerifier(makeFindings({ location: { url: 'http://x', steps: [] } }));
+    expect(out).toContain('http://x');
+    expect(out).not.toContain('Navigation steps');
   });
 });
 

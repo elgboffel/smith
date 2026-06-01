@@ -2,6 +2,7 @@ import type { AgentName, AgentResult, PipelineConfig, RevisionRequest, TaskJson 
 import { resolveEvidenceStrategy, DEFAULT_CREDENTIALS_PATH } from '../types.js';
 import type { RepoContext } from './prefetch.js';
 import { formatAgentResources } from './agent-resources.js';
+import { formatUiTestingHint } from './ui-testing-hint.js';
 import { readPackageAssetSync } from '../package-assets.js';
 
 /**
@@ -193,6 +194,20 @@ function appendImplementerContext(
     lines.push(repoContext.learnings);
   }
 
+  // Recent commits — the authoritative reference for this repo's commit style.
+  // Match the type/scope/casing conventions shown here rather than inventing a
+  // generic format.
+  if (repoContext.recentCommits) {
+    lines.push('');
+    lines.push('### Recent Commits (match this commit style)');
+    lines.push('');
+    lines.push('Mirror the type, scope, and casing conventions these commits use:');
+    lines.push('');
+    lines.push('```');
+    lines.push(repoContext.recentCommits);
+    lines.push('```');
+  }
+
   // Check command fields
   if (task.checkCommand) {
     lines.push('');
@@ -213,6 +228,12 @@ function appendImplementerContext(
 function appendVerifierContext(lines: string[], config: PipelineConfig): void {
   const creds = config.project?.credentials ?? DEFAULT_CREDENTIALS_PATH;
   lines.push(`- **Credentials**: \`${creds}\``);
+
+  const uiHint = formatUiTestingHint(config.project);
+  if (uiHint) {
+    lines.push('');
+    lines.push(uiHint.trimEnd());
+  }
 
   if (config.project?.verificationNotes) {
     lines.push('');

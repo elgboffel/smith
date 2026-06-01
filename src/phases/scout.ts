@@ -7,12 +7,20 @@ import type { TaskStore } from '../state/task-store.js';
 import { spawnAgent } from '../agent/pi-runner.js';
 import { readPackageAsset } from '../package-assets.js';
 import { parseScoutFindings } from '../scout/findings.js';
+import { formatUiTestingHint } from '../context/ui-testing-hint.js';
 import { createLogger } from '../util/logger.js';
 
 const log = createLogger();
 
-/** Default scout time budget (5 minutes). Configurable via `SMITH_SCOUT_TIMEOUT_MS`. */
-const DEFAULT_SCOUT_TIMEOUT_MS = 5 * 60 * 1000;
+/**
+ * Default scout hard timeout (15 minutes). Configurable via
+ * `SMITH_SCOUT_TIMEOUT_MS`. This is the process kill-switch, not the agent's
+ * self-imposed exploration budget (see `agents/scout.md`): for `ui-screenshot`
+ * tasks the scout also builds + starts the app to capture a BEFORE baseline,
+ * and the build is the long pole. 15 minutes leaves room for explore + build +
+ * capture; if a scout genuinely runs that long, something is wrong.
+ */
+const DEFAULT_SCOUT_TIMEOUT_MS = 15 * 60 * 1000;
 
 /**
  * Result envelope for the scout phase.
@@ -208,6 +216,10 @@ function buildScoutContextBlock(config: PipelineConfig, task: TaskJson): string 
     for (const [name, command] of Object.entries(config.project.commands)) {
       lines.push(`- **${name}**: \`${command}\``);
     }
+  }
+  const uiHint = formatUiTestingHint(config.project);
+  if (uiHint) {
+    lines.push('', uiHint.trimEnd());
   }
   lines.push('');
   return lines.join('\n');

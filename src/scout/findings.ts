@@ -70,7 +70,27 @@ export function validateScoutFindings(value: unknown): ScoutFindings {
     out.suggestedApproach = requireString(v, 'suggestedApproach');
   }
 
+  if (v.location !== undefined) {
+    out.location = validateLocation(v.location);
+  }
+
   return out;
+}
+
+/**
+ * Validate the optional `location` handoff (ui-screenshot tasks). Requires a
+ * `url` string and a `steps` string array. Throws on any shape mismatch so a
+ * malformed location surfaces as a parse failure rather than silently dropping
+ * the verifier's navigation breadcrumbs.
+ */
+function validateLocation(value: unknown): { url: string; steps: string[] } {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new ScoutFindingsValidationError('location: expected object');
+  }
+  const l = value as Record<string, unknown>;
+  const url = requireString(l, 'location.url', 'url');
+  const steps = requireStringArray(l, 'steps').map((s) => s);
+  return { url, steps };
 }
 
 /**
@@ -135,6 +155,27 @@ export function synthesizeForImplementer(findings: ScoutFindings | null | undefi
   if (sections.length === 0) return EMPTY_MESSAGE;
 
   return ['## Scout Findings', '', ...sections.flatMap((s) => [s, ''])].join('\n').trimEnd();
+}
+
+/**
+ * Synthesize the scout's `location` into a `## Scout Baseline` block for the
+ * verifier. Returns `null` when the scout produced no location (cold start,
+ * non-visual scout, or skipped baseline) — the verifier then falls back to
+ * rediscovering the route. Pure function — no I/O.
+ */
+export function synthesizeLocationForVerifier(findings: ScoutFindings | null | undefined): string | null {
+  if (!findings?.location) return null;
+  const { url, steps } = findings.location;
+  const lines = ['## Scout Baseline (BEFORE already captured)', '', `- **Captured screen**: ${url}`];
+  if (steps.length > 0) {
+    lines.push('- **Navigation steps**:');
+    for (const s of steps) lines.push(`  - ${s}`);
+  }
+  lines.push(
+    '- The scout captured the BEFORE screenshot at this exact state and recorded it in the task file. Navigate here for an apples-to-apples AFTER — do not fake a before.',
+    '',
+  );
+  return lines.join('\n');
 }
 
 // --- helpers (mirrors the validator style in src/memory/schema.ts) ---

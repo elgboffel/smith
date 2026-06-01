@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import type { AgentName, AgentResult, PhaseOutcome, PhaseOutput, PipelineConfig } from '../types.js';
+import type { AgentName, AgentResult, PhaseOutcome, PhaseOutput, PipelineConfig, ScoutFindings } from '../types.js';
 import { TaskStore } from '../state/task-store.js';
 import { spawnAgent } from '../agent/pi-runner.js';
 import { assemblePrompt } from '../context/assembler.js';
@@ -7,6 +7,7 @@ import { prefetchRepoContext } from '../context/prefetch.js';
 import { buildRevisionRequest } from './revision.js';
 import { readWorkingMemory } from '../memory/working-memory.js';
 import { formatForVerifier, taskSlugFromTaskJsonPath } from '../memory/format.js';
+import { synthesizeLocationForVerifier } from '../scout/findings.js';
 import { createLogger } from '../util/logger.js';
 
 const log = createLogger();
@@ -18,6 +19,7 @@ export async function runVerifyPhase(
   config: PipelineConfig,
   store: TaskStore,
   previousResults: Map<AgentName, AgentResult>,
+  scoutFindings?: ScoutFindings | null,
 ): Promise<PhaseOutput> {
   log.phase('verify', 'started');
 
@@ -46,7 +48,8 @@ export async function runVerifyPhase(
   const task = await store.read();
   const repoContext = await prefetchRepoContext(config, 'verifier');
   const basePrompt = await assemblePrompt('verifier', config, task, repoContext, previousResults);
-  const prompt = prependWorkingMemory(basePrompt, config);
+  const withMemory = prependWorkingMemory(basePrompt, config);
+  const prompt = prependScoutLocation(withMemory, scoutFindings);
 
   const spawn = config.runtime?.spawn.bind(config.runtime) ?? spawnAgent;
   const { result } = await spawn({
@@ -121,6 +124,19 @@ function prependWorkingMemory(basePrompt: string, config: PipelineConfig): strin
   const memory = readWorkingMemory(taskDir);
   if (!memory) return basePrompt;
   return formatForVerifier(memory) + '\n' + basePrompt;
+}
+
+/**
+ * Prepend the scout's captured `location` as a `## Scout Baseline` block so the
+ * verifier navigates straight to the identical state for its AFTER shot. The
+ * scout ran before the commit and is the only agent that could capture a
+ * genuine BEFORE. Returns the prompt unchanged when no location was carried
+ * (cold start, non-visual scout, or skipped baseline).
+ */
+function prependScoutLocation(basePrompt: string, scoutFindings?: ScoutFindings | null): string {
+  const block = synthesizeLocationForVerifier(scoutFindings);
+  if (!block) return basePrompt;
+  return `${block}\n${basePrompt}`;
 }
 
 /** Translate a hard verifier-agent failure into a typed outcome. */

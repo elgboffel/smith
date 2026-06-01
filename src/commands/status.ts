@@ -160,6 +160,13 @@ export async function handler(argv: string[]): Promise<number> {
   if (field === 'status') {
     const data = readTask(taskFile);
     const current = (data.status as string) ?? 'active';
+    // A self-transition (X → X) is an idempotent no-op. Revision re-entry
+    // re-asserts `implementing` while already implementing; treat as success
+    // rather than an "invalid transition" error.
+    if (current === value) {
+      process.stdout.write(`OK: status already ${current}\n`);
+      return 0;
+    }
     const allowed = TRANSITIONS[current] ?? [];
     if (!allowed.includes(value as TaskStatus)) {
       process.stderr.write(

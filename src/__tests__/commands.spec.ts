@@ -315,6 +315,63 @@ describe('mark-tested handler', () => {
     const stderr = errCapture.lines.join('');
     expect(stderr).toContain('mark-tested requires test output on stdin');
   });
+
+  it('refuses to write a marker from an empty file (no false-positive evidence)', async () => {
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: false,
+      configurable: true,
+      writable: true,
+    });
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mark-tested-empty-'));
+    const prevCwd = process.cwd();
+    try {
+      fs.mkdirSync(path.join(dir, '.smith'), { recursive: true });
+      fs.writeFileSync(path.join(dir, '.smith', 'active'), 'myslug\n');
+      const emptyFile = path.join(dir, 'empty.json');
+      fs.writeFileSync(emptyFile, '   \n');
+      process.chdir(dir);
+      const { handler } = await import('../commands/mark-tested.js');
+      const code = await handler([emptyFile]);
+      expect(code).toBe(1);
+      expect(errCapture.lines.join('')).toContain('empty test output');
+      expect(fs.existsSync(path.join(dir, '.smith', 'myslug', 'tested'))).toBe(false);
+    } finally {
+      process.chdir(prevCwd);
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('extracts vitest JSON even when stderr noise is mixed in (2>&1)', async () => {
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: false,
+      configurable: true,
+      writable: true,
+    });
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mark-tested-json-'));
+    const prevCwd = process.cwd();
+    try {
+      fs.mkdirSync(path.join(dir, '.smith'), { recursive: true });
+      fs.writeFileSync(path.join(dir, '.smith', 'active'), 'myslug\n');
+      const noisy = path.join(dir, 'noisy.json');
+      fs.writeFileSync(
+        noisy,
+        'vite v5 building...\nDEPRECATION warning\n' +
+          '{"numPassedTests":5,"numFailedTests":0,"numTotalTests":5,"testResults":[]}\n' +
+          'trailing log line\n',
+      );
+      process.chdir(dir);
+      const { handler } = await import('../commands/mark-tested.js');
+      const code = await handler([noisy]);
+      expect(code).toBe(0);
+      const marker = fs.readFileSync(path.join(dir, '.smith', 'myslug', 'tested'), 'utf-8');
+      expect(marker).toContain('passed: 5');
+      expect(marker).toContain('failed: 0');
+      expect(marker).toContain('total: 5');
+    } finally {
+      process.chdir(prevCwd);
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('upload handler — preflight checks', () => {
@@ -343,6 +400,165 @@ describe('upload handler — preflight checks', () => {
     const { handler } = await import('../commands/upload.js');
     const code = await handler(['--type', 'screenshot']);
     expect(code).toBe(1);
+  });
+});
+
+describe('upload handler — per-task assets dir', () => {
+  let tmp: string;
+  let cwd: string;
+  const savedAssetsEnv = process.env.SMITH_ASSETS_DIR;
+  const savedDataEnv = process.env.SMITH_DATA_DIR;
+  let outCapture: ReturnType<typeof captureStream>;
+
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'smith-upload-'));
+    cwd = process.cwd();
+    delete process.env.SMITH_ASSETS_DIR;
+    // Point the data dir at an empty temp dir so no config.json overrides the path.
+    process.env.SMITH_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'smith-data-'));
+    process.chdir(tmp);
+    outCapture = captureStream(process.stdout);
+  });
+
+  afterEach(() => {
+    outCapture.restore();
+    process.chdir(cwd);
+    if (savedAssetsEnv === undefined) delete process.env.SMITH_ASSETS_DIR;
+    else process.env.SMITH_ASSETS_DIR = savedAssetsEnv;
+    if (savedDataEnv === undefined) delete process.env.SMITH_DATA_DIR;
+    else process.env.SMITH_DATA_DIR = savedDataEnv;
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('stores a screenshot under .smith/<slug>/assets when a task is active', async () => {
+    fs.mkdirSync(path.join(tmp, '.smith'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, '.smith', 'active'), 'fix-login-bug\n');
+    fs.writeFileSync(path.join(tmp, 'shot.png'), 'fake-png-bytes');
+
+    const { handler } = await import('../commands/upload.js');
+    const code = await handler(['shot.png']);
+
+    expect(code).toBe(0);
+    const dest = path.join(tmp, '.smith', 'fix-login-bug', 'assets', 'shot.png');
+    expect(fs.existsSync(dest)).toBe(true);
+    // Markdown reference points at the per-task assets path.
+    expect(outCapture.lines.join('')).toContain(path.join('.smith', 'fix-login-bug', 'assets', 'shot.png'));
+  });
+
+  it('falls back to .smith/assets when no task is active', async () => {
+    fs.writeFileSync(path.join(tmp, 'shot.png'), 'fake-png-bytes');
+
+    const { handler } = await import('../commands/upload.js');
+    const code = await handler(['shot.png']);
+
+    expect(code).toBe(0);
+    expect(fs.existsSync(path.join(tmp, '.smith', 'assets', 'shot.png'))).toBe(true);
+  });
+
+  it('an active task slug wins over a config assetsDir (evidence stays where markers look)', async () => {
+    // A stale global assetsDir must not scatter a run's screenshots into a
+    // shared dir that mark-manual-tested does not search.
+    fs.writeFileSync(path.join(process.env.SMITH_DATA_DIR!, 'config.json'), JSON.stringify({ assetsDir: '.smith/assets' }));
+    fs.mkdirSync(path.join(tmp, '.smith'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, '.smith', 'active'), 'fix-login-bug\n');
+    fs.writeFileSync(path.join(tmp, 'shot.png'), 'fake-png-bytes');
+
+    const { handler } = await import('../commands/upload.js');
+    const code = await handler(['shot.png']);
+
+    expect(code).toBe(0);
+    expect(fs.existsSync(path.join(tmp, '.smith', 'fix-login-bug', 'assets', 'shot.png'))).toBe(true);
+    // Did NOT honour the config assetsDir while a task was active.
+    expect(fs.existsSync(path.join(tmp, '.smith', 'assets', 'shot.png'))).toBe(false);
+  });
+
+  it('honours config assetsDir for ad-hoc uploads when no task is active', async () => {
+    fs.writeFileSync(path.join(process.env.SMITH_DATA_DIR!, 'config.json'), JSON.stringify({ assetsDir: 'custom-shots' }));
+    fs.writeFileSync(path.join(tmp, 'shot.png'), 'fake-png-bytes');
+
+    const { handler } = await import('../commands/upload.js');
+    const code = await handler(['shot.png']);
+
+    expect(code).toBe(0);
+    expect(fs.existsSync(path.join(tmp, 'custom-shots', 'shot.png'))).toBe(true);
+  });
+
+  it('records the markdown reference in the active task file (survives an aborted agent turn)', async () => {
+    fs.mkdirSync(path.join(tmp, '.smith', 'tasks', 'active'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, '.smith', 'active'), 'fix-login-bug\n');
+    const taskMd = path.join(tmp, '.smith', 'tasks', 'active', 'fix-login-bug.md');
+    fs.writeFileSync(taskMd, '# Task\n\n## Progress Log\n\n### Implementer\n\n- did a thing\n');
+    fs.writeFileSync(path.join(tmp, 'before.png'), 'fake-png-bytes');
+    fs.writeFileSync(path.join(tmp, 'after.png'), 'fake-png-bytes');
+
+    const { handler } = await import('../commands/upload.js');
+    await handler(['before.png']);
+    await handler(['after.png']);
+
+    const body = fs.readFileSync(taskMd, 'utf-8');
+    // Both refs land under a single auto-managed heading.
+    expect(body.match(/### Evidence \(auto-captured\)/g)?.length).toBe(1);
+    expect(body).toContain('![before.png]');
+    expect(body).toContain('![after.png]');
+
+    // Idempotent: re-uploading the same asset does not duplicate the bullet.
+    await handler(['before.png']);
+    const after = fs.readFileSync(taskMd, 'utf-8');
+    expect(after.match(/!\[before\.png\]/g)?.length).toBe(1);
+  });
+});
+
+describe('mark-manual-tested — before/after requirement', () => {
+  let tmp: string;
+  let cwd: string;
+  let errCapture: ReturnType<typeof captureStream>;
+
+  function writeRecentPng(dir: string, name: string) {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, name), 'fake-png-bytes');
+  }
+
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'smith-manual-'));
+    cwd = process.cwd();
+    process.chdir(tmp);
+    fs.mkdirSync(path.join(tmp, '.smith'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, '.smith', 'active'), 'ui-change\n');
+    // mark-manual-tested updates task JSON as a side effect; provide a stub.
+    fs.mkdirSync(path.join(tmp, '.smith', 'tasks', 'active'), { recursive: true });
+    fs.writeFileSync(
+      path.join(tmp, '.smith', 'tasks', 'active', 'ui-change.task.json'),
+      JSON.stringify({ slug: 'ui-change' }),
+    );
+    errCapture = captureStream(process.stderr);
+  });
+
+  afterEach(() => {
+    errCapture.restore();
+    process.chdir(cwd);
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('refuses with a single screenshot — no before/after to compare', async () => {
+    writeRecentPng(path.join(tmp, '.playwright-cli'), 'after.png');
+
+    const { handler } = await import('../commands/mark-manual-tested.js');
+    const code = await handler([]);
+
+    expect(code).toBe(1);
+    expect(errCapture.lines.join('')).toContain('BEFORE and an AFTER');
+    expect(fs.existsSync(path.join(tmp, '.smith', 'ui-change', 'manual-tested'))).toBe(false);
+  });
+
+  it('accepts a before + after pair', async () => {
+    writeRecentPng(path.join(tmp, '.playwright-cli'), 'before.png');
+    writeRecentPng(path.join(tmp, '.playwright-cli'), 'after.png');
+
+    const { handler } = await import('../commands/mark-manual-tested.js');
+    const code = await handler([]);
+
+    expect(code).toBe(0);
+    expect(fs.existsSync(path.join(tmp, '.smith', 'ui-change', 'manual-tested'))).toBe(true);
   });
 });
 
@@ -434,6 +650,46 @@ describe('command modules — native TypeScript (smoke)', () => {
     const mod = await import('../commands/status.js');
     const code = await mod.handler(['/nonexistent.task.json', 'status']);
     expect(code).toBe(1);
+  });
+
+  it('status self-transition (X → X) is an idempotent no-op, not an error', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'status-self-'));
+    const taskFile = path.join(dir, 't.task.json');
+    try {
+      fs.writeFileSync(taskFile, JSON.stringify({ id: 'x', created: 'now', status: 'implementing' }));
+      const mod = await import('../commands/status.js');
+      const out = captureStream(process.stdout);
+      let code: number;
+      try {
+        code = await mod.handler([taskFile, 'status', 'implementing']);
+      } finally {
+        out.restore();
+      }
+      expect(code).toBe(0);
+      expect(out.lines.join('')).toContain('already implementing');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('status rejects a genuinely invalid transition', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'status-invalid-'));
+    const taskFile = path.join(dir, 't.task.json');
+    try {
+      fs.writeFileSync(taskFile, JSON.stringify({ id: 'x', created: 'now', status: 'verifying' }));
+      const mod = await import('../commands/status.js');
+      const err = captureStream(process.stderr);
+      let code: number;
+      try {
+        code = await mod.handler([taskFile, 'status', 'committed']);
+      } finally {
+        err.restore();
+      }
+      expect(code).toBe(1);
+      expect(err.lines.join('')).toContain('invalid transition');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('mark-reviewed rejects critical > 0', async () => {
