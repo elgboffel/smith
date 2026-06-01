@@ -3,6 +3,7 @@ import { TaskStore } from '../state/task-store.js';
 import { spawnAgent } from '../agent/pi-runner.js';
 import { assemblePrompt } from '../context/assembler.js';
 import { prefetchRepoContext } from '../context/prefetch.js';
+import { IssueStore } from '../entry/issue-store.js';
 import { createLogger } from '../util/logger.js';
 
 const log = createLogger();
@@ -65,6 +66,15 @@ export async function runClosePhase(
   });
 
   if (result.status === 'completed') {
+    // Code owns the issue-status flip (replacing the closer's ad-hoc edit):
+    // the source issue moves to `done` only when the close phase truly succeeds.
+    if (config.issuePath) {
+      try {
+        await new IssueStore().markDone(config.issuePath);
+      } catch (err) {
+        log.phase('close', 'issue-markdone-skip', { issuePath: config.issuePath, error: String(err) });
+      }
+    }
     previousResults.set('closer', result);
     log.phase('close', 'completed');
     return {

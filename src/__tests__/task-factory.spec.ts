@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { createTask } from '../entry/task-factory.js';
 import type { TaskCreateRequest } from '../types.js';
-import { mkdir, rm } from 'node:fs/promises';
+import { mkdir, rm, writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 describe('createTask', () => {
@@ -97,6 +97,37 @@ describe('createTask', () => {
     });
     const taskJson = JSON.parse(await Bun.file(result.taskJsonPath).text());
     expect(taskJson.issuePath).toBe(sourcePath);
+  });
+
+  it('claims the source issue file — flips it to claimed and writes the Task back-link', async () => {
+    const sourcePath = join(tempDir, '01-claim-me.md');
+    await writeFile(sourcePath, '# Claim me\n\nStatus: ready\n\nBody.\n');
+
+    const request: TaskCreateRequest = {
+      repo: 'cli',
+      title: 'Claim me',
+      description: 'body',
+      issueType: 'local-md',
+      issue: 'claim-me',
+      mode: 'attended',
+      trigger: { type: 'cli', user: 'local' },
+      evidenceExpectations: '',
+    };
+    const result = await createTask(tempDir, request, {
+      repoPath: tempDir,
+      issueContext: {
+        title: 'Claim me',
+        body: 'body',
+        labels: [],
+        issueType: 'local-md',
+        issueNumber: 'claim-me',
+        sourcePath,
+      },
+    });
+
+    const issue = await readFile(sourcePath, 'utf-8');
+    expect(issue).toContain('Status: claimed');
+    expect(issue).toContain(`Task: ${result.taskId}`);
   });
 
   it('leaves issuePath null when no issueContext sourcePath is present', async () => {

@@ -1,7 +1,10 @@
-import { readFile, stat } from 'node:fs/promises';
+import { stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { IssueContext } from '../types.js';
+import { IssueStore } from './issue-store.js';
 import { slugify } from '../util/slugify.js';
+
+const issueStore = new IssueStore();
 
 export interface LoadIssueOptions {
   /** When true, refuse issues whose Status is not 'ready-for-agent'. Default: false. */
@@ -26,16 +29,20 @@ export async function loadIssue(arg: string, opts: LoadIssueOptions = {}): Promi
       throw new Error(`Issue file not found: ${arg}`);
     }
 
-    const issue = await parseLocalMd(arg);
+    const record = await issueStore.read(arg);
 
-    if (opts.gate) {
-      const status = extractStatus(issue.body);
-      if (status && status !== 'ready-for-agent') {
-        throw new Error(`Issue is not ready: status is '${status}' (expected 'ready-for-agent')`);
-      }
+    if (opts.gate && record.status && record.status !== 'ready-for-agent') {
+      throw new Error(`Issue is not ready: status is '${record.status}' (expected 'ready-for-agent')`);
     }
 
-    return issue;
+    return {
+      title: record.title,
+      body: record.body,
+      labels: record.status ? [record.status] : [],
+      issueType: 'local-md',
+      issueNumber: slugify(record.title, 40),
+      sourcePath: resolve(arg),
+    };
   }
 
   // Fallthrough: freeform text
@@ -49,37 +56,6 @@ async function fileExists(path: string): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-async function parseLocalMd(filePath: string): Promise<IssueContext> {
-  const content = await readFile(filePath, 'utf-8');
-
-  const title = extractTitle(content, filePath);
-  const status = extractStatus(content);
-  const labels = status ? [status] : [];
-
-  return {
-    title,
-    body: content,
-    labels,
-    issueType: 'local-md',
-    issueNumber: slugify(title, 40),
-    sourcePath: resolve(filePath),
-  };
-}
-
-function extractTitle(content: string, filePath: string): string {
-  const match = content.match(/^# (.+)$/m);
-  if (match) return match[1].trim();
-
-  // Fallback: derive from filename
-  const basename = filePath.split('/').pop() ?? filePath;
-  return basename.replace(/\.md$/, '').replace(/[-_]/g, ' ');
-}
-
-function extractStatus(content: string): string | null {
-  const match = content.match(/^Status:\s*(.+)$/m);
-  return match ? match[1].trim() : null;
 }
 
 function freeformIssue(text: string): IssueContext {

@@ -1,7 +1,7 @@
 import { describe, it, expect, mock, beforeEach, afterAll } from 'bun:test';
 import { mockSpawnAgent, mockRunCommand } from './mocks.js';
 import type { AgentResult, PipelineConfig } from '../types.js';
-import { mkdir, rm } from 'node:fs/promises';
+import { mkdir, rm, writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const { runClosePhase } = await import('../phases/close.js');
@@ -91,6 +91,35 @@ describe('runClosePhase (commit-only close)', () => {
     const fields = store.setField.mock.calls.map((c) => c[0]);
     expect(fields).not.toContain('prUrl');
     expect(fields).not.toContain('prNumber');
+  });
+
+  it('flips the source issue file to done via IssueStore on success', async () => {
+    mockSpawnAgent.mockResolvedValue({ raw: '', result: completedResult, durationMs: 100 });
+
+    const issuePath = join(tempCaseRoot, 'issues', '01-close-me.md');
+    await mkdir(join(tempCaseRoot, 'issues'), { recursive: true });
+    await writeFile(issuePath, '# Close me\n\nStatus: claimed\nTask: cli-1\n\nBody.\n');
+
+    const store = makeMockStore();
+    await runClosePhase(makeConfig({ issuePath }), store as any, new Map());
+
+    const issue = await readFile(issuePath, 'utf-8');
+    expect(issue).toContain('Status: done');
+  });
+
+  it('does not flip the source issue when the close phase fails', async () => {
+    const failed: AgentResult = { ...completedResult, status: 'failed', summary: 'Failed', error: 'timeout' };
+    mockSpawnAgent.mockResolvedValue({ raw: '', result: failed, durationMs: 100 });
+
+    const issuePath = join(tempCaseRoot, 'issues', '02-stay-claimed.md');
+    await mkdir(join(tempCaseRoot, 'issues'), { recursive: true });
+    await writeFile(issuePath, '# Stay claimed\n\nStatus: claimed\nTask: cli-1\n\nBody.\n');
+
+    const store = makeMockStore();
+    await runClosePhase(makeConfig({ issuePath }), store as any, new Map());
+
+    const issue = await readFile(issuePath, 'utf-8');
+    expect(issue).toContain('Status: claimed');
   });
 
   it('a github-flavored failure is never classified as fail-github-unreachable', async () => {

@@ -1,6 +1,6 @@
 ---
 name: closer
-description: Commit-only close agent for /smith. Confirms work is committed on a feature branch, then flips the source issue file's Status to done and appends a Comments entry. Never opens PRs, never pushes, never runs gh. Never implements or tests.
+description: Commit-only close agent for /smith. Confirms work is committed on a feature branch, then appends a Comments entry to the source issue file (the pipeline flips its Status to done). Never opens PRs, never pushes, never runs gh. Never implements or tests.
 tools: ['Read', 'Edit', 'Bash', 'Glob', 'Grep']
 ---
 
@@ -74,15 +74,11 @@ Verify the work is in a closeable state. If any check fails, STOP — do not edi
 
 ### 2. Update the Issue File
 
-The issue file is the closed-loop record. Make two edits to it:
+The issue file is the closed-loop record. The `Status:` flip to `done` is handled by
+the pipeline (`IssueStore.markDone`) when this phase succeeds — **do not edit the
+`Status:` line yourself**. Your one edit:
 
-1. **Flip the status**: change the `Status:` line to `Status: done`.
-
-   ```
-   Status: ready-for-agent   →   Status: done
-   ```
-
-2. **Append a `## Comments` entry** at the end of the file summarizing the outcome. If a `## Comments` section already exists, append a new bullet under it; otherwise create the section.
+1. **Append a `## Comments` entry** at the end of the file summarizing the outcome. If a `## Comments` section already exists, append a new bullet under it; otherwise create the section.
 
    ```markdown
    ## Comments
@@ -95,7 +91,7 @@ The issue file is the closed-loop record. Make two edits to it:
    - Status: done
    ```
 
-Use the `Edit` tool for both changes so the rest of the issue file is preserved verbatim.
+Use the `Edit` tool so the rest of the issue file is preserved verbatim.
 
 ### 3. Record
 
@@ -133,5 +129,5 @@ If pre-flight failed, set `"status":"failed"` and describe exactly what's missin
 - **Never open a PR, push, or run `gh`.** Smith uses commit-only close — the commit (by the implementer) and the issue-file update (by you) are the only records.
 - **Never touch git history.** No `reset`, `rebase`, `commit`, `push`, or `squash`. The implementer owns commits.
 - **Always pre-flight before editing the issue file.** Catch a dirty tree or protected branch yourself with a clear error.
-- **Always update the source issue file** — flip `Status: done` and append a `## Comments` entry.
+- **Always append a `## Comments` entry to the source issue file.** The pipeline flips `Status: done` for you — do not edit the `Status:` line.
 - **Always end with `<<<AGENT_RESULT` / `AGENT_RESULT>>>`.** The orchestrator depends on this.

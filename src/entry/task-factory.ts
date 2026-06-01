@@ -3,6 +3,7 @@ import { basename, resolve } from 'node:path';
 import type { IssueContext, TaskCreateRequest, TaskJson } from '../types.js';
 import { loadProjectsManifest, resolveRepoPath } from '../config.js';
 import { resolveRepoActiveMarker, resolveRepoActiveTaskDir } from '../paths.js';
+import { IssueStore } from './issue-store.js';
 import { createLogger } from '../util/logger.js';
 import { slugify } from '../util/slugify.js';
 
@@ -77,6 +78,17 @@ export async function createTask(
   await Bun.write(taskMdPath, taskMd);
   await mkdir(resolve(repoPath, '.smith'), { recursive: true });
   await Bun.write(resolveRepoActiveMarker(repoPath), `${taskId}\n`);
+
+  // Two-way link: flip the source issue to `claimed` and back-link this task.
+  // Best-effort — a missing issue file must not abort task creation.
+  const sourcePath = enrichment?.issueContext?.sourcePath;
+  if (sourcePath) {
+    try {
+      await new IssueStore().claim(sourcePath, taskId);
+    } catch (err) {
+      log.info('issue claim skipped', { sourcePath, taskId, error: String(err) });
+    }
+  }
 
   log.info('task created', {
     taskId,
