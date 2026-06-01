@@ -25,7 +25,7 @@ describe('init (programmatic)', () => {
     expect(code).toBe(0);
     const cfg = JSON.parse(await readFile(join(tmp, 'config.json'), 'utf-8'));
     expect(cfg.version).toBe(DEFAULT_CONFIG.version);
-    expect(cfg.assetsRepo).toBe(DEFAULT_CONFIG.assetsRepo);
+    expect(cfg.assetsDir).toBe(DEFAULT_CONFIG.assetsDir);
     expect(cfg.defaultModel).toBe(DEFAULT_CONFIG.defaultModel);
     await stat(join(tmp, 'agent-versions'));
   });
@@ -42,10 +42,10 @@ describe('init (programmatic)', () => {
 
   it('--force rewrites config.json', async () => {
     await init({ cwd: '/no/such/repo' });
-    const code = await init({ cwd: '/no/such/repo', force: true, assetsRepo: 'me/forked' });
+    const code = await init({ cwd: '/no/such/repo', force: true, assetsDir: 'custom/assets' });
     expect(code).toBe(0);
     const cfg = JSON.parse(await readFile(join(tmp, 'config.json'), 'utf-8'));
-    expect(cfg.assetsRepo).toBe('me/forked');
+    expect(cfg.assetsDir).toBe('custom/assets');
   });
 
   it('--force preserves existing config/cache directories', async () => {
@@ -56,9 +56,9 @@ describe('init (programmatic)', () => {
   });
 
   it('flag overrides land in config.json', async () => {
-    await init({ cwd: '/no/such/repo', assetsRepo: 'me/x', projects: '/abs/path/projects.json' });
+    await init({ cwd: '/no/such/repo', assetsDir: 'custom/assets', projects: '/abs/path/projects.json' });
     const cfg = JSON.parse(await readFile(join(tmp, 'config.json'), 'utf-8'));
-    expect(cfg.assetsRepo).toBe('me/x');
+    expect(cfg.assetsDir).toBe('custom/assets');
     expect(cfg.projects).toBe('/abs/path/projects.json');
   });
 

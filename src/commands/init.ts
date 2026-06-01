@@ -25,7 +25,7 @@ export const description = 'Scaffold the smith config directory at ~/.config/smi
 
 export interface InitOptions {
   projects?: string;
-  assetsRepo?: string;
+  assetsDir?: string;
   migrateFrom?: string;
   force?: boolean;
   cwd?: string;
@@ -44,7 +44,7 @@ export async function init(opts: InitOptions = {}): Promise<number> {
 
   const patch: Partial<CaseConfig> = {};
   if (opts.projects) patch.projects = opts.projects;
-  if (opts.assetsRepo) patch.assetsRepo = opts.assetsRepo;
+  if (opts.assetsDir) patch.assetsDir = opts.assetsDir;
   writeConfig(patch);
 
   const migrateSource = opts.migrateFrom ? resolve(opts.migrateFrom) : detectRepoRoot(opts.cwd ?? process.cwd());
@@ -84,7 +84,7 @@ export async function handler(argv: string[]): Promise<number> {
       args: argv,
       options: {
         projects: { type: 'string' },
-        'assets-repo': { type: 'string' },
+        'assets-dir': { type: 'string' },
         'migrate-from': { type: 'string' },
         force: { type: 'boolean' },
       },
@@ -100,7 +100,7 @@ export async function handler(argv: string[]): Promise<number> {
   try {
     return await init({
       projects: parsed.values.projects as string | undefined,
-      assetsRepo: parsed.values['assets-repo'] as string | undefined,
+      assetsDir: parsed.values['assets-dir'] as string | undefined,
       migrateFrom: parsed.values['migrate-from'] as string | undefined,
       force: parsed.values.force as boolean | undefined,
     });
@@ -124,7 +124,7 @@ function printHelp(): void {
       '',
       'Options:',
       '  --projects <path>       Path to projects.json (absolute or relative to config dir)',
-      '  --assets-repo <owner/repo>  Override the screenshot upload target',
+      '  --assets-dir <path>     Override the local assets directory (default: .smith/assets)',
       '  --migrate-from <path>   Migrate state from an existing case repo',
       '  --force                 Rewrite config.json (state directories are never deleted)',
       '  --help, -h              Show this help',

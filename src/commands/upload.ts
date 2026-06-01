@@ -1,11 +1,26 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { basename, extname, resolve } from 'node:path';
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { basename, extname, isAbsolute, resolve } from 'node:path';
 import { resolveDataDir } from '../paths.js';
 
-export const description = 'Upload a screenshot or video to case-assets, print markdown reference';
+export const description = 'Copy a screenshot or video into the local assets dir, print markdown reference';
 
-function getAssetsRepo(): string {
-  if (process.env.ASSETS_REPO) return process.env.ASSETS_REPO;
+const DEFAULT_ASSETS_DIR = '.smith/assets';
+
+/**
+ * Resolve the local directory where assets are stored.
+ *
+ * Precedence:
+ *   1. SMITH_ASSETS_DIR env
+ *   2. config.json `assetsDir`
+ *   3. `.smith/assets` (gitignored in target repos)
+ *
+ * Relative values resolve against the current working directory (the target
+ * repo the agent is operating in). Nothing is ever pushed to a remote.
+ */
+function getAssetsDir(): string {
+  if (process.env.SMITH_ASSETS_DIR) return resolve(process.cwd(), process.env.SMITH_ASSETS_DIR);
+
+  let dir = DEFAULT_ASSETS_DIR;
   let configPath: string | undefined;
   try {
     configPath = resolve(resolveDataDir(), 'config.json');
@@ -15,91 +30,55 @@ function getAssetsRepo(): string {
   if (configPath && existsSync(configPath)) {
     try {
       const config = JSON.parse(readFileSync(configPath, 'utf-8'));
-      if (config.assetsRepo) return config.assetsRepo;
+      if (typeof config.assetsDir === 'string' && config.assetsDir) dir = config.assetsDir;
     } catch {
-      /* malformed config */
+      /* malformed config — fall back to default */
     }
   }
-  return 'nicknisi/case-assets';
+  return isAbsolute(dir) ? dir : resolve(process.cwd(), dir);
 }
 
-const RELEASE_TAG = 'assets';
-
-async function ghRun(args: string[]): Promise<{ stdout: string; exitCode: number }> {
-  const proc = Bun.spawn(['gh', ...args], { stdout: 'pipe', stderr: 'pipe' });
-  const stdout = await new Response(proc.stdout).text();
-  const exitCode = await proc.exited;
-  return { stdout: stdout.trim(), exitCode };
-}
-
-async function ensureRelease(repo: string): Promise<void> {
-  const check = await ghRun(['release', 'view', RELEASE_TAG, '--repo', repo]);
-  if (check.exitCode !== 0) {
-    process.stderr.write(`Creating release '${RELEASE_TAG}' in ${repo}...\n`);
-    await ghRun([
-      'release',
-      'create',
-      RELEASE_TAG,
-      '--repo',
-      repo,
-      '--title',
-      'PR Assets',
-      '--notes',
-      'Screenshots and videos for PR descriptions. Uploaded by case harness.',
-    ]);
-  }
-}
-
-async function uploadAsset(file: string, repo: string): Promise<string | null> {
-  const name = basename(file);
-  await ghRun(['release', 'upload', RELEASE_TAG, file, '--repo', repo, '--clobber']);
-  const { stdout } = await ghRun([
-    'release',
-    'view',
-    RELEASE_TAG,
-    '--repo',
-    repo,
-    '--json',
-    'assets',
-    '--jq',
-    `.assets[] | select(.name == "${name}") | .url`,
-  ]);
-  return stdout || null;
+/**
+ * Copy `file` into `dir`, returning the absolute destination path. Overwrites by
+ * name.
+ *
+ * The path is deliberately absolute: the markdown reference it produces gets
+ * pasted into task files under `.smith/tasks/active/`, while assets live under
+ * `.smith/assets/`. A cwd-relative link would resolve against the task file's
+ * own directory and break. Everything here is local + gitignored (never pushed),
+ * so an absolute machine-local path is the only reference that renders reliably
+ * regardless of which file embeds it.
+ */
+function storeAsset(file: string, dir: string): string {
+  mkdirSync(dir, { recursive: true });
+  const dest = resolve(dir, basename(file));
+  copyFileSync(file, dest);
+  return dest;
 }
 
 export async function handler(argv: string[]): Promise<number> {
-  const ghCheck = Bun.spawn(['gh', '--version'], { stdout: 'ignore', stderr: 'ignore' });
-  if ((await ghCheck.exited) !== 0) {
-    process.stderr.write('gh CLI not found. Install: https://cli.github.com/\n');
-    return 1;
-  }
-
   const filePath = argv.find((a) => !a.startsWith('--'));
   if (!filePath || !existsSync(filePath)) {
     process.stderr.write(`upload: file not found: ${filePath ?? '<none>'}\n`);
     return 1;
   }
 
-  const repo = getAssetsRepo();
+  const assetsDir = getAssetsDir();
   const ext = extname(filePath).slice(1).toLowerCase();
   const filename = basename(filePath);
-  await ensureRelease(repo);
 
   if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
-    process.stderr.write(`Uploading ${filename}...\n`);
-    const url = await uploadAsset(filePath, repo);
-    if (!url) {
-      process.stderr.write(`Failed to get download URL for ${filename}\n`);
-      return 1;
-    }
-    process.stdout.write(`![${filename}](${url})\n`);
+    const dest = storeAsset(filePath, assetsDir);
+    process.stderr.write(`Stored ${filename} -> ${dest}\n`);
+    process.stdout.write(`![${filename}](${dest})\n`);
   } else if (['mp4', 'mov', 'webm'].includes(ext)) {
-    let mp4Path = filePath;
+    const sourcePath = filePath;
     if (ext === 'webm') {
       const ffmpegCheck = Bun.spawn(['which', 'ffmpeg'], { stdout: 'ignore', stderr: 'ignore' });
       if ((await ffmpegCheck.exited) === 0) {
         const stem = basename(filePath, `.${ext}`);
-        mp4Path = `/tmp/${stem}.mp4`;
+        const mp4Path = resolve(assetsDir, `${stem}.mp4`);
+        mkdirSync(assetsDir, { recursive: true });
         process.stderr.write('Converting webm to mp4...\n');
         const convert = Bun.spawn(
           [
@@ -117,24 +96,21 @@ export async function handler(argv: string[]): Promise<number> {
           ],
           { stdout: 'ignore', stderr: 'ignore' },
         );
-        await convert.exited;
+        if ((await convert.exited) === 0) {
+          process.stderr.write(`Stored ${basename(mp4Path)} -> ${mp4Path}\n`);
+          process.stdout.write(`[▶ Verification video](${mp4Path})\n`);
+          return 0;
+        }
+        process.stderr.write('ffmpeg conversion failed — storing original webm.\n');
       }
     }
-    process.stderr.write('Uploading video...\n');
-    const url = await uploadAsset(mp4Path, repo);
-    if (!url) {
-      process.stderr.write('Failed to get download URL\n');
-      return 1;
-    }
-    process.stdout.write(`[▶ Download verification video](${url})\n`);
+    const dest = storeAsset(sourcePath, assetsDir);
+    process.stderr.write(`Stored ${basename(dest)} -> ${dest}\n`);
+    process.stdout.write(`[▶ Verification video](${dest})\n`);
   } else {
-    process.stderr.write(`Uploading ${filename}...\n`);
-    const url = await uploadAsset(filePath, repo);
-    if (!url) {
-      process.stderr.write(`Failed to get download URL for ${filename}\n`);
-      return 1;
-    }
-    process.stdout.write(`[${filename}](${url})\n`);
+    const dest = storeAsset(filePath, assetsDir);
+    process.stderr.write(`Stored ${filename} -> ${dest}\n`);
+    process.stdout.write(`[${filename}](${dest})\n`);
   }
   return 0;
 }

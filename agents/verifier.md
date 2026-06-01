@@ -248,9 +248,9 @@ Most AuthKit example apps redirect to the WorkOS hosted login page. Follow this 
 
 ### 4. Capture Evidence
 
-**Screenshots are the primary evidence.** They render inline on GitHub and are instantly reviewable. Video is optional supplementary evidence for complex multi-step flows.
+**Screenshots are the primary evidence.** They are stored locally (in the repo's gitignored `.smith/assets/`) and referenced from the task file for local review. Video is optional supplementary evidence for complex multi-step flows.
 
-1. **Upload before/after screenshots** for PR inclusion:
+1. **Store before/after screenshots** locally and capture their markdown references:
 
    ```bash
    BEFORE=$(smith upload .playwright-cli/before.png)
@@ -261,7 +261,7 @@ Most AuthKit example apps redirect to the WorkOS hosted login page. Follow this 
 
    Upload ALL screenshots you took during testing (before, intermediate steps, after). Each screenshot should show a distinct state — if two screenshots look identical, one is redundant.
 
-2. **(Optional) Upload video** if you recorded one for a complex flow:
+2. **(Optional) Store video** if you recorded one for a complex flow:
 
    ```bash
    VIDEO=$(smith upload /tmp/verification.webm)

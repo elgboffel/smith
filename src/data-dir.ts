@@ -30,8 +30,8 @@ export const CONFIG_VERSION = 1;
 
 export interface CaseConfig {
   version: number;
-  /** "<owner>/<repo>" for screenshot uploads. */
-  assetsRepo: string;
+  /** Local directory for screenshot/video assets (relative to the target repo, or absolute). Never pushed to a remote. */
+  assetsDir: string;
   /** Path to projects.json (absolute or relative to data dir). */
   projects: string;
   /** Informational — consumed by the orchestrator/agents in a later phase. */
@@ -40,7 +40,7 @@ export interface CaseConfig {
 
 export const DEFAULT_CONFIG: CaseConfig = {
   version: CONFIG_VERSION,
-  assetsRepo: 'nicknisi/case-assets',
+  assetsDir: '.smith/assets',
   projects: './projects.json',
   defaultModel: 'claude-sonnet-4-6',
 };

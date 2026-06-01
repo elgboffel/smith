@@ -58,9 +58,9 @@ describe('readConfig', () => {
   });
 
   it('merges partial files over defaults', async () => {
-    await writeFile(join(tmp, 'config.json'), JSON.stringify({ assetsRepo: 'me/assets' }));
+    await writeFile(join(tmp, 'config.json'), JSON.stringify({ assetsDir: 'me/assets' }));
     const cfg = readConfig();
-    expect(cfg.assetsRepo).toBe('me/assets');
+    expect(cfg.assetsDir).toBe('me/assets');
     expect(cfg.defaultModel).toBe(DEFAULT_CONFIG.defaultModel);
     expect(cfg.projects).toBe(DEFAULT_CONFIG.projects);
     expect(cfg.version).toBe(CONFIG_VERSION);
@@ -87,9 +87,9 @@ describe('readConfig', () => {
     // @ts-expect-error patching a method for assertion
     process.stderr.write = warn;
     try {
-      await writeFile(join(tmp, 'config.json'), JSON.stringify({ version: 999, assetsRepo: 'fork/assets' }));
+      await writeFile(join(tmp, 'config.json'), JSON.stringify({ version: 999, assetsDir: 'fork/assets' }));
       const cfg = readConfig();
-      expect(cfg.assetsRepo).toBe('fork/assets');
+      expect(cfg.assetsDir).toBe('fork/assets');
       expect(warn).toHaveBeenCalled();
     } finally {
       process.stderr.write = original;
@@ -99,22 +99,22 @@ describe('readConfig', () => {
 
 describe('writeConfig', () => {
   it('writes a fresh config when the file is missing', async () => {
-    writeConfig({ assetsRepo: 'fork/assets' });
+    writeConfig({ assetsDir: 'fork/assets' });
     const raw = await readFile(join(tmp, 'config.json'), 'utf-8');
     const parsed = JSON.parse(raw);
-    expect(parsed.assetsRepo).toBe('fork/assets');
+    expect(parsed.assetsDir).toBe('fork/assets');
     expect(parsed.version).toBe(CONFIG_VERSION);
   });
 
   it('preserves unrelated fields on shallow merge', async () => {
     await writeFile(
       join(tmp, 'config.json'),
-      JSON.stringify({ version: CONFIG_VERSION, defaultModel: 'custom-model', assetsRepo: 'a/b' }),
+      JSON.stringify({ version: CONFIG_VERSION, defaultModel: 'custom-model', assetsDir: 'a/b' }),
     );
-    writeConfig({ assetsRepo: 'c/d' });
+    writeConfig({ assetsDir: 'c/d' });
     const cfg = readConfig();
     expect(cfg.defaultModel).toBe('custom-model');
-    expect(cfg.assetsRepo).toBe('c/d');
+    expect(cfg.assetsDir).toBe('c/d');
   });
 
   it('pins version to CONFIG_VERSION on every write', async () => {
@@ -125,7 +125,7 @@ describe('writeConfig', () => {
 
   it('uses an atomic temp-file-then-rename', async () => {
     // Real atomicity is hard to assert; sanity-check that no .tmp lingers after success.
-    writeConfig({ assetsRepo: 'me/x' });
+    writeConfig({ assetsDir: 'me/x' });
     const entries = await readdir(tmp);
     expect(entries).not.toContain('config.json.tmp');
     expect(entries).toContain('config.json');
