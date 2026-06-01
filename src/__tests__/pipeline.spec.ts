@@ -42,6 +42,7 @@ const mockCreateNotifier = mock(() => ({
   toolStart: mock(),
   toolEnd: mock(),
   stepIndicator: mock(),
+  pipelineComplete: mock(),
   startHeartbeat: mock(),
   stopHeartbeat: mock(),
 }));

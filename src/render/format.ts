@@ -4,6 +4,8 @@
  * Phase 1: no ANSI color. Plain text only.
  */
 
+import type { PhaseSummaryRow } from './types.js';
+
 /** Fixed terminal width for phase header separator lines. */
 const HEADER_WIDTH = 60;
 /** Fixed terminal width target for right-aligned durations in single-line outputs. */
@@ -34,21 +36,25 @@ export function formatPhaseHeader(phase: string, agent: string): string {
 }
 
 /**
- * Format the end-of-phase line.
- * Example: "✓ implement completed                    1m 42s"
- *          "✗ implement failed                       1m 42s"
+ * Format the end-of-phase line. When `contextTokens` is provided (> 0) the
+ * phase's peak context occupancy is shown alongside the duration so each
+ * completed step reports the same context number as the final summary.
+ * Example: "✓ implement completed              120.0k ctx   1m 42s"
+ *          "✗ implement failed                              1m 42s"
  */
 export function formatPhaseEnd(
   phase: string,
   _agent: string,
   durationMs: number,
   status: 'completed' | 'failed',
+  contextTokens?: number,
 ): string {
   const icon = status === 'completed' ? '✓' : '✗';
   const label = status === 'completed' ? 'completed' : 'failed';
   const left = `${icon} ${phase} ${label}`;
   const dur = formatDuration(durationMs);
-  return padRight(left, dur);
+  const right = contextTokens ? `${formatTokenCount(contextTokens)} ctx   ${dur}` : dur;
+  return padRight(left, right);
 }
 
 /**
@@ -72,6 +78,52 @@ export function formatToolLine(tool: string, args: string, durationMs?: number):
 export function formatSetupStep(label: string, detail?: string): string {
   const suffix = detail ? `: ${detail}` : '';
   return `    ↳ ${label}${suffix}`;
+}
+
+/**
+ * Format a token count compactly.
+ *   <1000      → "N"
+ *   <1_000_000 → "N.Nk"
+ *   ≥1_000_000 → "N.NM"
+ */
+export function formatTokenCount(tokens: number): string {
+  if (tokens < 1000) return `${tokens}`;
+  if (tokens < 1_000_000) return `${(tokens / 1000).toFixed(1)}k`;
+  return `${(tokens / 1_000_000).toFixed(2)}M`;
+}
+
+/**
+ * Format the final pipeline summary as a vertical breakdown: a header line with
+ * total wall-clock time, then one indented row per phase showing that phase's
+ * duration and peak context occupancy. Returns an array of lines.
+ *
+ * Each phase is a fresh agent, so the context column is a per-phase value —
+ * never a running total.
+ *
+ * Example:
+ *   ✓ Pipeline complete [6/6]                       18m 6s
+ *       scout            3m 12s    47.0k ctx
+ *       implement       10m  4s   120.0k ctx
+ *       verify           2m 30s    88.0k ctx
+ *       ...
+ */
+export function formatPipelineComplete(rows: PhaseSummaryRow[], totalDurationMs: number): string[] {
+  const total = rows.length;
+  const header = padRight(`✓ Pipeline complete [${total}/${total}]`, formatDuration(totalDurationMs));
+  if (total === 0) return [header];
+
+  const nameW = Math.max(...rows.map((r) => r.phase.length));
+  const durW = Math.max(...rows.map((r) => formatDuration(r.durationMs).length));
+  const tokW = Math.max(...rows.map((r) => formatTokenCount(r.contextTokens).length));
+
+  const lines = [header];
+  for (const r of rows) {
+    const name = r.phase.padEnd(nameW);
+    const dur = formatDuration(r.durationMs).padStart(durW);
+    const tok = formatTokenCount(r.contextTokens).padStart(tokW);
+    lines.push(`    ${name}   ${dur}   ${tok} ctx`);
+  }
+  return lines;
 }
 
 /**

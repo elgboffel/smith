@@ -5,7 +5,9 @@ import {
   formatHeartbeatWhimsy,
   formatPhaseEnd,
   formatPhaseHeader,
+  formatPipelineComplete,
   formatStepIndicator,
+  formatTokenCount,
   formatToolLine,
 } from '../render/format.js';
 
@@ -147,5 +149,54 @@ describe('formatHeartbeatWhimsy', () => {
     const out = formatHeartbeatWhimsy(10_000, -1);
     expect(out.startsWith('    ··· ')).toBe(true);
     expect(out.endsWith(' (10s)')).toBe(true);
+  });
+});
+
+describe('formatTokenCount', () => {
+  test('sub-thousand renders as a bare integer', () => {
+    expect(formatTokenCount(0)).toBe('0');
+    expect(formatTokenCount(999)).toBe('999');
+  });
+
+  test('thousands render with one decimal and k suffix', () => {
+    expect(formatTokenCount(1000)).toBe('1.0k');
+    expect(formatTokenCount(12_345)).toBe('12.3k');
+  });
+
+  test('millions render with two decimals and M suffix', () => {
+    expect(formatTokenCount(1_000_000)).toBe('1.00M');
+    expect(formatTokenCount(1_240_000)).toBe('1.24M');
+  });
+});
+
+describe('formatPipelineComplete', () => {
+  const rows = [
+    { phase: 'scout', durationMs: 192_000, contextTokens: 47_000 },
+    { phase: 'implement', durationMs: 604_000, contextTokens: 120_000 },
+    { phase: 'close', durationMs: 45_000, contextTokens: 30_000 },
+  ];
+
+  test('header shows N/N and right-aligned total time', () => {
+    const lines = formatPipelineComplete(rows, 841_000);
+    expect(lines[0].startsWith('✓ Pipeline complete [3/3]')).toBe(true);
+    expect(lines[0].endsWith('14m 1s')).toBe(true);
+  });
+
+  test('one indented row per phase with aligned duration + context columns', () => {
+    const lines = formatPipelineComplete(rows, 841_000);
+    expect(lines.slice(1)).toEqual([
+      '    scout       3m 12s    47.0k ctx',
+      '    implement   10m 4s   120.0k ctx',
+      '    close          45s    30.0k ctx',
+    ]);
+    // Columns align: every row is the same width.
+    const widths = new Set(lines.slice(1).map((l) => l.length));
+    expect(widths.size).toBe(1);
+  });
+
+  test('empty rows yields just the header', () => {
+    const lines = formatPipelineComplete([], 0);
+    expect(lines).toHaveLength(1);
+    expect(lines[0].startsWith('✓ Pipeline complete [0/0]')).toBe(true);
   });
 });

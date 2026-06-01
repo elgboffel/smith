@@ -101,6 +101,31 @@ describe('reduceEvents', () => {
     expect(state.lastSequence).toBe(3);
   });
 
+  test('late skipped phase_end does not demote a completed phase', () => {
+    // With 0 revision cycles, unused revision-cycle nodes (implement-1, etc.)
+    // are skipped at end-of-run and collapse onto the same `implement_0` key as
+    // the node that actually completed. The skip must not clobber it.
+    const events: PipelineEvent[] = [
+      makeEvent(1, { event: 'pipeline_start', taskId: 'task-1', profile: 'standard', plan: PLAN }),
+      makeEvent(2, { event: 'phase_start', phase: 'implement', agent: 'implementer' }),
+      makeEvent(3, {
+        event: 'phase_end',
+        phase: 'implement',
+        agent: 'implementer',
+        outcome: 'completed',
+        durationMs: 1000,
+      }),
+      // Unused cycle-1 implement node skipped at end-of-run (revisionCycles still 0).
+      makeEvent(4, { event: 'phase_end', phase: 'implement', agent: 'implementer', outcome: 'skipped', durationMs: 0 }),
+    ];
+
+    const state = reduceEvents(events);
+
+    const phase = state.phases.get('implement_0');
+    expect(phase?.status).toBe('completed');
+    expect(phase?.durationMs).toBe(1000);
+  });
+
   test('revision cycle increments revisionCycles', () => {
     const events: PipelineEvent[] = [
       makeEvent(1, { event: 'pipeline_start', taskId: 'task-1', profile: 'standard', plan: PLAN }),

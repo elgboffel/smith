@@ -126,6 +126,25 @@ describe('StructuredLogRenderer', () => {
     expect(harness.lines[0]).toBe('[2/3] ✓ implement → ○ verify → · review');
   });
 
+  test('pipelineComplete renders a vertical per-phase breakdown', () => {
+    const { harness, options } = makeHarness();
+    const n = createStructuredLogRenderer(options);
+    n.pipelineComplete(
+      [
+        { phase: 'implement', durationMs: 604_000, contextTokens: 120_000 },
+        { phase: 'review', durationMs: 110_000, contextTokens: 95_000 },
+        { phase: 'close', durationMs: 45_000, contextTokens: 30_000 },
+      ],
+      759_000,
+    );
+    expect(harness.lines[0].startsWith('✓ Pipeline complete [3/3]')).toBe(true);
+    expect(harness.lines).toHaveLength(4);
+    expect(harness.lines[1]).toContain('implement');
+    expect(harness.lines[1]).toContain('120.0k ctx');
+    expect(harness.lines[3]).toContain('close');
+    expect(harness.lines[3]).toContain('30.0k ctx');
+  });
+
   test('startHeartbeat registers an interval; stopHeartbeat clears it', () => {
     const { harness, options } = makeHarness();
     const n = createStructuredLogRenderer(options);

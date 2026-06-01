@@ -45,6 +45,7 @@ export async function writeRunMetrics(
           }
         : null,
       phaseDurations: Object.fromEntries(metrics.phases.map((p) => [p.agent, p.durationMs])),
+      phaseContextTokens: Object.fromEntries(metrics.phases.map((p) => [p.agent, p.contextTokens])),
       profile: metrics.profile,
       revisionCycles: metrics.revisionCycles,
       humanOverrides: metrics.humanOverrides,

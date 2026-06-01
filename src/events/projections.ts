@@ -79,6 +79,7 @@ export function projectMetrics(state: PipelineState): RunMetrics {
       durationMs: phase.durationMs ?? 0,
       status: phase.status === 'running' ? 'completed' : (phase.status as 'completed' | 'failed' | 'skipped'),
       retried: phase.phase === 'implement' && state.revisionCycles > 0,
+      contextTokens: phase.result?.contextTokens ?? 0,
     });
 
     if (phase.result?.findings) {

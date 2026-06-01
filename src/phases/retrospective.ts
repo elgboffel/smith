@@ -101,6 +101,7 @@ export async function runRetrospectivePhase(
       dataDir: config.dataDir,
       onHeartbeat: config.onAgentHeartbeat,
       onToolActivity: config.onToolActivity,
+      onUsage: config.onUsage,
       traceWriter: config.traceWriter,
       eventAppender: config.eventAppender,
       phase: 'retrospective',

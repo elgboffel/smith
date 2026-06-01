@@ -104,11 +104,35 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
     // that message here so a real API error (bad model, auth, rate limit) is
     // surfaced instead of the misleading "AGENT_RESULT start delimiter not found".
     let agentError: string | null = null;
+    // Context size (input + output + cache) for the most recent turn. Context
+    // grows turn over turn within a single agent run, so the final turn's usage
+    // is this agent's context occupancy — the same number pi's footer shows via
+    // calculateContextTokens(lastAssistantUsage). NOT a running sum: each phase
+    // is a fresh agent with its own window, so accumulating across turns (or
+    // phases) would be meaningless.
+    let contextTokens = 0;
     const toolTimers = new Map<string, number>();
 
     agent.subscribe((event: any) => {
       if (event.type === 'message_update' && event.assistantMessageEvent.type === 'text_delta') {
         responseText += event.assistantMessageEvent.delta;
+      }
+      // Each turn's assistant message reports the context size at that turn.
+      // Track the running max (== final turn for a monotonically growing
+      // context) and surface it so the pipeline can report the peak occupancy.
+      if (event.type === 'turn_end') {
+        const u = event.message?.usage;
+        const turnContext = u ? (u.totalTokens || u.input + u.output + u.cacheRead + u.cacheWrite) : 0;
+        if (turnContext > contextTokens) {
+          contextTokens = turnContext;
+          if (options.onUsage) {
+            try {
+              options.onUsage(turnContext, options.phase);
+            } catch (e) {
+              log.error('onUsage callback threw', { error: e instanceof Error ? e.message : String(e) });
+            }
+          }
+        }
       }
       if (event.type === 'turn_end' && event.message?.errorMessage) {
         agentError = event.message.errorMessage;
@@ -218,13 +242,19 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
             error: agentError,
           },
           durationMs,
+          tokens: contextTokens,
         };
       }
 
       const result = parseAgentResult(responseText);
-      log.info('agent completed', { agent: options.agentName, durationMs, status: result.status });
+      log.info('agent completed', {
+        agent: options.agentName,
+        durationMs,
+        status: result.status,
+        contextTokens,
+      });
 
-      return { raw: responseText, result, durationMs };
+      return { raw: responseText, result, durationMs, tokens: contextTokens };
     } catch (err) {
       clearTimeout(timer);
       this.activeAgent = null;
@@ -250,6 +280,7 @@ export class PiRuntimeAdapter implements CaseAgentRuntime {
           error: `Agent spawn error: ${errorMsg}`,
         },
         durationMs,
+        tokens: contextTokens,
       };
     }
   }

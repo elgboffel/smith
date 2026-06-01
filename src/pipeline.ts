@@ -1,5 +1,14 @@
-import type { AgentName, AgentResult, PipelineConfig, RevisionRequest, ScoutFindings } from './types.js';
+import type {
+  AgentName,
+  AgentResult,
+  PipelineConfig,
+  PipelineProfile,
+  RevisionRequest,
+  RunMetrics,
+  ScoutFindings,
+} from './types.js';
 import { PROFILE_PHASES, resolveEvidenceStrategy } from './types.js';
+import type { PhaseSummaryRow } from './render/types.js';
 import { TaskStore } from './state/task-store.js';
 import { formatDuration } from './notify.js';
 import { notifyRunCompletion } from './notify-completion-bridge.js';
@@ -171,6 +180,16 @@ async function runPipelineBody(
   // same findings (scout runs once per pipeline).
   const scoutSlot: { current: ScoutFindings | null } = { current: null };
 
+  // Per-phase peak context occupancy, keyed by phase. Each phase is a fresh
+  // agent with its own window, so values are NOT summed — we keep the max
+  // occupancy each phase reached (matching pi's footer). Revision cycles reuse
+  // the same phase name, collapsing into one row.
+  const phaseContextTokens = new Map<import('./types.js').PipelinePhase, number>();
+  config.onUsage = (contextTokens, phase) => {
+    if (!phase) return;
+    phaseContextTokens.set(phase, Math.max(phaseContextTokens.get(phase) ?? 0, contextTokens));
+  };
+
   const ctx: ExecuteGraphContext = {
     graph,
     appender,
@@ -178,7 +197,7 @@ async function runPipelineBody(
     notifier,
     initialRevisionRequests,
     dispatchPhase: async (node: DagNode, revision?: RevisionRequest) => {
-      return dispatchNode(node, config, store, previousResults, notifier, revision, {
+      const result = await dispatchNode(node, config, store, previousResults, notifier, revision, {
         incrementHumanOverrides: () => {
           humanOverrides++;
         },
@@ -194,6 +213,11 @@ async function runPipelineBody(
           scoutSlot.current = f;
         },
       });
+      // Attribute this phase's peak context occupancy onto the result so it
+      // persists through the event log + run metrics. onUsage has already
+      // fired for this node's turns by the time dispatchNode resolves.
+      const tokens = phaseContextTokens.get(node.phase);
+      return tokens != null ? { ...result, contextTokens: tokens } : result;
     },
   };
 
@@ -232,6 +256,11 @@ async function runPipelineBody(
   if (outcome === 'failed') {
     notifier.send(`Pipeline failed at ${failedAgent ?? 'unknown'} phase.`);
   } else {
+    // Final summary: a vertical per-phase breakdown (duration + peak context),
+    // built from the run metrics in canonical phase order. Revision cycles are
+    // collapsed by summing durations and taking the phase's peak context.
+    const summaryRows = buildPhaseSummary(runMetrics, profile);
+    notifier.pipelineComplete(summaryRows, totalDurationMs);
     notifier.send('Pipeline completed successfully.');
   }
 
@@ -255,6 +284,29 @@ interface PipelineCallbacks {
  * legacy `nextPhase` field still drives control flow until the executor is
  * fully migrated.
  */
+/**
+ * Build the per-phase summary rows for the final pipeline breakdown. Walks the
+ * profile's canonical phase order, collapsing revision cycles by summing each
+ * phase's duration and taking its peak context occupancy. Skipped phases are
+ * omitted so the breakdown only lists work that actually ran.
+ */
+function buildPhaseSummary(metrics: RunMetrics, profile: PipelineProfile): PhaseSummaryRow[] {
+  const durations = new Map<string, number>();
+  const contextTokens = new Map<string, number>();
+  for (const p of metrics.phases) {
+    if (p.status === 'skipped') continue;
+    durations.set(p.phase, (durations.get(p.phase) ?? 0) + p.durationMs);
+    contextTokens.set(p.phase, Math.max(contextTokens.get(p.phase) ?? 0, p.contextTokens));
+  }
+  return PROFILE_PHASES[profile]
+    .filter((phase) => durations.has(phase))
+    .map((phase) => ({
+      phase,
+      durationMs: durations.get(phase) ?? 0,
+      contextTokens: contextTokens.get(phase) ?? 0,
+    }));
+}
+
 function consultMatrix(outcome: import('./types.js').PhaseOutcome | undefined): void {
   if (!outcome) return;
   try {

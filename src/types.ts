@@ -63,6 +63,12 @@ export interface AgentResult {
   findings?: ReviewFindings;
   /** Structured rubric from evaluator agents (verifier/reviewer) */
   rubric?: Rubric;
+  /**
+   * Peak context occupancy (final-turn input + output + cache) for the agent
+   * that produced this result. Matches pi's footer context number. Attributed
+   * per phase — never summed across phases (each phase is a fresh agent).
+   */
+  contextTokens?: number;
   error: string | null;
 }
 
@@ -164,6 +170,8 @@ export interface PipelineConfig {
   onAgentHeartbeat?: (elapsedMs: number) => void;
   /** Called on every tool start/end during agent execution. Used to drive live terminal feedback. */
   onToolActivity?: (event: import('./render/types.js').ToolActivityEvent) => void;
+  /** Called when an agent's context occupancy hits a new peak. Tagged by phase for per-step attribution. */
+  onUsage?: (contextTokens: number, phase?: PipelinePhase) => void;
   /** Optional pre-built notifier override (tests / custom renderers). Defaults to StructuredLogRenderer. */
   notifier?: import('./notify.js').Notifier;
   /** Per-run trace writer for tool-level observability (deprecated — use eventAppender). */
@@ -368,6 +376,11 @@ export interface SpawnAgentOptions {
   onHeartbeat?: (elapsedMs: number) => void;
   /** Called on every tool start/end so renderers can show live activity. */
   onToolActivity?: (event: import('./render/types.js').ToolActivityEvent) => void;
+  /**
+   * Called when this agent's context occupancy reaches a new peak (final-turn
+   * context size). `phase` is the pipeline phase the agent is running, when known.
+   */
+  onUsage?: (contextTokens: number, phase?: PipelinePhase) => void;
   /** Trace writer for per-run observability (deprecated — use eventAppender). */
   traceWriter?: { write(event: any): void; flush(): Promise<void>; path: string };
   /** Event appender for unified event logging. */
@@ -380,6 +393,11 @@ export interface SpawnAgentResult {
   raw: string;
   result: AgentResult;
   durationMs: number;
+  /**
+   * Peak context occupancy for this agent run (final-turn input + output +
+   * cache). Matches pi's footer context number. NOT a sum across turns.
+   */
+  tokens: number;
 }
 
 // --- Standalone CLI ---
@@ -409,6 +427,8 @@ export interface PhaseMetrics {
   durationMs: number;
   status: 'completed' | 'failed' | 'skipped';
   retried: boolean;
+  /** Peak context occupancy for this phase's agent. 0 when unknown (dry-run, skipped). */
+  contextTokens: number;
 }
 
 export interface RunMetrics {

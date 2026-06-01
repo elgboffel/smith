@@ -2,7 +2,16 @@ import type { Notifier } from '../notify.js';
 import { defaultAskUser } from '../notify.js';
 import type { PipelineMode } from '../types.js';
 import { bold, cyan, dim, green, red, yellow } from './color.js';
-import { formatDuration, formatHeartbeatWhimsy, formatPhaseEnd, formatPhaseHeader, formatToolLine } from './format.js';
+import {
+  formatDuration,
+  formatHeartbeatWhimsy,
+  formatPhaseEnd,
+  formatPhaseHeader,
+  formatPipelineComplete,
+  formatTokenCount,
+  formatToolLine,
+} from './format.js';
+import type { PhaseSummaryRow } from './types.js';
 
 export interface StructuredLogRendererOptions {
   /** Output sink. Default: writes to process.stdout. */
@@ -35,15 +44,39 @@ function colorDuration(durationMs: number): string {
 }
 
 /**
- * Recolor a formatted phase-end line: green or red icon + threshold-colored
+ * Recolor a formatted phase-end line: green/red icon, threshold-colored context
+ * tokens (matching the summary + pi's footer thresholds) and threshold-colored
  * duration. Body padding stays default.
  */
-function colorPhaseEndLine(phase: string, agent: string, durationMs: number, status: 'completed' | 'failed'): string {
-  const raw = formatPhaseEnd(phase, agent, durationMs, status);
+function colorPhaseEndLine(
+  phase: string,
+  agent: string,
+  durationMs: number,
+  status: 'completed' | 'failed',
+  contextTokens?: number,
+): string {
+  const raw = formatPhaseEnd(phase, agent, durationMs, status, contextTokens);
+  const icon = status === 'completed' ? green(raw[0]!) : red(raw[0]!);
+  let body = raw.slice(1);
+
+  // Recolor the duration tail (rightmost occurrence — the trailing column).
   const durText = formatDuration(durationMs);
-  const body = raw.endsWith(durText) ? raw.slice(0, raw.length - durText.length) : raw;
-  const icon = status === 'completed' ? green(body[0]!) : red(body[0]!);
-  return `${icon}${body.slice(1)}${colorDuration(durationMs)}`;
+  const durIdx = body.lastIndexOf(durText);
+  if (durIdx >= 0) {
+    body = body.slice(0, durIdx) + colorDuration(durationMs) + body.slice(durIdx + durText.length);
+  }
+
+  // Recolor the "N.Nk ctx" tail by absolute token count.
+  if (contextTokens) {
+    const ctxText = `${formatTokenCount(contextTokens)} ctx`;
+    const ctxIdx = body.indexOf(ctxText);
+    if (ctxIdx >= 0) {
+      const ctxColor = contextTokens >= 500_000 ? red : contextTokens >= 120_000 ? yellow : dim;
+      body = body.slice(0, ctxIdx) + ctxColor(ctxText) + body.slice(ctxIdx + ctxText.length);
+    }
+  }
+
+  return `${icon}${body}`;
 }
 
 /**
@@ -58,6 +91,27 @@ function colorStepIndicator(completed: string[], active: string, pending: string
   if (active) parts.push(`${cyan('○')} ${active}`);
   for (const phase of pending) parts.push(`${dim('·')} ${dim(phase)}`);
   return `[${position}/${total}] ${parts.join(' → ')}`;
+}
+
+/**
+ * Color the vertical pipeline summary: bold green header, dim per-phase rows
+ * with the context column threshold-colored by absolute token count (matching
+ * pi's footer thresholds: ≥500k red, ≥120k yellow).
+ */
+function colorPipelineComplete(rows: PhaseSummaryRow[], totalDurationMs: number): string[] {
+  const lines = formatPipelineComplete(rows, totalDurationMs);
+  const [header, ...phaseLines] = lines;
+  const coloredHeader = `${green('✓')}${bold(header.slice(1))}`;
+  const coloredPhaseLines = phaseLines.map((line, i) => {
+    const tokens = rows[i]?.contextTokens ?? 0;
+    const ctxColor = tokens >= 500_000 ? red : tokens >= 120_000 ? yellow : dim;
+    // Recolor only the "N.Nk ctx" tail; keep the name/duration dim.
+    const ctxMatch = line.match(/\S+ ctx$/);
+    if (!ctxMatch) return dim(line);
+    const head = line.slice(0, line.length - ctxMatch[0].length);
+    return `${dim(head)}${ctxColor(ctxMatch[0])}`;
+  });
+  return [coloredHeader, ...coloredPhaseLines];
 }
 
 /**
@@ -121,8 +175,8 @@ export function createStructuredLogRenderer(options: StructuredLogRendererOption
       writeLine(colorPhaseHeader(phase, agent));
     },
 
-    phaseEnd(phase, agent, durationMs, status) {
-      writeLine(colorPhaseEndLine(phase, agent, durationMs, status));
+    phaseEnd(phase, agent, durationMs, status, contextTokens) {
+      writeLine(colorPhaseEndLine(phase, agent, durationMs, status, contextTokens));
     },
 
     toolStart(tool, args) {
@@ -140,6 +194,10 @@ export function createStructuredLogRenderer(options: StructuredLogRendererOption
 
     stepIndicator(completed, active, pending) {
       writeLine(colorStepIndicator(completed, active, pending));
+    },
+
+    pipelineComplete(rows, totalDurationMs) {
+      for (const line of colorPipelineComplete(rows, totalDurationMs)) writeLine(line);
     },
 
     startHeartbeat() {

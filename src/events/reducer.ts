@@ -61,11 +61,20 @@ export function applyEvent(state: PipelineState | null, event: PipelineEvent): P
       const phaseState =
         updated.phases.get(key) ?? (updated.currentPhase ? updated.phases.get(updated.currentPhase) : undefined);
       if (phaseState) {
-        phaseState.status =
+        const incoming =
           event.outcome === 'completed' ? 'completed' : event.outcome === 'skipped' ? 'skipped' : 'failed';
-        phaseState.completedAt = event.ts;
-        phaseState.durationMs = event.durationMs;
-        if (event.result) phaseState.result = event.result;
+        // Unused revision-cycle nodes (e.g. implement-1, verify-1) are marked
+        // `skipped` at end-of-run. When no revisions occurred, revisionCycles is
+        // still 0, so they collapse onto the same `<phase>_0` key as the node
+        // that actually ran. Never let a late `skipped` demote a phase that
+        // already completed or failed.
+        const alreadyTerminal = phaseState.status === 'completed' || phaseState.status === 'failed';
+        if (!(incoming === 'skipped' && alreadyTerminal)) {
+          phaseState.status = incoming;
+          phaseState.completedAt = event.ts;
+          phaseState.durationMs = event.durationMs;
+          if (event.result) phaseState.result = event.result;
+        }
       }
       updated.runningPhases.delete(key);
       // currentPhase = last remaining running phase, or null

@@ -28,7 +28,14 @@ import type { Notifier } from '../notify.js';
 import { defaultAskUser } from '../notify.js';
 import type { PipelineMode } from '../types.js';
 import { bold, cyan, dim, green, red, yellow } from './color.js';
-import { formatDuration, formatHeartbeatWhimsy, formatPhaseEnd, formatPhaseHeader, formatToolLine } from './format.js';
+import {
+  formatDuration,
+  formatHeartbeatWhimsy,
+  formatPhaseEnd,
+  formatPhaseHeader,
+  formatPipelineComplete,
+  formatToolLine,
+} from './format.js';
 import { createStructuredLogRenderer } from './structured-log.js';
 
 /** Duration thresholds for color escalation (ms). Mirrors structured-log.ts. */
@@ -382,6 +389,31 @@ export function createTuiRenderer(options: TuiRendererOptions): TuiRenderer {
       state.activePhase = active || null;
       state.pendingPhases = [...pending];
       refreshHeader();
+    },
+
+    pipelineComplete(rows, totalDurationMs) {
+      if (fallback) return fallback.pipelineComplete(rows, totalDurationMs);
+      // Mark every phase done so the header progress bar reads N/N.
+      state.completedPhases = rows.map((r) => r.phase);
+      state.activePhase = null;
+      state.pendingPhases = [];
+      refreshHeader();
+      const lines = formatPipelineComplete(rows, totalDurationMs);
+      const [header, ...phaseLines] = lines;
+      pushFeed('');
+      pushFeed(`${green('✓')}${bold(header.slice(1))}`);
+      for (let i = 0; i < phaseLines.length; i++) {
+        const tokens = rows[i]?.contextTokens ?? 0;
+        const ctxColor = tokens >= 500_000 ? red : tokens >= 120_000 ? yellow : dim;
+        const line = phaseLines[i];
+        const ctxMatch = line.match(/\S+ ctx$/);
+        if (!ctxMatch) {
+          pushFeed(dim(line));
+          continue;
+        }
+        const head = line.slice(0, line.length - ctxMatch[0].length);
+        pushFeed(`${dim(head)}${ctxColor(ctxMatch[0])}`);
+      }
     },
 
     startHeartbeat() {

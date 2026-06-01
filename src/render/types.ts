@@ -9,3 +9,14 @@ export interface ToolActivityEvent {
   durationMs?: number;
   isError?: boolean;
 }
+
+/**
+ * One row in the final pipeline summary: a completed phase with its wall-clock
+ * duration and peak context occupancy. Rendered as a vertical breakdown when
+ * the pipeline finishes.
+ */
+export interface PhaseSummaryRow {
+  phase: string;
+  durationMs: number;
+  contextTokens: number;
+}

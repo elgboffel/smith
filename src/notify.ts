@@ -1,9 +1,16 @@
 import type { PipelineMode, PipelinePhase } from './types.js';
+import type { PhaseSummaryRow } from './render/types.js';
 
 export interface Notifier {
   send(message: string): void;
   phaseStart(phase: PipelinePhase, agent: string): void;
-  phaseEnd(phase: PipelinePhase, agent: string, durationMs: number, status: 'completed' | 'failed'): void;
+  phaseEnd(
+    phase: PipelinePhase,
+    agent: string,
+    durationMs: number,
+    status: 'completed' | 'failed',
+    contextTokens?: number,
+  ): void;
   askUser(prompt: string, options: string[]): Promise<string>;
   /** Indicate a tool invocation has started (rendered as indented tool line). */
   toolStart(tool: string, args: string): void;
@@ -11,6 +18,8 @@ export interface Notifier {
   toolEnd(tool: string, durationMs: number, isError: boolean): void;
   /** Render pipeline position (e.g., "[2/5] ✓ implement → ○ verify → ..."). */
   stepIndicator(completedPhases: string[], activePhase: string, pendingPhases: string[]): void;
+  /** Render the final pipeline summary: per-phase duration + context, plus total time. */
+  pipelineComplete(rows: PhaseSummaryRow[], totalDurationMs: number): void;
   /** Start the wall-clock thinking heartbeat timer. */
   startHeartbeat(): void;
   /** Stop the wall-clock thinking heartbeat timer. */
@@ -73,6 +82,7 @@ export function createNotifier(mode: PipelineMode): Notifier {
     toolStart() {},
     toolEnd() {},
     stepIndicator() {},
+    pipelineComplete() {},
     startHeartbeat() {},
     stopHeartbeat() {},
   };
