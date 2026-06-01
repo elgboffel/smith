@@ -30,6 +30,7 @@ export async function handler(argv: string[]): Promise<number> {
     options: {
       task: { type: 'string', short: 't' },
       mode: { type: 'string', short: 'm' },
+      branch: { type: 'string', short: 'b' },
       agent: { type: 'boolean' },
       model: { type: 'string' },
       effort: { type: 'string' },
@@ -102,6 +103,7 @@ export async function handler(argv: string[]): Promise<number> {
       fresh: (values.fresh as boolean) ?? false,
       caseRoot,
       renderer: values.tui ? 'tui' : undefined,
+      branch: values.branch as string | undefined,
     });
     return 0;
   } catch (err) {
@@ -122,6 +124,10 @@ Run the agent pipeline for a GitHub or Linear issue.
 Options:
   --task, -t <file>       Run an existing task JSON file directly
   --agent                 Start an interactive steering session
+  --branch, -b <name>     Branch strategy:
+                            "current" = stay on current branch
+                            <name>    = use this exact branch name
+                            (omit)    = derive from issue context
   --model <model>         Override model for all agents in this run
   --effort <level>        Override reasoning effort for all agents
                           (off|minimal|low|medium|high|xhigh)

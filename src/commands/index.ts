@@ -122,8 +122,10 @@ export function printHelp(): void {
   lines.push('       smith --agent [issue]');
   lines.push('');
   lines.push('Core:');
-  lines.push('  smith 1234           Create or resume a pipeline run from a GitHub issue');
-  lines.push('  smith --agent 1234   Start an interactive steering session before running');
+  lines.push('  smith <issue>              Create or resume a pipeline run');
+  lines.push('  smith --agent <issue>      Start an interactive steering session');
+  lines.push('  smith <issue> -b current   Run on the current branch (no branch creation)');
+  lines.push('  smith <issue> -b <name>    Run on a specific branch');
 
   const allVerbs = Object.keys(commandMap);
   const pad = Math.max(...allVerbs.map((v) => v.length)) + 2;

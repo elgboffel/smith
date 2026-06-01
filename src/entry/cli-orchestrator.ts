@@ -23,6 +23,13 @@ export interface CliOrchestratorOptions {
   caseRoot: string;
   /** Renderer override: 'tui' for full-screen TUI mode. */
   renderer?: 'structured' | 'tui';
+  /**
+   * Branch strategy:
+   * - `undefined`: derive a new branch from the issue context (default, current behavior)
+   * - `"current"`: stay on the current branch, don't create or switch
+   * - `string`:     use this exact branch name (create or checkout)
+   */
+  branch?: string;
 }
 
 const SETUP_PHASE: PipelinePhase = 'setup';
@@ -102,11 +109,8 @@ export async function runCliOrchestrator(options: CliOrchestratorOptions): Promi
   setupStep(notifier, 'Fetch issue', issueContext.title);
 
   // --- Step 2: Create branch + task files ---
-  const branchName = deriveBranchName(issueContext);
-  setupStep(notifier, 'Branch', branchName);
-
-  // Create or checkout branch
-  await ensureBranch(branchName, detected.path);
+  const branchName = await resolveBranch(options.branch, issueContext, detected.path);
+  setupStep(notifier, 'Branch', branchName ?? '(current)');
 
   // Create task files
   const strategy = resolveEvidenceStrategy(detected.project);
@@ -121,7 +125,7 @@ export async function runCliOrchestrator(options: CliOrchestratorOptions): Promi
     evidenceExpectations: defaultEvidenceExpectations(strategy, issueContext),
   };
 
-  const taskResult = await createTask(caseRoot, request, { issueContext, branch: branchName, repoPath: detected.path });
+  const taskResult = await createTask(caseRoot, request, { issueContext, branch: branchName ?? undefined, repoPath: detected.path });
   setupStep(notifier, 'Task', taskResult.taskId);
 
   // --- Step 3: Run baseline ---
@@ -174,7 +178,7 @@ async function resumeTask(
 
   setupStep(notifier, 'Resume task', `${taskJson.id} (entry: ${entryPhase})`);
 
-  // Checkout the task's branch if it has one
+  // Checkout the task's branch if it has one (skip when branch is null = "current" mode)
   if (taskJson.branch) {
     await ensureBranch(taskJson.branch, repoPath, true);
     setupStep(notifier, 'Branch', taskJson.branch);
@@ -243,6 +247,30 @@ const EVIDENCE_TEMPLATES: Record<EvidenceStrategy, (issue: IssueContext) => stri
 
 function defaultEvidenceExpectations(strategy: EvidenceStrategy, issue: IssueContext): string {
   return EVIDENCE_TEMPLATES[strategy](issue);
+}
+
+/**
+ * Resolve which branch to use for a new task.
+ *
+ * - `"current"`: stay on whatever branch is checked out, return null (no branch in task.json)
+ * - explicit string: use that branch name (create or checkout)
+ * - `undefined`: derive a new branch from the issue context (legacy default)
+ *
+ * Returns the branch name stored in task.json, or null for "current".
+ */
+async function resolveBranch(
+  branchOption: string | undefined,
+  issue: IssueContext,
+  repoPath: string,
+): Promise<string | null> {
+  if (branchOption === 'current') {
+    // Stay on the current branch — don't create or switch
+    return null;
+  }
+
+  const branchName = branchOption ?? deriveBranchName(issue);
+  await ensureBranch(branchName, repoPath);
+  return branchName;
 }
 
 /**
