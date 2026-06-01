@@ -1,4 +1,3 @@
-import { basename } from 'node:path';
 import { fetchIssue } from './issue-fetcher.js';
 import { createTask } from './task-factory.js';
 import { resolveDispatch } from './dispatch-resolver.js';
@@ -57,7 +56,9 @@ export async function runFolderDispatch(options: FolderDispatchOptions): Promise
   setupStep(notifier, 'Workspace', `${project.name} (${workspacePath})`);
 
   // --- One branch for the whole folder (git policy: managed) ---
-  const branch = new BranchNamer().fromFolderName(basename(folderPath));
+  // Meaningful folder name wins; a generic one (issues/.scratch/tmp) triggers
+  // PRD-based name synthesis so the branch is human-meaningful by construction.
+  const branch = await new BranchNamer().resolve({ folderPath });
   if (policy.createsBranch) {
     await ensureBranch(branch.name, workspacePath);
   }
