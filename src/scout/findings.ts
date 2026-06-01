@@ -66,19 +66,6 @@ export function validateScoutFindings(value: unknown): ScoutFindings {
 
   const out: ScoutFindings = { relevantFiles, patterns, constraints };
 
-  if (v.testBaseline !== undefined) {
-    const tb = v.testBaseline;
-    if (typeof tb !== 'object' || tb === null || Array.isArray(tb)) {
-      throw new ScoutFindingsValidationError('testBaseline: expected object');
-    }
-    const t = tb as Record<string, unknown>;
-    const command = requireString(t, 'testBaseline.command', 'command');
-    const passing = requireNumber(t, 'testBaseline.passing', 'passing');
-    const failing = requireNumber(t, 'testBaseline.failing', 'failing');
-    const relevant = requireStringArray(t, 'relevant');
-    out.testBaseline = { command, passing, failing, relevant };
-  }
-
   if (v.suggestedApproach !== undefined) {
     out.suggestedApproach = requireString(v, 'suggestedApproach');
   }
@@ -133,20 +120,6 @@ export function synthesizeForImplementer(findings: ScoutFindings | null | undefi
     sections.push(lines.join('\n'));
   }
 
-  if (findings.testBaseline) {
-    const tb = findings.testBaseline;
-    const lines = [
-      '### Test Baseline',
-      `- Command: \`${tb.command}\``,
-      `- Passing: ${tb.passing}`,
-      `- Failing: ${tb.failing}`,
-    ];
-    if (tb.relevant.length > 0) {
-      lines.push(`- Relevant: ${tb.relevant.map((r) => `\`${r}\``).join(', ')}`);
-    }
-    sections.push(lines.join('\n'));
-  }
-
   if (findings.constraints.length > 0) {
     const lines = ['### Constraints'];
     for (const c of findings.constraints) {
@@ -171,15 +144,6 @@ function requireString(obj: Record<string, unknown>, path: string, key?: string)
   const v = obj[k];
   if (typeof v !== 'string') {
     throw new ScoutFindingsValidationError(`${path}: expected string, got ${describe(v)}`);
-  }
-  return v;
-}
-
-function requireNumber(obj: Record<string, unknown>, path: string, key?: string): number {
-  const k = key ?? path;
-  const v = obj[k];
-  if (typeof v !== 'number' || !Number.isFinite(v)) {
-    throw new ScoutFindingsValidationError(`${path}: expected number, got ${describe(v)}`);
   }
   return v;
 }

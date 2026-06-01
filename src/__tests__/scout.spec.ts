@@ -20,12 +20,6 @@ function makeFindings(overrides: Partial<ScoutFindings> = {}): ScoutFindings {
         description: 'phases return PhaseOutput with nextPhase + outcome',
       },
     ],
-    testBaseline: {
-      command: 'bun test ./src/__tests__/',
-      passing: 590,
-      failing: 0,
-      relevant: ['src/__tests__/dag-builder.spec.ts'],
-    },
     constraints: ['No new runtime dependencies without owner approval'],
     suggestedApproach: 'Mirror verifier.md — read-only agent + structured AGENT_RESULT.',
     ...overrides,
@@ -46,7 +40,6 @@ describe('validateScoutFindings', () => {
     };
     const out = validateScoutFindings(minimal);
     expect(out).toEqual(minimal);
-    expect(out.testBaseline).toBeUndefined();
     expect(out.suggestedApproach).toBeUndefined();
   });
 
@@ -79,16 +72,6 @@ describe('validateScoutFindings', () => {
   it('rejects non-string constraints', () => {
     const bad = { relevantFiles: [], patterns: [], constraints: ['ok', 42] };
     expect(() => validateScoutFindings(bad)).toThrow(/constraints\[1\]/);
-  });
-
-  it('rejects malformed testBaseline', () => {
-    const bad = {
-      relevantFiles: [],
-      patterns: [],
-      constraints: [],
-      testBaseline: { command: 'bun test', passing: 'lots', failing: 0, relevant: [] },
-    };
-    expect(() => validateScoutFindings(bad)).toThrow(/testBaseline\.passing/);
   });
 
   it('ignores unknown top-level fields', () => {
@@ -134,8 +117,6 @@ describe('synthesizeForImplementer', () => {
     expect(out).toContain('wires phases into the graph');
     expect(out).toContain('### Patterns to Follow');
     expect(out).toContain('phase-dispatch');
-    expect(out).toContain('### Test Baseline');
-    expect(out).toContain('Passing: 590');
     expect(out).toContain('### Constraints');
     expect(out).toContain('No new runtime dependencies');
     expect(out).toContain('### Suggested Approach');
@@ -147,13 +128,11 @@ describe('synthesizeForImplementer', () => {
       patterns: [],
       constraints: [],
       suggestedApproach: undefined,
-      testBaseline: undefined,
     });
     const out = synthesizeForImplementer(partial);
     expect(out).toContain('### Relevant Files');
     expect(out).not.toContain('### Patterns to Follow');
     expect(out).not.toContain('### Constraints');
-    expect(out).not.toContain('### Test Baseline');
     expect(out).not.toContain('### Suggested Approach');
   });
 
@@ -171,17 +150,4 @@ describe('synthesizeForImplementer', () => {
     expect(out).toContain('`src/a.ts`');
   });
 
-  it('renders test baseline relevant files when present', () => {
-    const out = synthesizeForImplementer(makeFindings());
-    expect(out).toContain('`src/__tests__/dag-builder.spec.ts`');
-  });
-
-  it('skips test baseline relevant line when the list is empty', () => {
-    const findings = makeFindings({
-      testBaseline: { command: 'bun test', passing: 1, failing: 0, relevant: [] },
-    });
-    const out = synthesizeForImplementer(findings);
-    expect(out).toContain('### Test Baseline');
-    expect(out).not.toContain('Relevant: ');
-  });
 });

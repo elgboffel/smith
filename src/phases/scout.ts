@@ -11,8 +11,8 @@ import { createLogger } from '../util/logger.js';
 
 const log = createLogger();
 
-/** Default scout time budget (3 minutes). Configurable via `SMITH_SCOUT_TIMEOUT_MS`. */
-const DEFAULT_SCOUT_TIMEOUT_MS = 3 * 60 * 1000;
+/** Default scout time budget (5 minutes). Configurable via `SMITH_SCOUT_TIMEOUT_MS`. */
+const DEFAULT_SCOUT_TIMEOUT_MS = 5 * 60 * 1000;
 
 /**
  * Result envelope for the scout phase.
@@ -31,8 +31,8 @@ export interface ScoutPhaseOutput extends PhaseOutput {
  *
  * The scout is a read-only exploration agent that runs once per pipeline,
  * before `implement_0`. It returns structured findings (relevant files,
- * patterns, test baseline, constraints) that the orchestrator synthesizes
- * into the implementer's prompt as a `## Scout Findings` section.
+ * patterns, constraints) that the orchestrator synthesizes into the
+ * implementer's prompt as a `## Scout Findings` section.
  *
  * Failure is non-blocking: a malformed or absent findings payload yields
  * `findings: null` and the executor advances to implement anyway. The
@@ -202,9 +202,6 @@ function buildScoutContextBlock(config: PipelineConfig, task: TaskJson): string 
   }
   if (task.issue) {
     lines.push(`- **Issue**: ${task.issueType ?? 'unknown'} ${task.issue}`);
-  }
-  if (task.fastTestCommand) {
-    lines.push(`- **Fast test command**: \`${task.fastTestCommand}\``);
   }
   if (config.project?.commands && Object.keys(config.project.commands).length > 0) {
     lines.push('', '### Project Commands', '');

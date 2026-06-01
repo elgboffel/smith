@@ -205,7 +205,7 @@ Every task carries `evidenceExpectations` — the concrete artifacts the verifie
 
 ¹ The orchestrator runs as an LLM agent session via `smith --agent`, or as TypeScript runtime code for direct `smith <issue>` dispatch.
 
-The key boundary is context isolation. Scout context is read-only exploration of the target repo; its structured findings (relevant files, patterns, test baseline) are synthesized by the orchestrator and injected into the implementer's prompt. Implementer context includes task details, playbooks, repo learnings, scout findings, and revision feedback. Verifier context is intentionally fresher. Reviewer context is focused on the diff and principles.
+The key boundary is context isolation. Scout context is read-only exploration of the target repo; its structured findings (relevant files, patterns, constraints) are synthesized by the orchestrator and injected into the implementer's prompt. Implementer context includes task details, playbooks, repo learnings, scout findings, and revision feedback. Verifier context is intentionally fresher. Reviewer context is focused on the diff and principles.
 
 ## Evidence Gates
 

@@ -514,18 +514,13 @@ export type WorkingMemoryUpdate = Partial<Omit<WorkingMemory, 'version' | 'updat
  * file paths, patterns to follow, and known constraints instead of having to
  * rediscover the layout from scratch.
  *
- * Optional fields (`testBaseline`, `suggestedApproach`) may be absent on
- * partial findings; the synthesis function tolerates either case.
+ * Optional field `suggestedApproach` may be absent on partial findings; the
+ * synthesis function tolerates its absence. The scout does not run tests —
+ * relevant test files are surfaced as entries in `relevantFiles`.
  */
 export interface ScoutFindings {
   relevantFiles: Array<{ path: string; reason: string }>;
   patterns: Array<{ name: string; file: string; description: string }>;
-  testBaseline?: {
-    command: string;
-    passing: number;
-    failing: number;
-    relevant: string[];
-  };
   constraints: string[];
   suggestedApproach?: string;
 }
