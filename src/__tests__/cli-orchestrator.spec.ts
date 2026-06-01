@@ -23,6 +23,7 @@ const mockBuildPipelineConfig = mock();
 mock.module('../config.js', () => ({
   buildPipelineConfig: mockBuildPipelineConfig,
   loadProjects: mock(),
+  loadProjectsManifest: mock(),
   resolveRepoPath: mock(),
 }));
 

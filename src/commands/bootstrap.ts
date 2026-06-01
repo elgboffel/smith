@@ -23,7 +23,16 @@ export interface BootstrapResult {
   ok: boolean;
 }
 
-export async function runBootstrap(repoName: string, caseRoot = resolvePackageRoot()): Promise<BootstrapResult> {
+export interface BootstrapOptions {
+  /** Whether to add `.smith/` to the repo's `.gitignore`. Direct dispatch skips this. */
+  ensureIgnored?: boolean;
+}
+
+export async function runBootstrap(
+  repoName: string,
+  caseRoot = resolvePackageRoot(),
+  opts: BootstrapOptions = {},
+): Promise<BootstrapResult> {
   const manifest = await loadProjectsManifest(caseRoot);
   const projects = manifest.repos;
   const repo = projects.find((p) => p.name === repoName);
@@ -38,7 +47,9 @@ export async function runBootstrap(repoName: string, caseRoot = resolvePackageRo
     throw new Error(`repo directory not found at ${repo.path} (resolved from ${manifest.repoBasePath})`);
   }
 
-  ensureCaseIgnored(repoPath);
+  if (opts.ensureIgnored !== false) {
+    ensureCaseIgnored(repoPath);
+  }
 
   const steps: StepResult[] = [];
   let ok = true;

@@ -2,14 +2,20 @@ import { detectRepo } from './repo-detector.js';
 import { detectArgumentType, fetchIssue } from './issue-fetcher.js';
 import { findTaskByIssue, findTaskByMarker } from './task-scanner.js';
 import { createTask } from './task-factory.js';
+import { runDirectDispatch } from './direct-dispatch.js';
+import {
+  defaultEvidenceExpectations,
+  ensureBranch,
+  resumeTask,
+  setupStep,
+  SETUP_PHASE,
+} from './setup-phase.js';
+import type { RendererKind } from './setup-phase.js';
 import { buildPipelineConfig } from '../config.js';
 import { runPipeline } from '../pipeline.js';
 import { runBootstrap } from '../commands/bootstrap.js';
-import { runCommand } from '../util/run-command.js';
 import { createStructuredLogRenderer } from '../render/structured-log.js';
-import { formatSetupStep } from '../render/format.js';
-import type { Notifier } from '../notify.js';
-import type { IssueContext, PipelineMode, PipelinePhase, TaskCreateRequest, EvidenceStrategy } from '../types.js';
+import type { IssueContext, PipelineMode, TaskCreateRequest } from '../types.js';
 import { resolveEvidenceStrategy } from '../types.js';
 import type { TaskMatch } from './task-scanner.js';
 
@@ -22,7 +28,7 @@ export interface CliOrchestratorOptions {
   fresh?: boolean;
   caseRoot: string;
   /** Renderer override: 'tui' for full-screen TUI mode. */
-  renderer?: 'structured' | 'tui';
+  renderer?: RendererKind;
   /**
    * Branch strategy:
    * - `undefined`: derive a new branch from the issue context (default, current behavior)
@@ -32,21 +38,12 @@ export interface CliOrchestratorOptions {
   branch?: string;
 }
 
-const SETUP_PHASE: PipelinePhase = 'setup';
-
-/**
- * Emit a setup-phase tool line via the notifier. We bypass the Notifier's
- * toolStart implementation (which uses `formatToolLine`) because setup steps
- * don't need a duration suffix — `formatSetupStep` gives us the right shape.
- */
-function setupStep(notifier: Notifier, label: string, detail?: string): void {
-  notifier.send(formatSetupStep(label, detail));
-}
-
 /**
  * Standalone CLI orchestrator — Steps 0-3 as deterministic TypeScript.
  *
- * Flow:
+ * A `.md` file argument is dispatched fully locally (see `runDirectDispatch`):
+ * workspace resolved from the issue file, zero git writes. Everything else runs
+ * the legacy git-shaped flow:
  *   0. Detect repo from cwd
  *   0b. Check for existing task (re-entry)
  *   1. Fetch issue context
@@ -56,6 +53,11 @@ function setupStep(notifier: Notifier, label: string, detail?: string): void {
  */
 export async function runCliOrchestrator(options: CliOrchestratorOptions): Promise<void> {
   const { argument, mode, dryRun, fresh, caseRoot, renderer } = options;
+
+  // Direct dispatch: a `.md` file runs fully local with no git writes.
+  if (argument?.endsWith('.md')) {
+    return runDirectDispatch({ issueArg: argument, mode, dryRun, fresh, caseRoot, renderer });
+  }
 
   const notifier = createStructuredLogRenderer({ mode });
   const setupStartedAt = Date.now();
@@ -71,10 +73,7 @@ export async function runCliOrchestrator(options: CliOrchestratorOptions): Promi
   if (!fresh) {
     if (argument) {
       const argType = detectArgumentType(argument);
-      // For local-md the stored issue id is the slug of the file's H1 title,
-      // not the raw path. Resolve it so re-running the same file resumes its task.
-      const matchId = argType === 'local-md' ? (await fetchIssue(argType, argument)).issueNumber : argument;
-      match = await findTaskByIssue(caseRoot, detected.name, argType, matchId, detected.path);
+      match = await findTaskByIssue(caseRoot, detected.name, argType, argument, detected.path);
     } else {
       match = await findTaskByMarker(caseRoot, detected.path);
     }
@@ -125,7 +124,11 @@ export async function runCliOrchestrator(options: CliOrchestratorOptions): Promi
     evidenceExpectations: defaultEvidenceExpectations(strategy, issueContext),
   };
 
-  const taskResult = await createTask(caseRoot, request, { issueContext, branch: branchName ?? undefined, repoPath: detected.path });
+  const taskResult = await createTask(caseRoot, request, {
+    issueContext,
+    branch: branchName ?? undefined,
+    repoPath: detected.path,
+  });
   setupStep(notifier, 'Task', taskResult.taskId);
 
   // --- Step 3: Run baseline ---
@@ -149,49 +152,6 @@ export async function runCliOrchestrator(options: CliOrchestratorOptions): Promi
     mode,
     dryRun,
   });
-
-  await runPipeline({ ...config, notifier, renderer });
-}
-
-/**
- * Resume an existing task from the correct pipeline phase.
- * Handles the terminal state (committed) and branch recovery.
- */
-async function resumeTask(
-  match: TaskMatch,
-  repoPath: string,
-  mode: PipelineMode,
-  dryRun: boolean,
-  notifier: Notifier,
-  setupStartedAt: number,
-  renderer?: 'structured' | 'tui',
-): Promise<void> {
-  const { taskJson, taskJsonPath, entryPhase } = match;
-
-  // Guard: task already completed (commit-only close already ran).
-  if (taskJson.status === 'committed') {
-    setupStep(notifier, 'Status', taskJson.status);
-    notifier.phaseEnd(SETUP_PHASE, 'cli', Date.now() - setupStartedAt, 'completed');
-    notifier.send('Task already committed. Nothing to do.');
-    return;
-  }
-
-  setupStep(notifier, 'Resume task', `${taskJson.id} (entry: ${entryPhase})`);
-
-  // Checkout the task's branch if it has one (skip when branch is null = "current" mode)
-  if (taskJson.branch) {
-    await ensureBranch(taskJson.branch, repoPath, true);
-    setupStep(notifier, 'Branch', taskJson.branch);
-  }
-
-  // Build config from existing task JSON and dispatch
-  const config = await buildPipelineConfig({
-    taskJsonPath,
-    mode,
-    dryRun,
-  });
-
-  notifier.phaseEnd(SETUP_PHASE, 'cli', Date.now() - setupStartedAt, 'completed');
 
   await runPipeline({ ...config, notifier, renderer });
 }
@@ -225,30 +185,6 @@ function deriveBranchPrefix(labels: string[]): string {
   return 'fix';
 }
 
-const EVIDENCE_TEMPLATES: Record<EvidenceStrategy, (issue: IssueContext) => string> = {
-  'ui-screenshot': (issue) =>
-    [
-      `Before/after screenshots demonstrating the behavior change described in: ${issue.title}`,
-      'Navigate to the affected page, reproduce the scenario from the issue, and capture the state before and after the fix.',
-      'If auth is required, complete the AuthKit login flow with test credentials.',
-    ].join('\n'),
-  'scenario-script': (issue) =>
-    [
-      `Consumer script that imports the changed API and exercises the code path described in: ${issue.title}`,
-      'Script should assert expected behavior and print PASS/FAIL.',
-      'Full test suite and typecheck must also pass.',
-    ].join('\n'),
-  'test-output': (issue) =>
-    [
-      `Full test suite passes with no regressions. Typecheck and build succeed.`,
-      `Specific tests covering the change described in: ${issue.title}`,
-    ].join('\n'),
-};
-
-function defaultEvidenceExpectations(strategy: EvidenceStrategy, issue: IssueContext): string {
-  return EVIDENCE_TEMPLATES[strategy](issue);
-}
-
 /**
  * Resolve which branch to use for a new task.
  *
@@ -271,28 +207,4 @@ async function resolveBranch(
   const branchName = branchOption ?? deriveBranchName(issue);
   await ensureBranch(branchName, repoPath);
   return branchName;
-}
-
-/**
- * Create or checkout a git branch.
- * If branch exists, checkout. Otherwise, create from HEAD.
- * When `warnOnCreate` is true (resume flow), warns that the branch was recreated.
- */
-async function ensureBranch(branchName: string, repoPath: string, warnOnCreate = false): Promise<void> {
-  const check = await runCommand('git', ['rev-parse', '--verify', branchName], { cwd: repoPath });
-
-  if (check.exitCode === 0) {
-    const co = await runCommand('git', ['checkout', branchName], { cwd: repoPath });
-    if (co.exitCode !== 0) {
-      throw new Error(`Failed to checkout branch ${branchName}: ${co.stderr.trim()}`);
-    }
-  } else {
-    if (warnOnCreate) {
-      process.stdout.write(`  Warning: branch ${branchName} not found, recreating from HEAD\n`);
-    }
-    const create = await runCommand('git', ['checkout', '-b', branchName], { cwd: repoPath });
-    if (create.exitCode !== 0) {
-      throw new Error(`Failed to create branch ${branchName}: ${create.stderr.trim()}`);
-    }
-  }
 }
